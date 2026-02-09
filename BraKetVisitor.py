@@ -9,13 +9,23 @@ else:
 
 class BraKetVisitor(ParseTreeVisitor):
 
-    # Visit a parse tree produced by BraKetParser#prog.
-    def visitProg(self, ctx:BraKetParser.ProgContext):
+    # Visit a parse tree produced by BraKetParser#program.
+    def visitProgram(self, ctx:BraKetParser.ProgramContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BraKetParser#expr.
-    def visitExpr(self, ctx:BraKetParser.ExprContext):
+    # Visit a parse tree produced by BraKetParser#statement.
+    def visitStatement(self, ctx:BraKetParser.StatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#assignment.
+    def visitAssignment(self, ctx:BraKetParser.AssignmentContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#expression.
+    def visitExpression(self, ctx:BraKetParser.ExpressionContext):
         return self.visitChildren(ctx)
 
 
