@@ -1,46 +1,57 @@
 grammar BraKet;
-program : import_list EOF;
+program
+    : import_list?
+      const_decl_list?
+      func_decl_list?
+      main_function
+      EOF
+    ;
+
+/* Newlines & whitespace */
+COMMA   : ',';
+NEWLINE : '\r'? '\n';
+WS      : [ \t]+ -> skip;
 
 /* PRODUCTIONS FOR IMPORTING FILES AND FUNCTIONS */
 import_list 
-    : (import_statement) NEWLINE import_list
-    | /* empty */
+    : import_statement (NEWLINE import_statement)* NEWLINE*
     ;
 import_statement
-    : 'from' FILENAME 'import' func_list
-    | 'import' FILENAME
+    : FROM IDENTIFIER IMPORT func_list
+    | IMPORT IDENTIFIER
     ;
 func_list
-    : FUNCTION(',' FUNCTION)*
+    : IDENTIFIER (COMMA IDENTIFIER)*
     ;
-FUNCTION
-    : IDENTIFIER
+FROM
+    : 'from' 
     ;
-FILENAME
-    : IDENTIFIER 
-    | '_' LET_DIG_USCORE*
+IMPORT
+    : 'import'
     ;
+
 
 /* PRODUCTIONS FOR CONSTANT DECLARATION */
 const_decl_list
-    : const_decl NEWLINE const_decl_list
-    | /* empty */
+    : NEWLINE* (const_decl NEWLINE+)+
     ;
 const_decl
-    : 'const' var_decl
+    : CONST var_decl
+    ;
+CONST
+    : 'const'
     ;
 
 /* PRODUCTIONS FOR VARIABLE DECLARATION */
 var_decl_list
     : var_decl NEWLINE var_decl_list
-    | /* empty */
     ;
 var_decl
     : IDENTIFIER ASSIGN expression
     ;
-
 IDENTIFIER
-    : LETTER LET_DIG_USCORE
+    : LETTER LET_DIG_USCORE*
+    | '_' LET_DIG_USCORE*
     ;
 KET_IDENTIFIER
     : '|' IDENTIFIER '>'
@@ -48,7 +59,6 @@ KET_IDENTIFIER
 BRA_IDENTIFIER
     : '<' IDENTIFIER '|'
     ;
-
 value
     : INT
     | FLOAT
@@ -57,7 +67,8 @@ value
     | array
     | struct
     | COMPLEX
-    | op ;
+    | op 
+    ;
 
 braket_vector
     : '(' braket_elements ')'
@@ -72,18 +83,19 @@ braket_value
     ;
 
 INT
-    : SIGN? DIGIT_NONZERO DIGIT*
+    : ADD? DIGIT_NONZERO DIGIT*
+    | SUB? DIGIT_NONZERO DIGIT*
     | '0'
     ;
 FLOAT
-    : SIGN? INT? '.' DIGIT+
+    : INT? '.' DIGIT+
     | INT
     ;
 CHAR
     : '\''SYMBOL'\''
     ;
 STRING
-    : '\"'SYMBOL*'\"'
+    : '"'SYMBOL*'"'
     ;
 array
     : '[' element_list ']'
@@ -101,7 +113,8 @@ struct_value
     | func_decl
     | /* empty */ ;
 COMPLEX
-    : (INT | FLOAT) SIGN (INT | FLOAT) 'i'
+    : (INT | FLOAT) ADD (INT | FLOAT) 'i'
+    | (INT | FLOAT) SUB (INT | FLOAT) 'i'
     | (INT | FLOAT) 'i'
     ;
 op
@@ -216,7 +229,7 @@ dirac_expression
     | IDENTIFIER
     | braket_vector
     | op
-;
+    ;
 
 bool_expression
     : num_expression num_comp num_expression
@@ -250,7 +263,6 @@ bool_factor
 func_decl_list 
     : func_decl NEWLINE func_decl_list
     | func_decl
-    | /* empty */
     ;
 func_decl
     : 'op' IDENTIFIER '(' param_list ')' '{' statement_list '}'
@@ -275,7 +287,6 @@ main_function
     : 'main' '(' ')' '{' statement_list '}'
     ;
 
-    
 /* BASIC OPERATIONS */
 ADD: '+' ;
 SUB: '-' ;
@@ -290,9 +301,5 @@ fragment LET_DIG_USCORE : (LETTER | DIGIT | '_') ;
 fragment LETTER : [a-zA-Z] ;
 fragment DIGIT : [0-9] ;
 fragment DIGIT_NONZERO : [1-9] ;
-fragment SIGN : [+-] ;
-fragment SYMBOL: [\s\S] ;
-
-/* Newlines & whitespace */
-NEWLINE : '\r'? '\n' ;
-WS      : [ \t]+ -> skip ;
+//fragment SIGN : [+-] ;
+fragment SYMBOL: . ;
