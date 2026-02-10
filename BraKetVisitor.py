@@ -54,6 +54,26 @@ class BraKetVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BraKetParser#braket_vector.
+    def visitBraket_vector(self, ctx:BraKetParser.Braket_vectorContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#braket_value.
+    def visitBraket_value(self, ctx:BraKetParser.Braket_valueContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#array.
+    def visitArray(self, ctx:BraKetParser.ArrayContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#op.
+    def visitOp(self, ctx:BraKetParser.OpContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BraKetParser#assign_statement.
     def visitAssign_statement(self, ctx:BraKetParser.Assign_statementContext):
         return self.visitChildren(ctx)
@@ -96,6 +116,51 @@ class BraKetVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BraKetParser#num_factor.
     def visitNum_factor(self, ctx:BraKetParser.Num_factorContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#dirac_expression.
+    def visitDirac_expression(self, ctx:BraKetParser.Dirac_expressionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#num_comp.
+    def visitNum_comp(self, ctx:BraKetParser.Num_compContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#eq_comp.
+    def visitEq_comp(self, ctx:BraKetParser.Eq_compContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#bool_expression.
+    def visitBool_expression(self, ctx:BraKetParser.Bool_expressionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#bool_or.
+    def visitBool_or(self, ctx:BraKetParser.Bool_orContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#bool_and.
+    def visitBool_and(self, ctx:BraKetParser.Bool_andContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#bool_cmp.
+    def visitBool_cmp(self, ctx:BraKetParser.Bool_cmpContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#bool_unary.
+    def visitBool_unary(self, ctx:BraKetParser.Bool_unaryContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#bool_primary.
+    def visitBool_primary(self, ctx:BraKetParser.Bool_primaryContext):
         return self.visitChildren(ctx)
 
 

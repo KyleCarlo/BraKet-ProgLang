@@ -29,7 +29,6 @@ IMPORT
     : 'import'
     ;
 
-
 /* PRODUCTIONS FOR CONSTANT DECLARATION */
 const_decl_list
     : const_decl+
@@ -47,42 +46,38 @@ var_decl_list
     ;
 var_decl
     : IDENTIFIER ASSIGN expression
+    | KET_IDENTIFIER ASSIGN num_expression
+    | BRA_IDENTIFIER ASSIGN num_expression
     ;
-IDENTIFIER
-    : LETTER LET_DIG_USCORE*
-    | '_' LET_DIG_USCORE*
+
+KET_IDENTIFIER
+    : '|' IDENTIFIER '>'
     ;
-// KET_IDENTIFIER
-//     : '|' IDENTIFIER '>'
-//     ;
-// BRA_IDENTIFIER
-//     : '<' IDENTIFIER '|'
-//     ;
+BRA_IDENTIFIER
+    : '<' IDENTIFIER '|'
+    ;
 value
     : INT
     | FLOAT
     | CHAR
     | STRING
-    // | array
+    | array
     // | struct
-    // | COMPLEX
-    // | op 
+    | COMPLEX
+    | op 
     ;
 
-// braket_vector
-//     : '(' braket_elements ')'
-//     ;
-// braket_elements
-//     : (braket_value (',' braket_value)*)?
-//     ; 
-// braket_value
-//     : INT
-//     | FLOAT
-//     | COMPLEX
-//     ;
+braket_vector
+    : LPAREN (braket_value (COMMA braket_value)*) RPAREN
+    ;
+braket_value
+    : INT
+    | FLOAT
+    | COMPLEX
+    ;
 
 INT
-    : DIGIT*
+    : DIGIT+
     ;
 FLOAT
     : INT? '.' DIGIT+
@@ -94,35 +89,30 @@ CHAR
 STRING
     : '"'SYMBOL*'"'
     ;
-// array
-//     : '[' element_list ']'
-//     ;
-// element_list
-//     : (value (', ' value)*)?
-//     ;
+array
+    : LSQUARE (expression (COMMA expression)*)? RSQUARE
+    ;
 // struct
-//     : '{' struct_value '}'
+//     : LCURLY struct_value RCURLY
 //     ;
 // struct_value
-//     : var_decl', ' struct_value
-//     | func_decl', ' struct_value
+//     : var_decl COMMA struct_value
+//     | func_decl COMMA struct_value
 //     | var_decl
 //     | func_decl
 //     | /* empty */ ;
-// COMPLEX
-//     : (INT | FLOAT) ADD (INT | FLOAT) 'i'
-//     | (INT | FLOAT) SUB (INT | FLOAT) 'i'
-//     | (INT | FLOAT) 'i'
-//     ;
-// op
-//     : '[' op_list ']'
-//     ;
-// op_list
-//     : '['op_value']' (',' '['op_value']')*
-//     ;
-// op_value
-//     : braket_value (', ' braket_value)*
-//     ;
+
+COMPLEX
+    : (INT|FLOAT)? (ADD|SUB) (INT | FLOAT) IMAG_UNIT
+    | (INT | FLOAT) IMAG_UNIT
+    ;
+
+fragment IMAG_UNIT
+    : 'i'
+    ;
+op
+    : LPAREN braket_vector (COMMA braket_vector)* RPAREN
+    ;
 
 // /* PRODUCTIONS FOR STATEMENTS */
 // statement_list
@@ -186,8 +176,9 @@ arg
 expression
     : string_expression
     | num_expression
-    // | dirac_expression
-    // | bool_expression
+    | array
+    | dirac_expression
+    | bool_expression
     | func_call_statement
     ;
 
@@ -211,54 +202,66 @@ num_term
     ;
 num_factor
     : LPAREN num_expression RPAREN
+    | COMPLEX        // Add this
     | ADD num_factor        // Handles positive prefix (e.g., +5)
     | SUB num_factor        // Handles negative prefix (e.g., -5)
     | INT | FLOAT | CHAR 
-    // | COMPLEX
-    // | dirac_expression
-    | 
+    | dirac_expression
     | IDENTIFIER
     ;
 
-// dirac_expression
-//     : dirac_expression '*' dirac_expression
-//     | dirac_expression '@' dirac_expression
-//     | KET_IDENTIFIER
-//     | BRA_IDENTIFIER
-//     | IDENTIFIER
-//     | braket_vector
-//     | op
-//     ;
-
-// bool_expression
-//     : num_expression num_comp num_expression
-//     | string_expression eq_comp string_expression
-//     | bool_logical eq_comp bool_logical
-//     | bool_logical
-//     ;
-// num_comp
-//     : eq_comp 
-//     | '>' | '<' | '>=' | '<='
-//     ;
-// eq_comp
-//     : '==' | '!='
-//     ;
-// bool_logical
-//     : bool_term '||' bool_logical
-//     | bool_term
-//     ;
-// bool_term
-//     : bool_factor '&&' bool_term
-//     | bool_factor
-//     ;
-// bool_factor
-//     : '(' bool_logical ')'
-//     | '!' bool_logical
-//     | 'true' | 'false'
-//     | IDENTIFIER
-//     ;
-
-// /* PRODUCTIONS FOR FUNCTION DECLARATION */
+dirac_expression
+    : dirac_expression MUL dirac_expression
+    | dirac_expression TENSOR dirac_expression
+    | KET_IDENTIFIER
+    | BRA_IDENTIFIER
+    | IDENTIFIER
+    | braket_vector
+    | op
+    ;
+    
+num_comp
+    : eq_comp 
+    | GT | LT | GTE | LTE
+    ;
+eq_comp
+    : EQ | NEQ
+    ;
+bool_expression
+    : bool_or
+    ;
+bool_or
+    : bool_or LOGICAL_OR bool_or
+    | bool_and
+    ;
+bool_and
+    : bool_and LOGICAL_AND bool_and
+    | bool_cmp
+    ;
+bool_cmp 
+    : num_expression num_comp num_expression
+    | string_expression eq_comp string_expression
+    | bool_unary eq_comp bool_unary
+    | bool_unary
+    ;
+bool_unary
+    : NEG bool_unary
+    | bool_primary
+    ;
+bool_primary
+    : LPAREN bool_expression RPAREN
+    | BOOL_TRUE
+    | BOOL_FALSE
+    | INT        // 0 = false, non-zero = true
+    | IDENTIFIER
+    ;
+BOOL_TRUE
+    : 'true'
+    ;
+BOOL_FALSE
+    : 'false'
+    ;
+/* PRODUCTIONS FOR FUNCTION DECLARATION */
 // func_decl_list 
 //     : func_decl NEWLINE func_decl_list
 //     | func_decl
@@ -294,10 +297,24 @@ DIV: '/' ;
 EXP: '**' ;
 MOD: '%' ;
 ASSIGN: '=' ;
+GT: '>' ;
+LT: '<' ;
+GTE: '>=' ;
+LTE: '<=' ;
+EQ: '==' ;
+NEQ: '!=' ;
+LOGICAL_OR: '||' ;
+LOGICAL_AND: '&&' ;
+NEG: '!' ;
 
 // OTHER SYMBOLS
 LPAREN: '(' ;
 RPAREN: ')' ;
+LSQUARE: '[' ;
+RSQUARE: ']' ;
+LCURLY: '{' ;
+RCURLY: '}' ;
+TENSOR: '@';
 
 // /* Helper fragments / Other Productions*/
 fragment LET_DIG_USCORE : (LETTER | DIGIT | '_') ;
@@ -307,3 +324,7 @@ fragment DIGIT_NONZERO : [1-9] ;
 // //fragment SIGN : [+-] ;
 fragment SYMBOL: . ;
 
+IDENTIFIER
+    : LETTER LET_DIG_USCORE*
+    | '_' LET_DIG_USCORE*
+    ;
