@@ -2,9 +2,8 @@ grammar BraKet;
 program
     : import_list?
       const_decl_list?
-    //   func_decl_list?
-    //   main_function?
-    //   EOF
+      func_decl_list?
+      main_function?
     ;
 
 /* Newlines & whitespace */
@@ -62,7 +61,7 @@ value
     | CHAR
     | STRING
     | array
-    // | struct
+    | struct
     | COMPLEX
     | op 
     ;
@@ -92,19 +91,19 @@ STRING
 array
     : LSQUARE (expression (COMMA expression)*)? RSQUARE
     ;
-// struct
-//     : LCURLY struct_value RCURLY
-//     ;
-// struct_value
-//     : var_decl COMMA struct_value
-//     | func_decl COMMA struct_value
-//     | var_decl
-//     | func_decl
-//     | /* empty */ ;
+struct
+    : LCURLY struct_value? RCURLY
+    ;
+struct_value
+    : var_decl COMMA struct_value
+    | func_decl COMMA struct_value
+    | var_decl
+    | func_decl
+    ;
 
 COMPLEX
-    : (INT|FLOAT)? (ADD|SUB) (INT | FLOAT) IMAG_UNIT
-    | (INT | FLOAT) IMAG_UNIT
+    : (ADD|SUB) (INT | FLOAT) (ADD|SUB) (INT|FLOAT) IMAG_UNIT
+    | (INT|FLOAT) IMAG_UNIT
     ;
 
 fragment IMAG_UNIT
@@ -114,25 +113,24 @@ op
     : LPAREN braket_vector (COMMA braket_vector)* RPAREN
     ;
 
-// /* PRODUCTIONS FOR STATEMENTS */
-// statement_list
-//     : statement NEWLINE statement_list
-//     | statement
-//     | /* empty */
-//     ;
-// statement
-//     : assign_statement
-//     | func_call_statement
-//     | return_statement
-//     | if_statement
-//     | for_statement
-//     | while_statement
-//     | do_statement
-//     | var_decl
-//     ;
+/* PRODUCTIONS FOR STATEMENTS */
+statement_list
+    : statement+
+    ;
+statement
+    : assign_statement
+    | func_call_statement
+    | return_statement
+    | if_statement
+    | for_statement
+    | while_statement
+    | do_statement
+    ;
 
 assign_statement
     : var_decl
+    | array_access ASSIGN expression
+    | struct_access ASSIGN expression
     ;
 
 func_call_statement
@@ -145,38 +143,58 @@ arg
     : assign_statement
     | IDENTIFIER
     | value
+    | array_access
+    | struct_access
     ;
-// return_statement
-//     : 'return' expression
-//     ;
+return_statement
+    : 'return' expression
+    ;
 
-// if_statement 
-//     : 'if' '(' bool_expression ')' '{' statement_list '}' elif else
-//     ;
-// elif
-//     : 'elif' '(' bool_expression ')' '{' statement_list '}'
-//     | /* empty */
-//     ;
-// else
-//     : 'else' '{' statement_list '}'
-//     | /* empty */
-//     ;
-
-// for_statement
-//     : 'for' '(' assign_statement ';' bool_expression ';' assign_statement ')' '{' statement_list '}'
-//     ;
-// while_statement
-//     : 'while' '(' bool_expression ')' '{' statement_list '}'
-//     ;
-// do_statement
-//     : 'do' '{' statement_list '}' 'while' '(' bool_expression ')'
-//     ;
+if_statement 
+    : IF LPAREN bool_expression RPAREN LCURLY statement_list RCURLY elif* else?
+    ;
+elif
+    : ELIF LPAREN bool_expression RPAREN LCURLY statement_list RCURLY
+    ;
+else
+    : ELSE LCURLY statement_list RCURLY
+    ;
+IF:
+    'if'
+    ;
+ELIF:
+    'elif'
+    ;
+ELSE:
+    'else'
+    ;
+for_statement
+    : FOR LPAREN assign_statement SEMICOLON bool_expression SEMICOLON assign_statement RPAREN LCURLY statement_list RCURLY
+    ;
+while_statement
+    : WHILE LPAREN bool_expression RPAREN LCURLY statement_list RCURLY
+    ;
+do_statement
+    : DO LCURLY statement_list RCURLY WHILE LPAREN bool_expression RPAREN
+    ;
+FOR
+    : 'for'
+    ;
+WHILE
+    : 'while'
+    ;
+DO
+    : 'do'
+    ;
 
 /* PRODUCTIONS FOR EXPRESSIONS */
 expression
     : string_expression
     | num_expression
     | array
+    | struct
+    | array_access
+    | struct_access
     | dirac_expression
     | bool_expression
     | func_call_statement
@@ -208,6 +226,14 @@ num_factor
     | INT | FLOAT | CHAR 
     | dirac_expression
     | IDENTIFIER
+    ;
+
+array_access
+    : IDENTIFIER (LSQUARE num_expression RSQUARE)+
+    ;
+
+struct_access
+    : IDENTIFIER (DOT IDENTIFIER)+
     ;
 
 dirac_expression
@@ -261,35 +287,34 @@ BOOL_TRUE
 BOOL_FALSE
     : 'false'
     ;
+
 /* PRODUCTIONS FOR FUNCTION DECLARATION */
-// func_decl_list 
-//     : func_decl NEWLINE func_decl_list
-//     | func_decl
-//     ;
-// func_decl
-//     : 'op' IDENTIFIER '(' param_list ')' '{' statement_list '}'
-//     ;
-// param_list
-//     : identifier_list',' default_list
-//     | identifier_list
-//     | default_list
-//     ;
-// identifier_list
-//     : IDENTIFIER',' identifier_list
-//     | IDENTIFIER
-//     | /* empty */
-//     ;
-// default_list
-//     : assign_statement',' default_list
-//     | assign_statement
-//     | /* empty */
-//     ;
-
-// main_function
-//     : 'main' '(' ')' '{' statement_list '}'
-//     ;
-
-// /* BASIC OPERATIONS */
+func_decl_list 
+    : func_decl+
+    ;
+func_decl
+    : FUNC IDENTIFIER LPAREN param_list? RPAREN LCURLY statement_list? RCURLY
+    ;
+param_list
+    : identifier_list (COMMA default_list)?
+    | default_list
+    ;
+identifier_list
+    : IDENTIFIER (COMMA IDENTIFIER)*
+    ;
+default_list
+    : assign_statement (COMMA assign_statement)*
+    ;
+main_function
+    : MAIN LPAREN param_list? RPAREN LCURLY statement_list? RCURLY
+    ;
+MAIN
+    : 'main'
+    ;
+FUNC
+    : 'func'
+    ;
+/* BASIC OPERATIONS */
 ADD: '+' ;
 SUB: '-' ;
 MUL: '*' ;
@@ -315,6 +340,8 @@ RSQUARE: ']' ;
 LCURLY: '{' ;
 RCURLY: '}' ;
 TENSOR: '@';
+SEMICOLON: ';' ;
+DOT: '.' ;
 
 // /* Helper fragments / Other Productions*/
 fragment LET_DIG_USCORE : (LETTER | DIGIT | '_') ;

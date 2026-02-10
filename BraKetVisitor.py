@@ -69,8 +69,28 @@ class BraKetVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BraKetParser#struct.
+    def visitStruct(self, ctx:BraKetParser.StructContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#struct_value.
+    def visitStruct_value(self, ctx:BraKetParser.Struct_valueContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BraKetParser#op.
     def visitOp(self, ctx:BraKetParser.OpContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#statement_list.
+    def visitStatement_list(self, ctx:BraKetParser.Statement_listContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#statement.
+    def visitStatement(self, ctx:BraKetParser.StatementContext):
         return self.visitChildren(ctx)
 
 
@@ -91,6 +111,41 @@ class BraKetVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BraKetParser#arg.
     def visitArg(self, ctx:BraKetParser.ArgContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#return_statement.
+    def visitReturn_statement(self, ctx:BraKetParser.Return_statementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#if_statement.
+    def visitIf_statement(self, ctx:BraKetParser.If_statementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#elif.
+    def visitElif(self, ctx:BraKetParser.ElifContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#else.
+    def visitElse(self, ctx:BraKetParser.ElseContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#for_statement.
+    def visitFor_statement(self, ctx:BraKetParser.For_statementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#while_statement.
+    def visitWhile_statement(self, ctx:BraKetParser.While_statementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#do_statement.
+    def visitDo_statement(self, ctx:BraKetParser.Do_statementContext):
         return self.visitChildren(ctx)
 
 
@@ -116,6 +171,16 @@ class BraKetVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BraKetParser#num_factor.
     def visitNum_factor(self, ctx:BraKetParser.Num_factorContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#array_access.
+    def visitArray_access(self, ctx:BraKetParser.Array_accessContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#struct_access.
+    def visitStruct_access(self, ctx:BraKetParser.Struct_accessContext):
         return self.visitChildren(ctx)
 
 
@@ -161,6 +226,36 @@ class BraKetVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BraKetParser#bool_primary.
     def visitBool_primary(self, ctx:BraKetParser.Bool_primaryContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#func_decl_list.
+    def visitFunc_decl_list(self, ctx:BraKetParser.Func_decl_listContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#func_decl.
+    def visitFunc_decl(self, ctx:BraKetParser.Func_declContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#param_list.
+    def visitParam_list(self, ctx:BraKetParser.Param_listContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#identifier_list.
+    def visitIdentifier_list(self, ctx:BraKetParser.Identifier_listContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#default_list.
+    def visitDefault_list(self, ctx:BraKetParser.Default_listContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#main_function.
+    def visitMain_function(self, ctx:BraKetParser.Main_functionContext):
         return self.visitChildren(ctx)
 
 
