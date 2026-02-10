@@ -147,7 +147,11 @@ arg
     | struct_access
     ;
 return_statement
-    : 'return' expression
+    : RETURN expression
+    ;
+
+RETURN
+    : 'return'
     ;
 
 if_statement 
@@ -189,7 +193,7 @@ DO
 
 /* PRODUCTIONS FOR EXPRESSIONS */
 expression
-    : string_expression
+    : IDENTIFIER
     | num_expression
     | array
     | struct
@@ -198,6 +202,7 @@ expression
     | dirac_expression
     | bool_expression
     | func_call_statement
+    | string_expression
     ;
 
 string_expression
