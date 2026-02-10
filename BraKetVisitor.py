@@ -49,6 +49,31 @@ class BraKetVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BraKetParser#value.
+    def visitValue(self, ctx:BraKetParser.ValueContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#assign_statement.
+    def visitAssign_statement(self, ctx:BraKetParser.Assign_statementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#func_call_statement.
+    def visitFunc_call_statement(self, ctx:BraKetParser.Func_call_statementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#arg_list.
+    def visitArg_list(self, ctx:BraKetParser.Arg_listContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#arg.
+    def visitArg(self, ctx:BraKetParser.ArgContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BraKetParser#expression.
     def visitExpression(self, ctx:BraKetParser.ExpressionContext):
         return self.visitChildren(ctx)
@@ -56,6 +81,21 @@ class BraKetVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BraKetParser#string_expression.
     def visitString_expression(self, ctx:BraKetParser.String_expressionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#num_expression.
+    def visitNum_expression(self, ctx:BraKetParser.Num_expressionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#num_term.
+    def visitNum_term(self, ctx:BraKetParser.Num_termContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#num_factor.
+    def visitNum_factor(self, ctx:BraKetParser.Num_factorContext):
         return self.visitChildren(ctx)
 
 

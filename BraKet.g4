@@ -58,16 +58,16 @@ IDENTIFIER
 // BRA_IDENTIFIER
 //     : '<' IDENTIFIER '|'
 //     ;
-// value
-//     : INT
-//     | FLOAT
-//     | CHAR
-//     | STRING
-//     | array
-//     | struct
-//     | COMPLEX
-//     | op 
-//     ;
+value
+    : INT
+    | FLOAT
+    | CHAR
+    | STRING
+    // | array
+    // | struct
+    // | COMPLEX
+    // | op 
+    ;
 
 // braket_vector
 //     : '(' braket_elements ')'
@@ -81,18 +81,16 @@ IDENTIFIER
 //     | COMPLEX
 //     ;
 
-// INT
-//     : ADD? DIGIT_NONZERO DIGIT*
-//     | SUB? DIGIT_NONZERO DIGIT*
-//     | '0'
-//     ;
-// FLOAT
-//     : INT? '.' DIGIT+
-//     | INT
-//     ;
-// // CHAR
-// //     : '\''SYMBOL'\''
-// //     ;
+INT
+    : DIGIT*
+    ;
+FLOAT
+    : INT? '.' DIGIT+
+    | INT
+    ;
+CHAR
+    : '\''SYMBOL'\''
+    ;
 STRING
     : '"'SYMBOL*'"'
     ;
@@ -143,23 +141,21 @@ STRING
 //     | var_decl
 //     ;
 
-// assign_statement
-//     : var_decl
-//     ;
+assign_statement
+    : var_decl
+    ;
 
-// func_call_statement
-//     : IDENTIFIER '(' arg_list ')'
-//     ;
-// arg_list
-//     : arg (',' arg_list)*
-//     | /* empty */
-//     ;
-// arg
-//     : assign_statement
-//     | IDENTIFIER
-//     | value
-//     | /* empty */
-//     ;
+func_call_statement
+    : IDENTIFIER LPAREN arg_list? RPAREN
+    ;
+arg_list
+    : arg (COMMA arg_list)*
+    ;
+arg
+    : assign_statement
+    | IDENTIFIER
+    | value
+    ;
 // return_statement
 //     : 'return' expression
 //     ;
@@ -189,10 +185,10 @@ STRING
 /* PRODUCTIONS FOR EXPRESSIONS */
 expression
     : string_expression
-    // | num_expression
+    | num_expression
     // | dirac_expression
     // | bool_expression
-    // | func_call_statement
+    | func_call_statement
     ;
 
 string_expression
@@ -201,24 +197,28 @@ string_expression
     | IDENTIFIER
     ;
 
-// num_expression
-//     : num_term ADD num_expression
-//     | num_term SUB num_expression
-//     | num_term
-//     ;
-// num_term
-//     : num_factor MUL num_term
-//     | num_factor DIV num_term
-//     | num_factor MOD num_term
-//     | num_factor EXP num_term
-//     | num_factor
-//     ;
-// num_factor
-//     : '('num_expression')'
-//     | INT | FLOAT | CHAR | COMPLEX
-//     | dirac_expression
-//     | IDENTIFIER
-//     ;
+num_expression
+    : num_term ADD num_expression
+    | num_term SUB num_expression
+    | num_term
+    ;
+num_term
+    : num_factor MUL num_term
+    | num_factor DIV num_term
+    | num_factor MOD num_term
+    | num_factor EXP num_term
+    | num_factor
+    ;
+num_factor
+    : LPAREN num_expression RPAREN
+    | ADD num_factor        // Handles positive prefix (e.g., +5)
+    | SUB num_factor        // Handles negative prefix (e.g., -5)
+    | INT | FLOAT | CHAR 
+    // | COMPLEX
+    // | dirac_expression
+    | 
+    | IDENTIFIER
+    ;
 
 // dirac_expression
 //     : dirac_expression '*' dirac_expression
@@ -288,12 +288,16 @@ string_expression
 
 // /* BASIC OPERATIONS */
 ADD: '+' ;
-// SUB: '-' ;
-// MUL: '*' ;
-// DIV: '/' ;
-// EXP: '**' ;
-// MOD: '%' ;
+SUB: '-' ;
+MUL: '*' ;
+DIV: '/' ;
+EXP: '**' ;
+MOD: '%' ;
 ASSIGN: '=' ;
+
+// OTHER SYMBOLS
+LPAREN: '(' ;
+RPAREN: ')' ;
 
 // /* Helper fragments / Other Productions*/
 fragment LET_DIG_USCORE : (LETTER | DIGIT | '_') ;
@@ -302,3 +306,4 @@ fragment DIGIT : [0-9] ;
 fragment DIGIT_NONZERO : [1-9] ;
 // //fragment SIGN : [+-] ;
 fragment SYMBOL: . ;
+
