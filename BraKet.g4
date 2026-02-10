@@ -63,7 +63,9 @@ value
     | array
     | struct
     | COMPLEX
-    | op 
+    | op
+    | BOOL_FALSE
+    | BOOL_TRUE
     ;
 
 braket_vector
@@ -83,7 +85,7 @@ FLOAT
     | INT
     ;
 CHAR
-    : '\''SYMBOL'\''
+    : '\''SYMBOL?'\''
     ;
 STRING
     : '"'SYMBOL*'"'
