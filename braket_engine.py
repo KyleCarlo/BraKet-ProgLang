@@ -184,7 +184,7 @@ class BKType:
     STRUCT   = "struct"
     KET      = "ket"
     BRA      = "bra"
-    OPERATOR = "operator"
+    OPERATOR = "op"
     FUNCTION = "function"
     UNKNOWN  = "unknown"
 

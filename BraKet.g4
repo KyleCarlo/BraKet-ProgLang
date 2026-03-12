@@ -72,7 +72,11 @@ braket_vector
     : LPAREN (braket_value (COMMA braket_value)*) RPAREN
     ;
 braket_value
-    : INT
+    : ADD INT
+    | SUB INT
+    | INT
+    | ADD FLOAT
+    | SUB FLOAT
     | FLOAT
     | COMPLEX
     ;
@@ -104,8 +108,8 @@ struct_value
     ;
 
 COMPLEX
-    : (ADD|SUB) (INT | FLOAT) (ADD|SUB) (INT|FLOAT) IMAG_UNIT
-    | (INT|FLOAT) IMAG_UNIT
+    : (ADD|SUB)? (INT | FLOAT) (ADD|SUB) (INT|FLOAT) IMAG_UNIT
+    | (ADD|SUB)? (INT|FLOAT) IMAG_UNIT
     ;
 
 fragment IMAG_UNIT
