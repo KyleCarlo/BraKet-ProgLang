@@ -819,21 +819,21 @@ def analyze(code: str) -> BraKetResult:
     """
     # Single ANTLR pass shared by scanner + parser
     stream = InputStream(code)
-    lexer  = BraKetLexer(stream)
+    lexer  = BraKetLexer(stream) # LEXER
     lexer.removeErrorListeners()
     lex_err = _CollectingErrorListener()
     lexer.addErrorListener(lex_err)
 
     token_stream = CommonTokenStream(lexer)
 
-    parser = BraKetParser(token_stream)
+    parser = BraKetParser(token_stream) # PARSER
     parser.removeErrorListeners()
     parse_err = _CollectingErrorListener()
     parser.addErrorListener(parse_err)
 
     tree = parser.program()
     token_stream.fill()
-
+    
     # Collect tokens
     tokens: list[TokenInfo] = []
     for i, tok in enumerate(token_stream.tokens):
@@ -847,7 +847,7 @@ def analyze(code: str) -> BraKetResult:
     parse_tree_str = tree.toStringTree(recog=parser)
 
     # Semantic pass
-    visitor = _SemanticVisitor()
+    visitor = _SemanticVisitor() # SEMANTIC ANALYZER
     visitor.visit(tree)
 
     sem = SemanticResult(

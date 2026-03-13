@@ -892,7 +892,20 @@ class Interpreter:
                 pc += 1; continue
 
             elif op == ASSIGN:
-                env[ins.a] = self._resolve(ins.b, env)
+                val = self._resolve(ins.b, env)
+                # If a raw list came back (inline vector literal), wrap it now
+                # using the variable name to determine ket vs bra kind.
+                if isinstance(val, list):
+                    name = ins.a if isinstance(ins.a, str) else ""
+                    if name.startswith("<") and name.endswith("|"):
+                        val = BKVector(val, "bra")
+                    elif name.startswith("|") and name.endswith(">"):
+                        val = BKVector(val, "ket")
+                    elif val and isinstance(val[0], list):
+                        val = BKOperator(val)
+                    else:
+                        val = BKVector(val, "ket")   # fallback
+                env[ins.a] = val
 
             elif op == COPY:
                 env[ins.a] = self._resolve(ins.b, env)
@@ -1005,24 +1018,19 @@ class Interpreter:
                 return v
             return v
         if isinstance(v, list):
-            # Inline list literal — either a vector or a matrix
+            # Inline list literal — either a vector or a matrix.
+            # We return raw lists here; the ASSIGN handler wraps them with the
+            # correct kind ("ket" or "bra") once it knows the variable name.
             if v and isinstance(v[0], list):
                 return BKOperator(v)
-            return BKVector(v)
+            # Return as-is — ASSIGN will wrap in BKVector with correct kind
+            return v
         if isinstance(v, dict):
             return BKStruct(v)
         return v
 
     def _binop_str(self, ins: ICInstruction) -> str:
-        """The BINOP instruction stores the operator in field `b` (position 2)."""
-        # Layout: BINOP dest left op right
-        # In ICInstruction: a=dest, b=left, c=right — BUT we stored op in b during emit
-        # We stored as: emit(BINOP, dest, left, op); then patched c=right
-        # So the operator is at ins.b... except left is also at b.
-        # Let's recover from the raw instruction:
-        # ins.a = dest, ins.b = left, ins.c = right  → op was placed between them
-        # We need to store op differently.  See _fix below.
-        return "+"   # fallback — see _fix_binop_storage below
+        return "+"   # fallback — overridden by _patched_run_ic via _op2
 
     # ── binary operation evaluation ───────────────────────────
 
@@ -1137,26 +1145,21 @@ class Interpreter:
             return self._mul(a, b)
         if isinstance(b, (int, float, complex)):
             return self._mul(b, a)
-
         # ket ⊗ ket → larger ket
         if isinstance(a, BKVector) and isinstance(b, BKVector) and a.kind == "ket" and b.kind == "ket":
             result = [x*y for x in a.data for y in b.data]
             return BKVector(result, "ket")
-
         # bra ⊗ bra → larger bra
         if isinstance(a, BKVector) and isinstance(b, BKVector) and a.kind == "bra" and b.kind == "bra":
             result = [x*y for x in a.data for y in b.data]
             return BKVector(result, "bra")
-
         # ket ⊗ bra → outer product (operator)
         if isinstance(a, BKVector) and a.kind == "ket" and isinstance(b, BKVector) and b.kind == "bra":
             rows = [[x*y for y in b.data] for x in a.data]
             return BKOperator(rows)
-
         # bra ⊗ ket → full contraction (scalar)
         if isinstance(a, BKVector) and a.kind == "bra" and isinstance(b, BKVector) and b.kind == "ket":
             return sum(x*y for x,y in zip(a.data, b.data))
-
         # operator ⊗ operator (Kronecker product)
         if isinstance(a, BKOperator) and isinstance(b, BKOperator):
             rows = []
@@ -1167,11 +1170,9 @@ class Interpreter:
                         block_rows[r].extend([ae*be for be in br])
                 rows.extend(block_rows)
             return BKOperator(rows)
-
         # operator ⊗ ket/bra
         if isinstance(a, BKOperator) and isinstance(b, BKVector):
             return self._mul(a, b)
-
         return self._mul(a, b)
 
     # ── truthiness ────────────────────────────────────────────
@@ -1231,7 +1232,6 @@ class Interpreter:
             raise BKRuntimeError("len() requires an array or string", line)
         if name == "abs":
             v = args[0] if args else 0
-            if isinstance(v, complex): return abs(v)
             return abs(v)
         if name == "sqrt":
             v = args[0] if args else 0
@@ -1255,7 +1255,6 @@ class Interpreter:
             if isinstance(v, complex): return abs(v)
             return abs(v)
         if name == "dag":
-            # Hermitian conjugate (dagger) of a vector or operator
             v = args[0] if args else None
             if isinstance(v, BKVector):
                 new_kind = "bra" if v.kind == "ket" else "ket"
@@ -1286,12 +1285,9 @@ class Interpreter:
 #  BINOP operator storage fix
 #  The ICGenerator stores BINOP as: emit(BINOP, dest, left, op)
 #  then patches the last instruction's .c = right.
-#  So the layout is:  a=dest  b=left  c=right  — and op is stored separately.
-#  We need to track op.  We fix this by storing op in a 4th slot.
+#  We store the actual operator string in ins._op2 so the interpreter
+#  can read it reliably.
 # ══════════════════════════════════════════════════════════════════════════════
-
-# Monkey-patch ICInstruction to add an `op2` field for BINOP operator string,
-# and override _run_ic to use it.
 
 _orig_emit = ICGenerator._emit
 
@@ -1302,17 +1298,6 @@ def _patched_emit(self, op, a=None, b=None, c=None, line=0, _op2=None):
 
 ICGenerator._emit = _patched_emit
 
-
-def _patched_emit_binop(gen, dest, left, op_str, line=0):
-    """Emit a BINOP and return so caller can patch .c = right."""
-    ins = ICInstruction(BINOP, dest, left, None, line)
-    ins._op2 = op_str
-    gen._current_ic.append(ins)
-
-# Override _gen_num_expr, _gen_num_term, etc. to use _op2 properly
-# We do this by overriding _apply_binop dispatch in Interpreter to read ins._op2
-
-_orig_run_ic = Interpreter._run_ic
 
 def _patched_run_ic(self, ic, env):
     """Extended run loop that reads _op2 for BINOP instructions."""
@@ -1338,12 +1323,17 @@ def _patched_run_ic(self, ic, env):
 
         elif op == ASSIGN:
             val = self._resolve(ins.b, env)
-            # If val is a list, wrap it
+            # ── FIX: use the variable name (ins.a) to decide ket vs bra ──
             if isinstance(val, list):
-                if val and isinstance(val[0], list):
-                    val = BKOperator(val)
+                name = ins.a if isinstance(ins.a, str) else ""
+                if name.startswith("<") and name.endswith("|"):
+                    val = BKVector(val, "bra")          # <name| → bra
+                elif name.startswith("|") and name.endswith(">"):
+                    val = BKVector(val, "ket")           # |name> → ket
+                elif val and isinstance(val[0], list):
+                    val = BKOperator(val)                # nested list → matrix
                 else:
-                    val = BKVector(val)
+                    val = BKVector(val, "ket")           # bare list fallback → ket
             env[ins.a] = val
 
         elif op == COPY:
@@ -1445,7 +1435,7 @@ def _patched_run_ic(self, ic, env):
 Interpreter._run_ic = _patched_run_ic
 
 
-# ── Also patch _gen_num_expr to store op in _op2 ─────────────
+# ── Patch generators to store op in _op2 ─────────────────────
 
 def _patched_gen_num_expr(self, ctx):
     if ctx is None: return 0

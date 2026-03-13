@@ -33,7 +33,6 @@ if not _ENGINE_AVAILABLE:
     import re as _re
 
     _STUB_SPEC = [
-        ("COMMENT",     r"//[^\n]*"),
         ("FLOAT",       r"\b\d+\.\d*\b"),
         ("INT",         r"\b\d+\b"),
         ("STRING",      r'"[^"\n]*"'),
@@ -41,11 +40,11 @@ if not _ENGINE_AVAILABLE:
         ("KEYWORD",     r"\b(if|elif|else|while|for|do|func|main|const|"
                         r"return|from|import|true|false)\b"),
         ("IDENTIFIER",  r"\b[a-zA-Z_]\w*\b"),
-        ("KET",         r"\|[a-zA-Z_]\w*>"),
-        ("BRA",         r"<[a-zA-Z_]\w*\|"),
-        ("OP",          r"\*\*|==|!=|<=|>=|&&|\|\||[+\-*/<>=!@%]"),
-        ("PUNCT",       r"[(){}\[\];,.]"),
-        ("WS",          r"\s+"),
+        ("KET_IDENTIFIER",         r"\|[a-zA-Z_]\w*>"),
+        ("BRA_IDENTIFIER",         r"<[a-zA-Z_]\w*\|"),
+        ("OPERATION",          r"\*\*|==|!=|<=|>=|&&|\|\||[+\-*/<>=!@%]"),
+        ("OTHERS",       r"[(){}\[\];,.]"),
+        ("WS",          r"[ \t\r\n]+"),
         ("UNKNOWN",     r"."),
     ]
     _STUB_RE = _re.compile("|".join(f"(?P<{n}>{p})" for n, p in _STUB_SPEC))
@@ -157,6 +156,7 @@ BKTYPE_COLORS = {
 }
 
 # ── Sample BraKet code ────────────────────────────────────────
+# TODO: Edit this also
 SAMPLE = """\
 const |ket0> = (1, 0)
 const |ket1> = (0, 1)
@@ -785,7 +785,7 @@ class IDE:
         self.root.update_idletasks()
 
         try:
-            result = analyze(source)
+            result = analyze(source) # CALLS ENGINE
         except Exception as exc:
             self._write_output(f"Internal engine error:\n{exc}\n", "error")
             self.status_var.set("  Engine error")
