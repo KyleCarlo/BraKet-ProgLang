@@ -80,6 +80,26 @@ braket_value
     | FLOAT
     | COMPLEX
     ;
+braket_expression
+    : braket_term ADD braket_expression
+    | braket_term SUB braket_expression
+    | braket_term
+    ;
+braket_term
+    : braket_factor MUL braket_term
+    | braket_factor DIV braket_term
+    | braket_factor MOD braket_term
+    | braket_factor EXP braket_term
+    | braket_factor
+    ;
+braket_factor
+    : LPAREN braket_expression RPAREN
+    | COMPLEX
+    | ADD braket_factor        // Handles positive prefix (e.g., +5)
+    | SUB braket_factor        // Handles negative prefix (e.g., -5)
+    | INT | FLOAT 
+    | IDENTIFIER
+    ;
 
 INT
     : DIGIT+

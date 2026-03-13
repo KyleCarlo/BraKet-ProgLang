@@ -64,6 +64,21 @@ class BraKetVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BraKetParser#braket_expression.
+    def visitBraket_expression(self, ctx:BraKetParser.Braket_expressionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#braket_term.
+    def visitBraket_term(self, ctx:BraKetParser.Braket_termContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BraKetParser#braket_factor.
+    def visitBraket_factor(self, ctx:BraKetParser.Braket_factorContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BraKetParser#array.
     def visitArray(self, ctx:BraKetParser.ArrayContext):
         return self.visitChildren(ctx)

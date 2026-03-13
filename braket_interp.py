@@ -53,6 +53,26 @@ import cmath
 import operator
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
+from unittest.mock import _Sentinel
+
+# Optional Tkinter import for input() dialog — only used at runtime if called
+try:
+    import tkinter as _tk
+    import tkinter.simpledialog as _tk_simpledialog
+    _TK_AVAILABLE = True
+except ImportError:
+    _TK_AVAILABLE = False
+
+# Optional matplotlib import for dirac() visual renderer
+try:
+    import matplotlib
+    matplotlib.use("Agg")          # non-interactive backend — no display needed
+    import matplotlib.pyplot as _plt
+    import io as _io
+    import base64 as _base64
+    _MPL_AVAILABLE = True
+except ImportError:
+    _MPL_AVAILABLE = False
 
 # ANTLR-generated files must be on sys.path
 from BraKetParser import BraKetParser
@@ -785,6 +805,230 @@ def _fmt(v: Any) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  Dirac visual renderer  (used by the dirac() built-in)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Layout constants — tweak here to adjust the look of all rendered output
+_DR_FONTSIZE  = 13      # pt — element label font size
+_DR_DPI       = 130     # render resolution
+_DR_COL_PAD   = 0.22    # inches of padding on each side of a cell
+_DR_ROW_H     = 0.42    # inches per matrix row
+_DR_OUTER_PAD = 0.18    # inches of margin outside the brackets
+_DR_BRK_W     = 0.12    # inches — bracket arm (horizontal tick) length
+_DR_BRK_LW    = 2.0     # pt — bracket line weight
+
+
+def _dr_fmt(z: complex) -> str:
+    """Format a single complex number for display inside a matrix cell."""
+    if isinstance(z, complex):
+        if z.imag == 0:
+            v = z.real
+            return str(int(v)) if v == int(v) else f"{v:.4g}"
+        if z.real == 0:
+            v = z.imag
+            s = str(int(v)) if v == int(v) else f"{v:.4g}"
+            return s + "i"
+        r = int(z.real) if z.real == int(z.real) else f"{z.real:.3g}"
+        i = int(z.imag) if z.imag == int(z.imag) else f"{z.imag:.3g}"
+        sign = "+" if z.imag >= 0 else ""
+        return f"{r}{sign}{i}i"
+    if isinstance(z, float):
+        return str(int(z)) if z == int(z) else f"{z:.4g}"
+    return str(z)
+
+
+def _dr_label_width(text: str) -> float:
+    """Return the rendered width of `text` in inches at _DR_FONTSIZE/_DR_DPI."""
+    fig, ax = _plt.subplots(figsize=(8, 1))
+    ax.axis("off")
+    t = ax.text(0, 0, text, fontsize=_DR_FONTSIZE, fontfamily="monospace")
+    fig.canvas.draw()
+    bb = t.get_window_extent(fig.canvas.get_renderer())
+    w = bb.width / _DR_DPI
+    _plt.close(fig)
+    return w
+
+
+def _dr_brackets(ax, lx: float, rx: float, by: float, ty: float):
+    """Draw [ ] brackets on axes `ax` between the given coordinate bounds."""
+    for x, sign in [(lx, +1), (rx, -1)]:
+        ax.plot([x, x],                    [by, ty], "k-", lw=_DR_BRK_LW)
+        ax.plot([x, x + sign * _DR_BRK_W], [ty, ty], "k-", lw=_DR_BRK_LW)
+        ax.plot([x, x + sign * _DR_BRK_W], [by, by], "k-", lw=_DR_BRK_LW)
+
+
+def _dr_to_png(fig) -> bytes:
+    buf = _io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight",
+                dpi=_DR_DPI, facecolor="white")
+    _plt.close(fig)
+    buf.seek(0)
+    return buf.read()
+
+
+def _render_ket(data: list) -> bytes:
+    """Render a ket column vector as a PNG image."""
+    labels = [_dr_fmt(complex(x)) for x in data]
+    n      = len(labels)
+    cw     = max(_dr_label_width(l) for l in labels) + 2 * _DR_COL_PAD
+    W      = cw + 2 * _DR_OUTER_PAD + 2 * _DR_BRK_W
+    H      = n * _DR_ROW_H + 2 * _DR_OUTER_PAD
+
+    fig, ax = _plt.subplots(figsize=(W, H))
+    ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis("off")
+    _dr_brackets(ax, _DR_OUTER_PAD, W - _DR_OUTER_PAD,
+                 _DR_OUTER_PAD * 0.6, H - _DR_OUTER_PAD * 0.6)
+
+    for i, lbl in enumerate(labels):
+        y = H - _DR_OUTER_PAD - (i + 0.5) * _DR_ROW_H
+        ax.text(W / 2, y, lbl, ha="center", va="center",
+                fontsize=_DR_FONTSIZE, fontfamily="monospace")
+    return _dr_to_png(fig)
+
+
+def _render_bra(data: list) -> bytes:
+    """Render a bra row vector as a PNG image."""
+    labels  = [_dr_fmt(complex(x)) for x in data]
+    col_ws  = [_dr_label_width(l) + 2 * _DR_COL_PAD for l in labels]
+    W       = sum(col_ws) + 2 * _DR_OUTER_PAD + 2 * _DR_BRK_W
+    H       = _DR_ROW_H + 2 * _DR_OUTER_PAD
+
+    fig, ax = _plt.subplots(figsize=(W, H))
+    ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis("off")
+    _dr_brackets(ax, _DR_OUTER_PAD, W - _DR_OUTER_PAD,
+                 _DR_OUTER_PAD * 0.6, H - _DR_OUTER_PAD * 0.6)
+
+    cx = _DR_OUTER_PAD + _DR_BRK_W
+    for lbl, cw in zip(labels, col_ws):
+        ax.text(cx + cw / 2, H / 2, lbl, ha="center", va="center",
+                fontsize=_DR_FONTSIZE, fontfamily="monospace")
+        cx += cw
+    return _dr_to_png(fig)
+
+
+def _render_operator(rows_data: list) -> bytes:
+    """Render an operator/matrix as a PNG image."""
+    nrows  = len(rows_data)
+    ncols  = max(len(r) for r in rows_data) if rows_data else 0
+    labels = [[_dr_fmt(complex(x)) for x in row] for row in rows_data]
+    flat   = [l for row in labels for l in row]
+    cw     = max(_dr_label_width(l) for l in flat) + 2 * _DR_COL_PAD
+    W      = ncols * cw + 2 * _DR_OUTER_PAD + 2 * _DR_BRK_W
+    H      = nrows * _DR_ROW_H + 2 * _DR_OUTER_PAD
+
+    fig, ax = _plt.subplots(figsize=(W, H))
+    ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis("off")
+    _dr_brackets(ax, _DR_OUTER_PAD, W - _DR_OUTER_PAD,
+                 _DR_OUTER_PAD * 0.6, H - _DR_OUTER_PAD * 0.6)
+
+    for r, row in enumerate(labels):
+        for c, lbl in enumerate(row):
+            x = _DR_OUTER_PAD + _DR_BRK_W + (c + 0.5) * cw
+            y = H - _DR_OUTER_PAD - (r + 0.5) * _DR_ROW_H
+            ax.text(x, y, lbl, ha="center", va="center",
+                    fontsize=_DR_FONTSIZE, fontfamily="monospace")
+    return _dr_to_png(fig)
+
+
+def _render_scalar(value: Any) -> bytes:
+    """Render a plain scalar (complex, float, int, string) as a PNG image."""
+    text = _dr_fmt(value) if not isinstance(value, str) else value
+    W    = max(1.5, len(text) * 0.14 + 0.4)
+    fig, ax = _plt.subplots(figsize=(W, 0.55))
+    ax.text(0.5, 0.5, text, ha="center", va="center",
+            fontsize=_DR_FONTSIZE + 1, fontfamily="monospace",
+            transform=ax.transAxes)
+    ax.axis("off")
+    return _dr_to_png(fig)
+
+
+def _render_array(data: list) -> bytes:
+    """Render a BKArray as a vertical column vector PNG."""
+    labels = [_fmt(x) for x in data]
+    n      = len(labels)
+    if n == 0:
+        return _render_scalar("[]")
+    cw     = max(_dr_label_width(l) for l in labels) + 2 * _DR_COL_PAD
+    W      = cw + 2 * _DR_OUTER_PAD + 2 * _DR_BRK_W
+    H      = n * _DR_ROW_H + 2 * _DR_OUTER_PAD
+
+    fig, ax = _plt.subplots(figsize=(W, H))
+    ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis("off")
+
+    # Arrays use square brackets — draw them as [ ]
+    # Left [
+    lx = _DR_OUTER_PAD; rx = W - _DR_OUTER_PAD
+    by = _DR_OUTER_PAD * 0.6; ty = H - _DR_OUTER_PAD * 0.6
+    for x, sign in [(lx, +1), (rx, -1)]:
+        ax.plot([x, x],                    [by, ty], "k-", lw=_DR_BRK_LW)
+        ax.plot([x, x + sign * _DR_BRK_W], [ty, ty], "k-", lw=_DR_BRK_LW)
+        ax.plot([x, x + sign * _DR_BRK_W], [by, by], "k-", lw=_DR_BRK_LW)
+
+    for i, lbl in enumerate(labels):
+        y = H - _DR_OUTER_PAD - (i + 0.5) * _DR_ROW_H
+        ax.text(W / 2, y, lbl, ha="center", va="center",
+                fontsize=_DR_FONTSIZE, fontfamily="monospace")
+    return _dr_to_png(fig)
+
+
+def render_dirac_value(value: Any) -> bytes | None:
+    """
+    Render any BraKet runtime value as a PNG byte string.
+    Returns None if matplotlib is unavailable.
+    Accepts: BKVector (ket/bra), BKOperator, BKArray,
+             complex, float, int, bool, str.
+    """
+    if not _MPL_AVAILABLE:
+        return None
+    if isinstance(value, BKVector):
+        if value.kind == "ket":
+            return _render_ket(value.data)
+        return _render_bra(value.data)
+    if isinstance(value, BKOperator):
+        return _render_operator(value.rows)
+    if isinstance(value, BKArray):
+        return _render_array(value.data)
+    # scalar fallback
+    return _render_scalar(value)
+
+
+def show_dirac_popup(value: Any, title: str = "dirac()"):
+    """
+    Open a Tkinter Toplevel window showing the rendered Dirac notation image.
+    Safe to call from within the interpreter (runs in the same thread as the IDE).
+    Does nothing if Tkinter or matplotlib is unavailable.
+    """
+    if not _TK_AVAILABLE or not _MPL_AVAILABLE:
+        return
+    png = render_dirac_value(value)
+    if png is None:
+        return
+
+    try:
+        # Encode PNG as base64 so Tkinter's PhotoImage can load it directly
+        b64 = _base64.b64encode(png).decode("ascii")
+
+        win = _tk.Toplevel()
+        win.title(title)
+        win.resizable(False, False)
+
+        img = _tk.PhotoImage(data=b64)
+        lbl = _tk.Label(win, image=img, bg="white",
+                        padx=16, pady=16)
+        lbl.image = img   # keep reference — Tkinter GC would delete it otherwise
+        lbl.pack()
+
+        # Close button
+        _tk.Button(win, text="Close", command=win.destroy,
+                   padx=8, pady=4).pack(pady=(0, 10))
+
+        win.lift()
+        win.focus_force()
+    except Exception:
+        pass   # silently skip if display is unavailable (e.g. headless CI)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  Runtime exceptions
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -822,7 +1066,22 @@ class Interpreter:
     • PARAM instructions accumulate into self._param_buf.
     • CALL pops self._param_buf, binds params, executes the function's IC.
     • RETURN raises _ReturnSignal which is caught by the call dispatcher.
-    • Built-in functions: print, len, abs, sqrt, real, imag, conj, norm.
+
+    Built-in functions
+    ──────────────────
+    I/O       : print(*args)  input(prompt?)  dirac(v, label?)
+    Type conv : int(v)  float(v)  str(v)  bool(v)  complex(r, i?)
+    Type query: type(v)
+    Math      : abs(v)  sqrt(v)  floor(v)  ceil(v)  round(v, n?)
+                pow(a, b)  log(v, base?)  exp(v)
+                max(*args)  min(*args)  sum(arr)
+    Numeric   : real(v)  imag(v)  conj(v)
+    Sequences : len(v)  range(stop)  range(start,stop)  range(start,stop,step)
+                append(arr, val)  pop(arr)
+    BraKet    : norm(v)  dag(v)  dirac(v, label?)
+                normalize(ket)  outer(ket, bra)  expect(op, ket)
+                tensor(a, b)  dim(v)  trace(op)  det(op)
+                is_unitary(op)  identity(n)  zero_ket(n)
     """
 
     MAX_STEPS = 100_000   # loop guard
@@ -893,27 +1152,27 @@ class Interpreter:
 
             elif op == ASSIGN:
                 val = self._resolve(ins.b, env)
-                # If a raw list came back (inline vector literal), wrap it now
-                # using the variable name to determine ket vs bra kind.
+                # ── FIX: use the variable name (ins.a) to decide ket vs bra ──
                 if isinstance(val, list):
                     name = ins.a if isinstance(ins.a, str) else ""
                     if name.startswith("<") and name.endswith("|"):
-                        val = BKVector(val, "bra")
+                        val = BKVector(val, "bra")          # <name| → bra
                     elif name.startswith("|") and name.endswith(">"):
-                        val = BKVector(val, "ket")
+                        val = BKVector(val, "ket")           # |name> → ket
                     elif val and isinstance(val[0], list):
-                        val = BKOperator(val)
+                        val = BKOperator(val)                # nested list → matrix
                     else:
-                        val = BKVector(val, "ket")   # fallback
+                        val = BKVector(val, "ket")           # bare list fallback → ket
                 env[ins.a] = val
 
             elif op == COPY:
                 env[ins.a] = self._resolve(ins.b, env)
 
             elif op == BINOP:
+                op_str = getattr(ins, '_op2', '+')
                 lv = self._resolve(ins.b, env)
                 rv = self._resolve(ins.c, env)
-                env[ins.a] = self._apply_binop(ins.b, ins.c, lv, rv, ins.op_str if hasattr(ins,'op_str') else self._binop_str(ins), ins.line)
+                env[ins.a] = self._apply_binop(ins.b, ins.c, lv, rv, op_str, ins.line)
 
             elif op == UNOP:
                 v = self._resolve(ins.c, env)
@@ -1018,19 +1277,26 @@ class Interpreter:
                 return v
             return v
         if isinstance(v, list):
-            # Inline list literal — either a vector or a matrix.
-            # We return raw lists here; the ASSIGN handler wraps them with the
-            # correct kind ("ket" or "bra") once it knows the variable name.
+            # Nested list → operator matrix. Wrap here since no name context needed.
             if v and isinstance(v[0], list):
                 return BKOperator(v)
-            # Return as-is — ASSIGN will wrap in BKVector with correct kind
+            # Flat list → raw vector data. Return as-is so the ASSIGN handler
+            # can inspect the variable name and choose "ket" vs "bra" correctly.
             return v
         if isinstance(v, dict):
             return BKStruct(v)
         return v
 
     def _binop_str(self, ins: ICInstruction) -> str:
-        return "+"   # fallback — overridden by _patched_run_ic via _op2
+        """The BINOP instruction stores the operator in field `b` (position 2)."""
+        # Layout: BINOP dest left op right
+        # In ICInstruction: a=dest, b=left, c=right — BUT we stored op in b during emit
+        # We stored as: emit(BINOP, dest, left, op); then patched c=right
+        # So the operator is at ins.b... except left is also at b.
+        # Let's recover from the raw instruction:
+        # ins.a = dest, ins.b = left, ins.c = right  → op was placed between them
+        # We need to store op differently.  See _fix below.
+        return "+"   # fallback — see _fix_binop_storage below
 
     # ── binary operation evaluation ───────────────────────────
 
@@ -1145,21 +1411,26 @@ class Interpreter:
             return self._mul(a, b)
         if isinstance(b, (int, float, complex)):
             return self._mul(b, a)
+
         # ket ⊗ ket → larger ket
         if isinstance(a, BKVector) and isinstance(b, BKVector) and a.kind == "ket" and b.kind == "ket":
             result = [x*y for x in a.data for y in b.data]
             return BKVector(result, "ket")
+
         # bra ⊗ bra → larger bra
         if isinstance(a, BKVector) and isinstance(b, BKVector) and a.kind == "bra" and b.kind == "bra":
             result = [x*y for x in a.data for y in b.data]
             return BKVector(result, "bra")
+
         # ket ⊗ bra → outer product (operator)
         if isinstance(a, BKVector) and a.kind == "ket" and isinstance(b, BKVector) and b.kind == "bra":
             rows = [[x*y for y in b.data] for x in a.data]
             return BKOperator(rows)
+
         # bra ⊗ ket → full contraction (scalar)
         if isinstance(a, BKVector) and a.kind == "bra" and isinstance(b, BKVector) and b.kind == "ket":
             return sum(x*y for x,y in zip(a.data, b.data))
+
         # operator ⊗ operator (Kronecker product)
         if isinstance(a, BKOperator) and isinstance(b, BKOperator):
             rows = []
@@ -1170,9 +1441,11 @@ class Interpreter:
                         block_rows[r].extend([ae*be for be in br])
                 rows.extend(block_rows)
             return BKOperator(rows)
+
         # operator ⊗ ket/bra
         if isinstance(a, BKOperator) and isinstance(b, BKVector):
             return self._mul(a, b)
+
         return self._mul(a, b)
 
     # ── truthiness ────────────────────────────────────────────
@@ -1191,7 +1464,7 @@ class Interpreter:
     def _call_function(self, name: str, args: list, line: int) -> Any:
         # Built-ins
         builtin = self._try_builtin(name, args, line)
-        if builtin is not _SENTINEL:
+        if builtin is not _Sentinel:
             return builtin
 
         if name not in self.functions:
@@ -1218,43 +1491,200 @@ class Interpreter:
     _SENTINEL = object()
 
     def _try_builtin(self, name: str, args: list, line: int) -> Any:
+
+        # ── I/O ──────────────────────────────────────────────────────────────
+
         if name == "print":
             parts = [_fmt(a) for a in args]
             s = " ".join(parts)
             self._output.append(s)
             self.output_cb(s)
             return None
+
+        if name == "input":
+            prompt = _fmt(args[0]) if args else ""
+            if _TK_AVAILABLE:
+                val = _tk_simpledialog.askstring(
+                    "Input", prompt or "Enter a value:") or ""
+            else:
+                val = ""   # headless fallback
+            self._output.append(f"{prompt}{val}")
+            self.output_cb(f"{prompt}{val}")
+            return val
+
+        # ── Type conversion ───────────────────────────────────────────────────
+
+        if name == "int":
+            v = args[0] if args else 0
+            if isinstance(v, str):
+                try:    return int(v.strip())
+                except: raise BKRuntimeError(f"int(): cannot convert \'{v}\'", line)
+            return int(v)
+
+        if name == "float":
+            v = args[0] if args else 0.0
+            if isinstance(v, str):
+                try:    return float(v.strip())
+                except: raise BKRuntimeError(f"float(): cannot convert \'{v}\'", line)
+            return float(v)
+
+        if name == "str":
+            return _fmt(args[0]) if args else ""
+
+        if name == "bool":
+            return self._truthy(args[0]) if args else False
+
+        if name == "complex":
+            r = args[0] if len(args) >= 1 else 0
+            i = args[1] if len(args) >= 2 else 0
+            return complex(r, i)
+
+        # ── Type query ────────────────────────────────────────────────────────
+
+        if name == "type":
+            v = args[0] if args else None
+            if isinstance(v, bool):       return "bool"
+            if isinstance(v, int):        return "int"
+            if isinstance(v, float):      return "float"
+            if isinstance(v, complex):    return "complex"
+            if isinstance(v, str):        return "string"
+            if isinstance(v, BKVector):   return v.kind   # "ket" or "bra"
+            if isinstance(v, BKOperator): return "op"
+            if isinstance(v, BKArray):    return "array"
+            if isinstance(v, BKStruct):   return "struct"
+            if v is None:                 return "null"
+            return "unknown"
+
+        # ── Math ──────────────────────────────────────────────────────────────
+
+        if name == "abs":
+            v = args[0] if args else 0
+            return abs(v)
+
+        if name == "sqrt":
+            v = args[0] if args else 0
+            return cmath.sqrt(v) if isinstance(v, complex) else math.sqrt(abs(v))
+
+        if name == "floor":
+            v = args[0] if args else 0
+            return int(math.floor(v.real if isinstance(v, complex) else v))
+
+        if name == "ceil":
+            v = args[0] if args else 0
+            return int(math.ceil(v.real if isinstance(v, complex) else v))
+
+        if name == "round":
+            v = args[0] if args else 0
+            n = int(args[1]) if len(args) >= 2 else 0
+            return round(v, n)
+
+        if name == "pow":
+            if len(args) < 2:
+                raise BKRuntimeError("pow() requires 2 arguments", line)
+            return args[0] ** args[1]
+
+        if name == "log":
+            v = args[0] if args else 1
+            if len(args) >= 2:
+                base = args[1]
+                return (cmath.log(v) / cmath.log(base) if isinstance(v, complex)
+                        else math.log(v, base))
+            return cmath.log(v) if isinstance(v, complex) else math.log(v)
+
+        if name == "exp":
+            v = args[0] if args else 0
+            return cmath.exp(v) if isinstance(v, complex) else math.exp(v)
+
+        if name == "max":
+            if not args:
+                raise BKRuntimeError("max() requires at least one argument", line)
+            items = (args[0].data
+                     if len(args) == 1 and isinstance(args[0], BKArray)
+                     else args)
+            return max(items)
+
+        if name == "min":
+            if not args:
+                raise BKRuntimeError("min() requires at least one argument", line)
+            items = (args[0].data
+                     if len(args) == 1 and isinstance(args[0], BKArray)
+                     else args)
+            return min(items)
+
+        if name == "sum":
+            v = args[0] if args else None
+            if isinstance(v, BKArray):
+                return sum(v.data)
+            raise BKRuntimeError("sum() requires an array", line)
+
+        # ── Complex number components ─────────────────────────────────────────
+
+        if name == "real":
+            v = args[0] if args else 0
+            return v.real if isinstance(v, complex) else float(v)
+
+        if name == "imag":
+            v = args[0] if args else 0
+            return v.imag if isinstance(v, complex) else 0.0
+
+        if name == "conj":
+            v = args[0] if args else 0
+            if isinstance(v, complex):
+                return v.conjugate()
+            if isinstance(v, BKVector):
+                return BKVector([x.conjugate() for x in v.data], v.kind)
+            if isinstance(v, BKOperator):
+                return BKOperator([[x.conjugate() for x in row] for row in v.rows])
+            return v
+
+        # ── Sequences ─────────────────────────────────────────────────────────
+
         if name == "len":
             v = args[0] if args else None
             if isinstance(v, BKArray):  return len(v.data)
             if isinstance(v, str):      return len(v)
             if isinstance(v, BKVector): return len(v.data)
-            raise BKRuntimeError("len() requires an array or string", line)
-        if name == "abs":
-            v = args[0] if args else 0
-            return abs(v)
-        if name == "sqrt":
-            v = args[0] if args else 0
-            return cmath.sqrt(v) if isinstance(v, complex) else math.sqrt(v)
-        if name == "real":
-            v = args[0] if args else 0
-            return v.real if isinstance(v, complex) else float(v)
-        if name == "imag":
-            v = args[0] if args else 0
-            return v.imag if isinstance(v, complex) else 0.0
-        if name == "conj":
-            v = args[0] if args else 0
-            if isinstance(v, complex):   return v.conjugate()
-            if isinstance(v, BKVector):
-                return BKVector([x.conjugate() for x in v.data], v.kind)
-            return v
+            raise BKRuntimeError("len() requires an array, string, or vector", line)
+
+        if name == "range":
+            if len(args) == 1:
+                return BKArray(list(range(int(args[0]))))
+            if len(args) == 2:
+                return BKArray(list(range(int(args[0]), int(args[1]))))
+            if len(args) >= 3:
+                return BKArray(list(range(int(args[0]), int(args[1]), int(args[2]))))
+            return BKArray([])
+
+        if name == "append":
+            if len(args) < 2:
+                raise BKRuntimeError("append() requires array and value", line)
+            arr, val = args[0], args[1]
+            if isinstance(arr, BKArray):
+                arr.data.append(val)
+                return None
+            raise BKRuntimeError("append() first argument must be an array", line)
+
+        if name == "pop":
+            v = args[0] if args else None
+            if isinstance(v, BKArray):
+                if not v.data:
+                    raise BKRuntimeError("pop() on empty array", line)
+                return v.data.pop()
+            raise BKRuntimeError("pop() requires an array", line)
+
+        # ── BraKet ────────────────────────────────────────────────────────────
+
         if name == "norm":
             v = args[0] if args else 0
             if isinstance(v, BKVector):
                 return math.sqrt(sum(abs(x)**2 for x in v.data))
-            if isinstance(v, complex): return abs(v)
+            if isinstance(v, complex):
+                return abs(v)
             return abs(v)
+
         if name == "dag":
+            # Hermitian conjugate (†): flip ket<->bra and conjugate each element;
+            # for operators: conjugate transpose
             v = args[0] if args else None
             if isinstance(v, BKVector):
                 new_kind = "bra" if v.kind == "ket" else "ket"
@@ -1265,19 +1695,156 @@ class Interpreter:
                         for i in range(v.n_cols)]
                 return BKOperator(rows)
             return v
-        if name == "str":
-            return _fmt(args[0]) if args else ""
-        if name == "int":
-            v = args[0] if args else 0
-            return int(v)
-        if name == "float":
-            v = args[0] if args else 0.0
-            return float(v)
-        if name == "range":
-            if len(args) == 1:   return BKArray(list(range(int(args[0]))))
-            if len(args) == 2:   return BKArray(list(range(int(args[0]), int(args[1]))))
-            if len(args) >= 3:   return BKArray(list(range(int(args[0]), int(args[1]), int(args[2]))))
-            return BKArray([])
+
+        if name == "dirac":
+            # Render value as a visual matrix/vector notation in a popup window.
+            # Accepts: BKVector (ket/bra), BKOperator, BKArray, or any scalar.
+            v     = args[0] if args else None
+            label = _fmt(args[1]) if len(args) >= 2 else "dirac()"
+            if not _MPL_AVAILABLE:
+                raise BKRuntimeError(
+                    "dirac() requires matplotlib — run: pip install matplotlib",
+                    line)
+            show_dirac_popup(v, title=label)
+            return None
+
+        if name == "trace":
+            # Sum of diagonal elements of a square operator.
+            v = args[0] if args else None
+            if not isinstance(v, BKOperator):
+                raise BKRuntimeError("trace() requires an operator", line)
+            if v.n_rows != v.n_cols:
+                raise BKRuntimeError(
+                    f"trace() requires a square operator, got {v.n_rows}×{v.n_cols}",
+                    line)
+            return sum(v.rows[i][i] for i in range(v.n_rows))
+
+        if name == "det":
+            # Determinant of a square operator via cofactor expansion.
+            v = args[0] if args else None
+            if not isinstance(v, BKOperator):
+                raise BKRuntimeError("det() requires an operator", line)
+            n = v.n_rows
+            if n != v.n_cols:
+                raise BKRuntimeError(
+                    f"det() requires a square operator, got {n}×{v.n_cols}", line)
+            def _det(m):
+                if len(m) == 1:
+                    return m[0][0]
+                if len(m) == 2:
+                    return m[0][0]*m[1][1] - m[0][1]*m[1][0]
+                total = complex(0)
+                for c in range(len(m)):
+                    minor = [row[:c] + row[c+1:] for row in m[1:]]
+                    sign  = (-1) ** c
+                    total += sign * m[0][c] * _det(minor)
+                return total
+            return _det(v.rows)
+
+        if name == "normalize":
+            # Return v scaled so that norm(v) == 1.
+            v = args[0] if args else None
+            if isinstance(v, BKVector):
+                n = math.sqrt(sum(abs(x)**2 for x in v.data))
+                if n == 0:
+                    raise BKRuntimeError("normalize() on zero vector", line)
+                return BKVector([x / n for x in v.data], v.kind)
+            raise BKRuntimeError("normalize() requires a ket or bra", line)
+
+        if name == "outer":
+            # Outer product |ket><bra| → BKOperator.
+            if len(args) < 2:
+                raise BKRuntimeError("outer() requires two arguments: ket and bra",
+                                     line)
+            ket, bra = args[0], args[1]
+            if not (isinstance(ket, BKVector) and ket.kind == "ket"):
+                raise BKRuntimeError("outer() first argument must be a ket", line)
+            if not (isinstance(bra, BKVector) and bra.kind == "bra"):
+                raise BKRuntimeError("outer() second argument must be a bra", line)
+            rows = [[x * y for y in bra.data] for x in ket.data]
+            return BKOperator(rows)
+
+        if name == "expect":
+            # Expectation value <ket|op|ket> → complex scalar.
+            if len(args) < 2:
+                raise BKRuntimeError(
+                    "expect() requires two arguments: operator and ket", line)
+            op, ket = args[0], args[1]
+            if not isinstance(op, BKOperator):
+                raise BKRuntimeError("expect() first argument must be an operator",
+                                     line)
+            if not (isinstance(ket, BKVector) and ket.kind == "ket"):
+                raise BKRuntimeError("expect() second argument must be a ket", line)
+            # op|ket>
+            if op.n_cols != len(ket.data):
+                raise BKRuntimeError(
+                    f"expect(): operator ({op.n_rows}×{op.n_cols}) dimension "
+                    f"mismatch with ket (dim {len(ket.data)})", line)
+            op_ket = [sum(op.rows[r][c] * ket.data[c]
+                          for c in range(op.n_cols))
+                      for r in range(op.n_rows)]
+            # <ket| · (op|ket>)  — bra is conjugate of ket
+            return sum(ket.data[i].conjugate() * op_ket[i]
+                       for i in range(len(ket.data)))
+
+        if name == "tensor":
+            # Kronecker / tensor product — callable form of the @ operator.
+            if len(args) < 2:
+                raise BKRuntimeError(
+                    "tensor() requires two arguments", line)
+            return self._tensor(args[0], args[1])
+
+        if name == "dim":
+            # Dimension of a ket/bra (int) or operator (tuple of ints).
+            v = args[0] if args else None
+            if isinstance(v, BKVector):
+                return len(v.data)
+            if isinstance(v, BKOperator):
+                return BKArray([v.n_rows, v.n_cols])
+            raise BKRuntimeError(
+                "dim() requires a ket, bra, or operator", line)
+
+        if name == "is_unitary":
+            # Return true if op† × op ≈ identity (within tolerance).
+            v = args[0] if args else None
+            if not isinstance(v, BKOperator):
+                raise BKRuntimeError("is_unitary() requires an operator", line)
+            tol = 1e-9
+            n   = v.n_rows
+            if n != v.n_cols:
+                return False
+            # dag(v)
+            dag_rows = [[v.rows[j][i].conjugate()
+                         for j in range(n)] for i in range(n)]
+            # dag @ v
+            for r in range(n):
+                for c in range(n):
+                    val = sum(dag_rows[r][k] * v.rows[k][c] for k in range(n))
+                    expected = complex(1) if r == c else complex(0)
+                    if abs(val - expected) > tol:
+                        return False
+            return True
+
+        if name == "identity":
+            # Return an n×n identity operator.
+            if not args:
+                raise BKRuntimeError("identity() requires a size argument", line)
+            n = int(args[0])
+            if n <= 0:
+                raise BKRuntimeError("identity() size must be positive", line)
+            rows = [[complex(1) if r == c else complex(0)
+                     for c in range(n)] for r in range(n)]
+            return BKOperator(rows)
+
+        if name == "zero_ket":
+            # Return an n-dimensional zero ket.
+            if not args:
+                raise BKRuntimeError("zero_ket() requires a size argument", line)
+            n = int(args[0])
+            if n <= 0:
+                raise BKRuntimeError("zero_ket() size must be positive", line)
+            return BKVector([complex(0)] * n, "ket")
+
         return self._SENTINEL
 
 
@@ -1285,9 +1852,12 @@ class Interpreter:
 #  BINOP operator storage fix
 #  The ICGenerator stores BINOP as: emit(BINOP, dest, left, op)
 #  then patches the last instruction's .c = right.
-#  We store the actual operator string in ins._op2 so the interpreter
-#  can read it reliably.
+#  So the layout is:  a=dest  b=left  c=right  — and op is stored separately.
+#  We need to track op.  We fix this by storing op in a 4th slot.
 # ══════════════════════════════════════════════════════════════════════════════
+
+# Monkey-patch ICInstruction to add an `op2` field for BINOP operator string,
+# and override _run_ic to use it.
 
 _orig_emit = ICGenerator._emit
 
@@ -1298,6 +1868,17 @@ def _patched_emit(self, op, a=None, b=None, c=None, line=0, _op2=None):
 
 ICGenerator._emit = _patched_emit
 
+
+def _patched_emit_binop(gen, dest, left, op_str, line=0):
+    """Emit a BINOP and return so caller can patch .c = right."""
+    ins = ICInstruction(BINOP, dest, left, None, line)
+    ins._op2 = op_str
+    gen._current_ic.append(ins)
+
+# Override _gen_num_expr, _gen_num_term, etc. to use _op2 properly
+# We do this by overriding _apply_binop dispatch in Interpreter to read ins._op2
+
+_orig_run_ic = Interpreter._run_ic
 
 def _patched_run_ic(self, ic, env):
     """Extended run loop that reads _op2 for BINOP instructions."""
@@ -1435,7 +2016,7 @@ def _patched_run_ic(self, ic, env):
 Interpreter._run_ic = _patched_run_ic
 
 
-# ── Patch generators to store op in _op2 ─────────────────────
+# ── Also patch _gen_num_expr to store op in _op2 ─────────────
 
 def _patched_gen_num_expr(self, ctx):
     if ctx is None: return 0

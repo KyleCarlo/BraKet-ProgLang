@@ -266,8 +266,7 @@ class IDE:
 
         h_pane = tk.PanedWindow(self.root, orient=tk.HORIZONTAL,
                                  bg=BORDER, sashwidth=5,
-                                 sashrelief=tk.FLAT, bd=0,
-                                 sashcursor="sb_h_double_arrow")
+                                 sashrelief=tk.FLAT, bd=0)
         h_pane.pack(fill=tk.BOTH, expand=True)
 
         # Left: editor + output

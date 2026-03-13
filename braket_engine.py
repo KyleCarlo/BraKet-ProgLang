@@ -60,7 +60,7 @@ class _CollectingErrorListener(ErrorListener):
 
 def _build_parse_tree(code: str):
     """
-    Lex + parse `code`, returning (token_stream, tree, lex_errors, parse_errors).
+    Lex + parse `code`, returning (token_stream, parser, tree, lex_errors, parse_errors).
     Errors are collected silently; ANTLR's default console listener is removed.
     """
     stream = InputStream(code)
@@ -78,7 +78,7 @@ def _build_parse_tree(code: str):
     parser.addErrorListener(parse_err)
 
     tree = parser.program()
-    return token_stream, tree, lex_err.errors, parse_err.errors
+    return token_stream, parser, tree, lex_err.errors, parse_err.errors
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -101,7 +101,7 @@ def run_scanner(code: str) -> list[TokenInfo]:
     Returns a list of TokenInfo (excluding the final EOF token).
     Errors encountered during lexing are silently collected and do NOT raise.
     """
-    token_stream, _, _, _ = _build_parse_tree(code)
+    token_stream, _, _, _, _ = _build_parse_tree(code)
     token_stream.fill()
 
     results: list[TokenInfo] = []
@@ -147,19 +147,8 @@ def run_parser(code: str) -> ParserResult:
       - parse_errors   : list of parser error strings
       - tokens         : full token list (via run_scanner)
     """
-    token_stream, tree, lex_errors, parse_errors = _build_parse_tree(code)
-    parse_tree_str = tree.toStringTree(recog=token_stream.tokenSource.getClass())
-
-    # toStringTree needs the *parser* as the recognizer, not the lexer.
-    # Re-parse briefly to obtain the parser reference for rule-name resolution.
-    stream2 = InputStream(code)
-    lexer2  = BraKetLexer(stream2)
-    lexer2.removeErrorListeners()
-    ts2     = CommonTokenStream(lexer2)
-    parser2 = BraKetParser(ts2)
-    parser2.removeErrorListeners()
-    tree2   = parser2.program()
-    parse_tree_str = tree2.toStringTree(recog=parser2)
+    token_stream, parser, tree, lex_errors, parse_errors = _build_parse_tree(code)
+    parse_tree_str = tree.toStringTree(recog=parser)
 
     return ParserResult(
         parse_tree_str=parse_tree_str,
@@ -287,6 +276,18 @@ class Diagnostic:
 # ══════════════════════════════════════════════════════════════════════════════
 #  Semantic Visitor
 # ══════════════════════════════════════════════════════════════════════════════
+
+_BUILTINS: frozenset[str] = frozenset({
+    "print", "input", "dirac",
+    "int", "float", "str", "bool", "complex",
+    "type",
+    "abs", "sqrt", "floor", "ceil", "round", "pow", "log", "exp",
+    "max", "min", "sum",
+    "real", "imag", "conj",
+    "len", "range", "append", "pop",
+    "norm", "dag", "normalize", "outer", "expect",
+    "tensor", "dim", "trace", "det", "is_unitary", "identity", "zero_ket",
+})
 
 class _SemanticVisitor(BraKetVisitor):
     """
@@ -484,7 +485,7 @@ class _SemanticVisitor(BraKetVisitor):
 
     def _visit_call(self, ctx: BraKetParser.Func_call_statementContext) -> str:
         name = ctx.IDENTIFIER().getText()
-        if self.current_scope.lookup(name) is None:
+        if name not in _BUILTINS and self.current_scope.lookup(name) is None:
             self._error(ctx, f"Call to undeclared function '{name}'.")
         if ctx.arg_list():
             self._visit_arg_list(ctx.arg_list())
@@ -760,19 +761,10 @@ def run_semantic(code: str) -> SemanticResult:
     Run the full semantic analysis pipeline on BraKet source code.
     Returns a SemanticResult with diagnostics, symbol table, and syntax errors.
     """
-    _, tree, lex_errors, parse_errors = _build_parse_tree(code)
-
-    # re-parse to get a fresh tree with the correct parser for the visitor
-    stream2 = InputStream(code)
-    lexer2  = BraKetLexer(stream2)
-    lexer2.removeErrorListeners()
-    ts2     = CommonTokenStream(lexer2)
-    parser2 = BraKetParser(ts2)
-    parser2.removeErrorListeners()
-    tree2   = parser2.program()
+    _, _parser, tree, lex_errors, parse_errors = _build_parse_tree(code)
 
     visitor = _SemanticVisitor()
-    visitor.visit(tree2)
+    visitor.visit(tree)
 
     return SemanticResult(
         diagnostics=visitor.diagnostics,
