@@ -385,20 +385,72 @@ class IDE:
     # ── debug notebook ────────────────────────────────────────
 
     def _build_debug_notebook(self, parent):
-        self.nb = ttk.Notebook(parent)
-        self.nb.pack(fill=tk.BOTH, expand=True, padx=1, pady=1)
+        # ── Tab button bar ────────────────────────────────────
+        self._tab_frames: dict[str, tk.Frame] = {}
+        self._tab_buttons: dict[str, tk.Button] = {}
+        self._active_tab: str = ""
+
+        tab_bar = tk.Frame(parent, bg=DARK_BG)
+        tab_bar.pack(fill=tk.X, side=tk.TOP)
+        tk.Frame(parent, bg=BORDER, height=1).pack(fill=tk.X, side=tk.TOP)
+
+        # Container that holds all tab frames stacked on top of each other
+        self._tab_container = tk.Frame(parent, bg=PANEL_BG)
+        self._tab_container.pack(fill=tk.BOTH, expand=True)
+
+        TAB_DEFS = [
+            ("scanner",   "  🔍 Scanner  "),
+            ("parser",    "  🌳 Parse Tree  "),
+            ("symbols",   "  📋 Symbols  "),
+            ("diag",      "  ⚠  Diagnostics  "),
+            ("ic",        "  ⚙  IC  "),
+        ]
+        for key, label in TAB_DEFS:
+            btn = tk.Button(
+                tab_bar, text=label,
+                bg=DARK_BG, fg=FG_DIM,
+                relief=tk.FLAT, bd=0,
+                font=("Segoe UI", 10, "bold"),
+                padx=10, pady=7,
+                cursor="hand2",
+                activebackground=PANEL_BG,
+                activeforeground=ACCENT,
+                command=lambda k=key: self._select_tab(k),
+            )
+            btn.pack(side=tk.LEFT)
+            self._tab_buttons[key] = btn
+
         self._build_scanner_tab()
         self._build_parser_tab()
         self._build_symtable_tab()
         self._build_diag_tab()
         self._build_ic_tab()
 
+        # Show the first tab by default
+        self._select_tab("scanner")
+
+    def _select_tab(self, key: str):
+        """Raise the chosen tab frame and update button highlight states."""
+        if key in self._tab_frames:
+            self._tab_frames[key].tkraise()
+        self._active_tab = key
+        for k, btn in self._tab_buttons.items():
+            if k == key:
+                btn.config(bg=PANEL_BG, fg=ACCENT,
+                           relief=tk.FLAT,
+                           font=("Segoe UI", 10, "bold"))
+            else:
+                btn.config(bg=DARK_BG, fg=FG_DIM,
+                           relief=tk.FLAT,
+                           font=("Segoe UI", 10, "bold"))
+
 
     # ── Intermediate Code tab ─────────────────────────────────
 
     def _build_ic_tab(self):
-        frame = tk.Frame(self.nb, bg=PANEL_BG)
-        self.nb.add(frame, text="  ⚙  IC  ")
+        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
+        frame.place(relwidth=1, relheight=1)
+        self._tab_frames["ic"] = frame
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -425,8 +477,9 @@ class IDE:
     # ── Scanner tab ───────────────────────────────────────────
 
     def _build_scanner_tab(self):
-        frame = tk.Frame(self.nb, bg=PANEL_BG)
-        self.nb.add(frame, text="  🔍 Scanner  ")
+        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
+        frame.place(relwidth=1, relheight=1)
+        self._tab_frames["scanner"] = frame
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -454,8 +507,9 @@ class IDE:
     # ── Parser tab ────────────────────────────────────────────
 
     def _build_parser_tab(self):
-        frame = tk.Frame(self.nb, bg=PANEL_BG)
-        self.nb.add(frame, text="  🌳 Parse Tree  ")
+        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
+        frame.place(relwidth=1, relheight=1)
+        self._tab_frames["parser"] = frame
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -475,8 +529,9 @@ class IDE:
     # ── Symbol Table tab ──────────────────────────────────────
 
     def _build_symtable_tab(self):
-        frame = tk.Frame(self.nb, bg=PANEL_BG)
-        self.nb.add(frame, text="  📋 Symbols  ")
+        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
+        frame.place(relwidth=1, relheight=1)
+        self._tab_frames["symbols"] = frame
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -504,8 +559,9 @@ class IDE:
     # ── Diagnostics tab ───────────────────────────────────────
 
     def _build_diag_tab(self):
-        frame = tk.Frame(self.nb, bg=PANEL_BG)
-        self.nb.add(frame, text="  ⚠  Diagnostics  ")
+        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
+        frame.place(relwidth=1, relheight=1)
+        self._tab_frames["diag"] = frame
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -854,7 +910,7 @@ class IDE:
 
         # Auto-switch: errors → Diagnostics, else output if there is program output
         if syn_errs or sem_errs:
-            self.nb.select(4)   # diagnostics tab (now index 4)
+            self._select_tab("diag")
         elif result.run and result.run.output:
             pass  # stay on current tab; output is in the output panel
 
