@@ -353,6 +353,7 @@ class IDE:
         self.editor.pack(fill=tk.BOTH, expand=True)
         self.editor.bind("<KeyRelease>",    self._on_key)
         self.editor.bind("<ButtonRelease>", self._update_cursor_pos)
+        self.editor.bind("<Tab>", lambda e: (self.editor.insert(tk.INSERT, "    "), "break")[1])
         return frame
 
     # ── output / diagnostics panel ────────────────────────────

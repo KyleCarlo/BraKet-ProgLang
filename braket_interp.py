@@ -806,226 +806,209 @@ def _fmt(v: Any) -> str:
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Dirac visual renderer  (used by the dirac() built-in)
+#  Renders via matplotlib mathtext — no external TeX installation required.
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Layout constants — tweak here to adjust the look of all rendered output
-_DR_FONTSIZE  = 13      # pt — element label font size
-_DR_DPI       = 130     # render resolution
-_DR_COL_PAD   = 0.22    # inches of padding on each side of a cell
-_DR_ROW_H     = 0.42    # inches per matrix row
-_DR_OUTER_PAD = 0.18    # inches of margin outside the brackets
-_DR_BRK_W     = 0.12    # inches — bracket arm (horizontal tick) length
-_DR_BRK_LW    = 2.0     # pt — bracket line weight
+# _DR_FONTSIZE = 16    # pt — base math font size
+# _DR_DPI      = 150   # render resolution
 
 
-def _dr_fmt(z: complex) -> str:
-    """Format a single complex number for display inside a matrix cell."""
-    if isinstance(z, complex):
-        if z.imag == 0:
-            v = z.real
-            return str(int(v)) if v == int(v) else f"{v:.4g}"
-        if z.real == 0:
-            v = z.imag
-            s = str(int(v)) if v == int(v) else f"{v:.4g}"
-            return s + "i"
-        r = int(z.real) if z.real == int(z.real) else f"{z.real:.3g}"
-        i = int(z.imag) if z.imag == int(z.imag) else f"{z.imag:.3g}"
-        sign = "+" if z.imag >= 0 else ""
-        return f"{r}{sign}{i}i"
-    if isinstance(z, float):
-        return str(int(z)) if z == int(z) else f"{z:.4g}"
-    return str(z)
+# def _latex_num(z: Any) -> str:
+#     """
+#     Format a scalar value as a LaTeX math string fragment.
+#     complex  →  a+bi  (using \\mathbf{i} for the imaginary unit)
+#     float    →  decimal or integer
+#     int      →  integer
+#     other    →  str()
+#     """
+#     if isinstance(z, complex):
+#         z = complex(z)
+#         def _r(v):
+#             return str(int(v)) if v == int(v) else f"{v:.4g}"
+#         if z.imag == 0:
+#             return _r(z.real)
+#         if z.real == 0:
+#             i = z.imag
+#             s = _r(abs(i))
+#             return f"{s}i" if i >= 0 else f"-{s}i"
+#         sign = "+" if z.imag >= 0 else "-"
+#         return f"{_r(z.real)}{sign}{_r(abs(z.imag))}i"
+#     if isinstance(z, float):
+#         return str(int(z)) if z == int(z) else f"{z:.4g}"
+#     if isinstance(z, bool):
+#         return r"\mathrm{true}" if z else r"\mathrm{false}"
+#     return str(z)
 
 
-def _dr_label_width(text: str) -> float:
-    """Return the rendered width of `text` in inches at _DR_FONTSIZE/_DR_DPI."""
-    fig, ax = _plt.subplots(figsize=(8, 1))
-    ax.axis("off")
-    t = ax.text(0, 0, text, fontsize=_DR_FONTSIZE, fontfamily="monospace")
-    fig.canvas.draw()
-    bb = t.get_window_extent(fig.canvas.get_renderer())
-    w = bb.width / _DR_DPI
-    _plt.close(fig)
-    return w
+# def _latex_ket(data: list) -> str:
+#     """Build a LaTeX string for a ket column vector using pmatrix."""
+#     rows = r" \\ ".join(_latex_num(complex(x)) for x in data)
+#     return r"$\begin{pmatrix}" + rows + r"\end{pmatrix}$"
 
 
-def _dr_brackets(ax, lx: float, rx: float, by: float, ty: float):
-    """Draw [ ] brackets on axes `ax` between the given coordinate bounds."""
-    for x, sign in [(lx, +1), (rx, -1)]:
-        ax.plot([x, x],                    [by, ty], "k-", lw=_DR_BRK_LW)
-        ax.plot([x, x + sign * _DR_BRK_W], [ty, ty], "k-", lw=_DR_BRK_LW)
-        ax.plot([x, x + sign * _DR_BRK_W], [by, by], "k-", lw=_DR_BRK_LW)
+# def _latex_bra(data: list) -> str:
+#     """Build a LaTeX string for a bra row vector using pmatrix."""
+#     cols = " & ".join(_latex_num(complex(x)) for x in data)
+#     return r"$\begin{pmatrix}" + cols + r"\end{pmatrix}$"
 
 
-def _dr_to_png(fig) -> bytes:
-    buf = _io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight",
-                dpi=_DR_DPI, facecolor="white")
-    _plt.close(fig)
-    buf.seek(0)
-    return buf.read()
+# def _latex_operator(rows_data: list) -> str:
+#     """Build a LaTeX string for a matrix operator using pmatrix."""
+#     row_strs = []
+#     for row in rows_data:
+#         row_strs.append(" & ".join(_latex_num(complex(x)) for x in row))
+#     body = r" \\ ".join(row_strs)
+#     return r"$\begin{pmatrix}" + body + r"\end{pmatrix}$"
 
 
-def _render_ket(data: list) -> bytes:
-    """Render a ket column vector as a PNG image."""
-    labels = [_dr_fmt(complex(x)) for x in data]
-    n      = len(labels)
-    cw     = max(_dr_label_width(l) for l in labels) + 2 * _DR_COL_PAD
-    W      = cw + 2 * _DR_OUTER_PAD + 2 * _DR_BRK_W
-    H      = n * _DR_ROW_H + 2 * _DR_OUTER_PAD
-
-    fig, ax = _plt.subplots(figsize=(W, H))
-    ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis("off")
-    _dr_brackets(ax, _DR_OUTER_PAD, W - _DR_OUTER_PAD,
-                 _DR_OUTER_PAD * 0.6, H - _DR_OUTER_PAD * 0.6)
-
-    for i, lbl in enumerate(labels):
-        y = H - _DR_OUTER_PAD - (i + 0.5) * _DR_ROW_H
-        ax.text(W / 2, y, lbl, ha="center", va="center",
-                fontsize=_DR_FONTSIZE, fontfamily="monospace")
-    return _dr_to_png(fig)
+# def _latex_array(data: list) -> str:
+#     """Build a LaTeX string for a generic BKArray as a column vector using bmatrix."""
+#     rows = r" \\ ".join(_latex_num(x) if isinstance(x, (int, float, complex))
+#                         else r"\mathrm{" + str(x) + "}" for x in data)
+#     return r"$\begin{bmatrix}" + rows + r"\end{bmatrix}$"
 
 
-def _render_bra(data: list) -> bytes:
-    """Render a bra row vector as a PNG image."""
-    labels  = [_dr_fmt(complex(x)) for x in data]
-    col_ws  = [_dr_label_width(l) + 2 * _DR_COL_PAD for l in labels]
-    W       = sum(col_ws) + 2 * _DR_OUTER_PAD + 2 * _DR_BRK_W
-    H       = _DR_ROW_H + 2 * _DR_OUTER_PAD
-
-    fig, ax = _plt.subplots(figsize=(W, H))
-    ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis("off")
-    _dr_brackets(ax, _DR_OUTER_PAD, W - _DR_OUTER_PAD,
-                 _DR_OUTER_PAD * 0.6, H - _DR_OUTER_PAD * 0.6)
-
-    cx = _DR_OUTER_PAD + _DR_BRK_W
-    for lbl, cw in zip(labels, col_ws):
-        ax.text(cx + cw / 2, H / 2, lbl, ha="center", va="center",
-                fontsize=_DR_FONTSIZE, fontfamily="monospace")
-        cx += cw
-    return _dr_to_png(fig)
+# def _latex_scalar(value: Any) -> str:
+#     """Build a LaTeX string for a plain scalar value."""
+#     if isinstance(value, str):
+#         # Escape special LaTeX chars, display as mathrm text
+#         escaped = value.replace("_", r"\_").replace("^", r"\^{}")
+#         return r"$\mathrm{" + escaped + r"}$"
+#     return r"$" + _latex_num(value) + r"$"
 
 
-def _render_operator(rows_data: list) -> bytes:
-    """Render an operator/matrix as a PNG image."""
-    nrows  = len(rows_data)
-    ncols  = max(len(r) for r in rows_data) if rows_data else 0
-    labels = [[_dr_fmt(complex(x)) for x in row] for row in rows_data]
-    flat   = [l for row in labels for l in row]
-    cw     = max(_dr_label_width(l) for l in flat) + 2 * _DR_COL_PAD
-    W      = ncols * cw + 2 * _DR_OUTER_PAD + 2 * _DR_BRK_W
-    H      = nrows * _DR_ROW_H + 2 * _DR_OUTER_PAD
+# def _render_latex(latex: str) -> bytes:
+#     """
+#     Render a LaTeX math string to PNG bytes using matplotlib's mathtext engine.
+#     Does NOT require a system TeX installation.
+#     """
+#     import matplotlib
+#     matplotlib.rcParams.update({
+#         "mathtext.fontset": "cm",      # Computer Modern — standard LaTeX look
+#         "font.size":         _DR_FONTSIZE,
+#     })
 
-    fig, ax = _plt.subplots(figsize=(W, H))
-    ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis("off")
-    _dr_brackets(ax, _DR_OUTER_PAD, W - _DR_OUTER_PAD,
-                 _DR_OUTER_PAD * 0.6, H - _DR_OUTER_PAD * 0.6)
+#     fig = _plt.figure(figsize=(0.01, 0.01))
+#     fig.patch.set_facecolor("white")
 
-    for r, row in enumerate(labels):
-        for c, lbl in enumerate(row):
-            x = _DR_OUTER_PAD + _DR_BRK_W + (c + 0.5) * cw
-            y = H - _DR_OUTER_PAD - (r + 0.5) * _DR_ROW_H
-            ax.text(x, y, lbl, ha="center", va="center",
-                    fontsize=_DR_FONTSIZE, fontfamily="monospace")
-    return _dr_to_png(fig)
+#     # Render into a text object, then resize the figure to fit tightly
+#     text = fig.text(0.5, 0.5, latex,
+#                     ha="center", va="center",
+#                     fontsize=_DR_FONTSIZE,
+#                     color="black")
 
+#     # Measure the bounding box and resize figure to fit
+#     fig.canvas.draw()
+#     renderer = fig.canvas.get_renderer()
+#     bb = text.get_window_extent(renderer=renderer)
 
-def _render_scalar(value: Any) -> bytes:
-    """Render a plain scalar (complex, float, int, string) as a PNG image."""
-    text = _dr_fmt(value) if not isinstance(value, str) else value
-    W    = max(1.5, len(text) * 0.14 + 0.4)
-    fig, ax = _plt.subplots(figsize=(W, 0.55))
-    ax.text(0.5, 0.5, text, ha="center", va="center",
-            fontsize=_DR_FONTSIZE + 1, fontfamily="monospace",
-            transform=ax.transAxes)
-    ax.axis("off")
-    return _dr_to_png(fig)
+#     pad_px = 20
+#     W_in = (bb.width  + 2 * pad_px) / _DR_DPI
+#     H_in = (bb.height + 2 * pad_px) / _DR_DPI
+#     fig.set_size_inches(max(W_in, 0.5), max(H_in, 0.5))
 
-
-def _render_array(data: list) -> bytes:
-    """Render a BKArray as a vertical column vector PNG."""
-    labels = [_fmt(x) for x in data]
-    n      = len(labels)
-    if n == 0:
-        return _render_scalar("[]")
-    cw     = max(_dr_label_width(l) for l in labels) + 2 * _DR_COL_PAD
-    W      = cw + 2 * _DR_OUTER_PAD + 2 * _DR_BRK_W
-    H      = n * _DR_ROW_H + 2 * _DR_OUTER_PAD
-
-    fig, ax = _plt.subplots(figsize=(W, H))
-    ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis("off")
-
-    # Arrays use square brackets — draw them as [ ]
-    # Left [
-    lx = _DR_OUTER_PAD; rx = W - _DR_OUTER_PAD
-    by = _DR_OUTER_PAD * 0.6; ty = H - _DR_OUTER_PAD * 0.6
-    for x, sign in [(lx, +1), (rx, -1)]:
-        ax.plot([x, x],                    [by, ty], "k-", lw=_DR_BRK_LW)
-        ax.plot([x, x + sign * _DR_BRK_W], [ty, ty], "k-", lw=_DR_BRK_LW)
-        ax.plot([x, x + sign * _DR_BRK_W], [by, by], "k-", lw=_DR_BRK_LW)
-
-    for i, lbl in enumerate(labels):
-        y = H - _DR_OUTER_PAD - (i + 0.5) * _DR_ROW_H
-        ax.text(W / 2, y, lbl, ha="center", va="center",
-                fontsize=_DR_FONTSIZE, fontfamily="monospace")
-    return _dr_to_png(fig)
+#     buf = _io.BytesIO()
+#     fig.savefig(buf, format="png", dpi=_DR_DPI,
+#                 bbox_inches="tight", facecolor="white")
+#     _plt.close(fig)
+#     buf.seek(0)
+#     return buf.read()
 
 
-def render_dirac_value(value: Any) -> bytes | None:
-    """
-    Render any BraKet runtime value as a PNG byte string.
-    Returns None if matplotlib is unavailable.
-    Accepts: BKVector (ket/bra), BKOperator, BKArray,
-             complex, float, int, bool, str.
-    """
-    if not _MPL_AVAILABLE:
-        return None
-    if isinstance(value, BKVector):
-        if value.kind == "ket":
-            return _render_ket(value.data)
-        return _render_bra(value.data)
-    if isinstance(value, BKOperator):
-        return _render_operator(value.rows)
-    if isinstance(value, BKArray):
-        return _render_array(value.data)
-    # scalar fallback
-    return _render_scalar(value)
+# def render_dirac_value(value: Any) -> bytes | None:
+#     """
+#     Render any BraKet runtime value as a LaTeX-formatted PNG byte string.
+#     Returns None if matplotlib is unavailable.
+#     Accepts: BKVector (ket/bra), BKOperator, BKArray,
+#              complex, float, int, bool, str.
+#     """
+#     if not _MPL_AVAILABLE:
+#         return None
+#     if isinstance(value, BKVector):
+#         latex = _latex_ket(value.data) if value.kind == "ket" else _latex_bra(value.data)
+#     elif isinstance(value, BKOperator):
+#         latex = _latex_operator(value.rows)
+#     elif isinstance(value, BKArray):
+#         if not value.data:
+#             latex = r"$[\,]$"
+#         else:
+#             latex = _latex_array(value.data)
+#     else:
+#         latex = _latex_scalar(value)
+#     return _render_latex(latex)
 
 
-def show_dirac_popup(value: Any, title: str = "dirac()"):
-    """
-    Open a Tkinter Toplevel window showing the rendered Dirac notation image.
-    Safe to call from within the interpreter (runs in the same thread as the IDE).
-    Does nothing if Tkinter or matplotlib is unavailable.
-    """
-    if not _TK_AVAILABLE or not _MPL_AVAILABLE:
-        return
-    png = render_dirac_value(value)
-    if png is None:
-        return
+# def show_dirac_popup(value: Any, title: str = "dirac()"):
+# """
+# Open a Tkinter Toplevel window showing the rendered LaTeX Dirac notation image.
+# Safe to call from within the interpreter (runs in the same thread as the IDE).
+# Does nothing if Tkinter or matplotlib is unavailable.
+# """
+# if not _TK_AVAILABLE or not _MPL_AVAILABLE:
+#     return
+# png = render_dirac_value(value)
+# if png is None:
+#     return
 
-    try:
-        # Encode PNG as base64 so Tkinter's PhotoImage can load it directly
-        b64 = _base64.b64encode(png).decode("ascii")
+# # Determine a human-readable type label for the subtitle
+# if isinstance(value, BKVector):
+#     type_label = f"{'ket' if value.kind == 'ket' else 'bra'}  —  dim {len(value.data)}"
+# elif isinstance(value, BKOperator):
+#     type_label = f"operator  —  {value.n_rows}×{value.n_cols}"
+# elif isinstance(value, BKArray):
+#     type_label = f"array  —  len {len(value.data)}"
+# else:
+#     type_label = type(value).__name__
 
-        win = _tk.Toplevel()
-        win.title(title)
-        win.resizable(False, False)
+# try:
+#     b64 = _base64.b64encode(png).decode("ascii")
 
-        img = _tk.PhotoImage(data=b64)
-        lbl = _tk.Label(win, image=img, bg="white",
-                        padx=16, pady=16)
-        lbl.image = img   # keep reference — Tkinter GC would delete it otherwise
-        lbl.pack()
+#     WIN_BG  = "#0f1117"
+#     HDR_BG  = "#161b22"
+#     FG      = "#e6edf3"
+#     FG_DIM  = "#8b949e"
+#     ACCENT  = "#58a6ff"
+#     BTN_BG  = "#21262d"
 
-        # Close button
-        _tk.Button(win, text="Close", command=win.destroy,
-                   padx=8, pady=4).pack(pady=(0, 10))
+#     win = _tk.Toplevel()
+#     win.title(title)
+#     win.resizable(True, True)
+#     win.configure(bg=WIN_BG)
+#     win.minsize(260, 180)
 
-        win.lift()
-        win.focus_force()
-    except Exception:
-        pass   # silently skip if display is unavailable (e.g. headless CI)
+#     # Header bar
+#     hdr = _tk.Frame(win, bg=HDR_BG, pady=8)
+#     hdr.pack(fill=_tk.X)
+#     _tk.Label(hdr, text=f"  {title}", bg=HDR_BG,
+#               fg=ACCENT, font=("Segoe UI", 11, "bold")).pack(side=_tk.LEFT)
+#     _tk.Label(hdr, text=f"{type_label}  ", bg=HDR_BG,
+#               fg=FG_DIM, font=("Segoe UI", 10)).pack(side=_tk.RIGHT)
+
+#     # Separator
+#     _tk.Frame(win, bg="#30363d", height=1).pack(fill=_tk.X)
+
+#     # Image area — white background so the LaTeX PNG looks natural
+#     img_frame = _tk.Frame(win, bg="white", padx=24, pady=20)
+#     img_frame.pack(fill=_tk.BOTH, expand=True, padx=16, pady=16)
+
+#     img = _tk.PhotoImage(data=b64)
+#     lbl = _tk.Label(img_frame, image=img, bg="white")
+#     lbl.image = img   # keep GC reference
+#     lbl.pack()
+
+#     # Close button
+#     _tk.Frame(win, bg="#30363d", height=1).pack(fill=_tk.X)
+#     _tk.Button(win, text="Close", command=win.destroy,
+#                bg=BTN_BG, fg=FG, relief=_tk.FLAT,
+#                font=("Segoe UI", 10, "bold"),
+#                padx=20, pady=6, cursor="hand2",
+#                activebackground=ACCENT,
+#                activeforeground=WIN_BG).pack(pady=10)
+
+#     win.lift()
+#     win.focus_force()
+# except Exception:
+#     pass   # silently skip if display is unavailable (e.g. headless CI)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1696,17 +1679,17 @@ class Interpreter:
                 return BKOperator(rows)
             return v
 
-        if name == "dirac":
-            # Render value as a visual matrix/vector notation in a popup window.
-            # Accepts: BKVector (ket/bra), BKOperator, BKArray, or any scalar.
-            v     = args[0] if args else None
-            label = _fmt(args[1]) if len(args) >= 2 else "dirac()"
-            if not _MPL_AVAILABLE:
-                raise BKRuntimeError(
-                    "dirac() requires matplotlib — run: pip install matplotlib",
-                    line)
-            show_dirac_popup(v, title=label)
-            return None
+        # if name == "dirac":
+        #     # Render value as a visual matrix/vector notation in a popup window.
+        #     # Accepts: BKVector (ket/bra), BKOperator, BKArray, or any scalar.
+        #     v     = args[0] if args else None
+        #     label = _fmt(args[1]) if len(args) >= 2 else "dirac()"
+        #     if not _MPL_AVAILABLE:
+        #         raise BKRuntimeError(
+        #             "dirac() requires matplotlib — run: pip install matplotlib",
+        #             line)
+        #     show_dirac_popup(v, title=label)
+        #     return None
 
         if name == "trace":
             # Sum of diagonal elements of a square operator.
