@@ -45,8 +45,8 @@ var_decl_list
     ;
 var_decl
     : IDENTIFIER ASSIGN expression
-    | KET_IDENTIFIER ASSIGN num_expression
-    | BRA_IDENTIFIER ASSIGN num_expression
+    | KET_IDENTIFIER ASSIGN expression
+    | BRA_IDENTIFIER ASSIGN expression
     ;
 
 KET_IDENTIFIER

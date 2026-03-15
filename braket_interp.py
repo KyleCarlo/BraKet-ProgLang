@@ -260,16 +260,29 @@ class ICGenerator:
             field_name = ctx.struct_access().IDENTIFIER(1).getText()
             self._emit(STRUCT_SET, name, field_name, val, line=self._line(ctx))
 
+    def _gen_rhs(self, ctx):
+        """
+        Get the IC address for a var_decl RHS.
+        Tries expression() first (new grammar), falls back to num_expression()
+        for stale parsers that still route ket/bra RHS through num_expression.
+        """
+        if ctx.expression():
+            return self._gen_expr(ctx.expression())
+        if ctx.num_expression():
+            return self._gen_num_expr(ctx.num_expression())
+        return None
+
     def _gen_var_decl(self, ctx, is_const=False):
         """
-        var_decl : IDENTIFIER ASSIGN expression
-                 | KET_IDENTIFIER ASSIGN num_expression
-                 | BRA_IDENTIFIER ASSIGN num_expression
+        var_decl : IDENTIFIER    ASSIGN expression
+                 | KET_IDENTIFIER ASSIGN expression   (new grammar)
+                 | BRA_IDENTIFIER ASSIGN expression   (new grammar)
+        Falls back to num_expression for ket/bra if parser not yet regenerated.
         """
         ln = self._line(ctx)
         if ctx.IDENTIFIER():
             name = ctx.IDENTIFIER().getText()
-            val  = self._gen_expr(ctx.expression())
+            val  = self._gen_rhs(ctx)
             self._emit(ASSIGN, name, val, line=ln)
             if is_const:
                 self._const_names.add(name)
@@ -277,7 +290,7 @@ class ICGenerator:
         elif ctx.KET_IDENTIFIER():
             raw  = ctx.KET_IDENTIFIER().getText()   # |name>
             name = raw                               # keep the full token as key
-            val  = self._gen_braket_vector_or_num(ctx)
+            val  = self._gen_rhs(ctx)
             self._emit(ASSIGN, name, val, line=ln)
             if is_const:
                 self._const_names.add(name)
@@ -285,16 +298,14 @@ class ICGenerator:
         elif ctx.BRA_IDENTIFIER():
             raw  = ctx.BRA_IDENTIFIER().getText()   # <name|
             name = raw
-            val  = self._gen_braket_vector_or_num(ctx)
+            val  = self._gen_rhs(ctx)
             self._emit(ASSIGN, name, val, line=ln)
             if is_const:
                 self._const_names.add(name)
 
     def _gen_braket_vector_or_num(self, ctx):
-        """For ket/bra declarations — the RHS is a num_expression (braket_vector)."""
-        if ctx.num_expression():
-            return self._gen_num_expr(ctx.num_expression())
-        return None
+        """For ket/bra declarations — tries expression then num_expression."""
+        return self._gen_rhs(ctx)
 
     # ── if / elif / else ──────────────────────────────────────
 

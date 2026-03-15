@@ -307,6 +307,8 @@ class _SemanticVisitor(BraKetVisitor):
         self.current_scope = self.global_scope
         self.diagnostics:  list[Diagnostic] = []
         self._scope_log:   list[SymbolTable] = []
+        self._func_return_types: dict[str, str] = {}
+        self._func_stack: list[str] = []
 
     # ── helpers ───────────────────────────────────────────────
 
@@ -369,20 +371,40 @@ class _SemanticVisitor(BraKetVisitor):
             name     = ctx.IDENTIFIER().getText()
             rhs_type = self._visit_expr(ctx.expression())
             literal  = self._try_literal(ctx.expression())
-            self._assign(ctx, name, rhs_type, is_const, literal)
+            # A plain variable cannot hold a ket or bra
+            if rhs_type == BKType.KET:
+                self._error(ctx,
+                    f"Cannot assign a ket to plain variable '{name}'. "
+                    f"Use ket syntax: |{name}> = ...")
+            elif rhs_type == BKType.BRA:
+                self._error(ctx,
+                    f"Cannot assign a bra to plain variable '{name}'. "
+                    f"Use bra syntax: <{name}| = ...")
+            else:
+                self._assign(ctx, name, rhs_type, is_const, literal)
 
         elif ctx.KET_IDENTIFIER():
-            raw  = ctx.KET_IDENTIFIER().getText()   # |name>
-            name = "|" + raw[1:-1] + ">"
-            if ctx.num_expression():
-                self._visit_num_expr(ctx.num_expression())
+            raw      = ctx.KET_IDENTIFIER().getText()   # |name>
+            name     = "|" + raw[1:-1] + ">"
+            rhs_type = self._visit_expr(ctx.expression())
+            # Vector/matrix literals (braket_vector, op) are context-neutral —
+            # the LHS determines whether they become ket/bra/operator.
+            # Only reject if RHS is a typed non-ket value (e.g. function returning bra).
+            if rhs_type not in (BKType.KET, BKType.UNKNOWN):
+                self._error(ctx,
+                    f"Cannot assign '{rhs_type}' to ket variable '{raw}'. "
+                    f"RHS must return a ket.")
             self._assign(ctx, name, BKType.KET, is_const)
 
-        else:                                        # BRA  <name|
-            raw  = ctx.BRA_IDENTIFIER().getText()    # <name|
-            name = "<" + raw[1:-1] + "|"
-            if ctx.num_expression():
-                self._visit_num_expr(ctx.num_expression())
+        else:                                           # BRA  <name|
+            raw      = ctx.BRA_IDENTIFIER().getText()   # <name|
+            name     = "<" + raw[1:-1] + "|"
+            rhs_type = self._visit_expr(ctx.expression())
+            # Same as above — vector literals are context-neutral.
+            if rhs_type not in (BKType.BRA, BKType.UNKNOWN):
+                self._error(ctx,
+                    f"Cannot assign '{rhs_type}' to bra variable '{raw}'. "
+                    f"RHS must return a bra.")
             self._assign(ctx, name, BKType.BRA, is_const)
 
     def _try_literal(self, expr_ctx) -> Optional[float]:
@@ -412,10 +434,12 @@ class _SemanticVisitor(BraKetVisitor):
         name = ctx.IDENTIFIER().getText()
         self.current_scope.define(name, BKType.FUNCTION)
         self._push(f"func:{name}")
+        self._func_stack.append(name)
         if ctx.param_list():
             self._register_params(ctx.param_list())
         if ctx.statement_list():
             self.visitStatement_list(ctx.statement_list())
+        self._func_stack.pop()
         self._pop()
 
     def visitMain_function(self, ctx: BraKetParser.Main_functionContext):
@@ -481,7 +505,17 @@ class _SemanticVisitor(BraKetVisitor):
         self._visit_bool_expr(ctx.bool_expression())
 
     def _visit_return(self, ctx: BraKetParser.Return_statementContext) -> str:
-        return self._visit_expr(ctx.expression())
+        ret_type = self._visit_expr(ctx.expression())
+        if self._func_stack:
+            fname = self._func_stack[-1]
+            existing = self._func_return_types.get(fname, BKType.UNKNOWN)
+            if existing == BKType.UNKNOWN:
+                self._func_return_types[fname] = ret_type
+            elif ret_type != BKType.UNKNOWN and ret_type != existing:
+                self._warn(ctx,
+                    f"Function '{fname}' has inconsistent return types: "
+                    f"'{existing}' and '{ret_type}'.")
+        return ret_type
 
     def _visit_call(self, ctx: BraKetParser.Func_call_statementContext) -> str:
         name = ctx.IDENTIFIER().getText()
@@ -489,7 +523,7 @@ class _SemanticVisitor(BraKetVisitor):
             self._error(ctx, f"Call to undeclared function '{name}'.")
         if ctx.arg_list():
             self._visit_arg_list(ctx.arg_list())
-        return BKType.UNKNOWN
+        return self._func_return_types.get(name, BKType.UNKNOWN)
 
     def _visit_arg_list(self, ctx: BraKetParser.Arg_listContext):
         if ctx.arg():      self._visit_arg(ctx.arg())
@@ -515,22 +549,30 @@ class _SemanticVisitor(BraKetVisitor):
     # ── expressions ───────────────────────────────────────────
 
     def _visit_expr(self, ctx: BraKetParser.ExpressionContext) -> str:
-        if ctx.IDENTIFIER():
-            name = ctx.IDENTIFIER().getText()
-            sym  = self.current_scope.lookup(name)
-            if sym is None:
-                self._error(ctx, f"Undeclared variable '{name}'.")
-                return BKType.UNKNOWN
-            return sym.bk_type
+        # IMPORTANT: func_call_statement MUST be checked before IDENTIFIER.
+        # ctx.IDENTIFIER() uses getToken() which searches all child tokens,
+        # so it returns the function name token even when the expression is
+        # a func_call_statement (e.g. hadamard(|ket0>)).
+        # ctx.func_call_statement() uses getTypedRuleContext() which only
+        # matches when that rule was actually parsed — so it is reliably None
+        # for a plain identifier expression and non-None for a call.
+        if ctx.func_call_statement(): return self._visit_call(ctx.func_call_statement())
+        if ctx.array_access():        return self._visit_array_access(ctx.array_access())
+        if ctx.struct_access():       return self._visit_struct_access(ctx.struct_access())
         if ctx.dirac_expression():    return self._visit_dirac(ctx.dirac_expression())
         if ctx.num_expression():      return self._visit_num_expr(ctx.num_expression())
         if ctx.bool_expression():     return self._visit_bool_expr(ctx.bool_expression())
         if ctx.string_expression():   return self._visit_str_expr(ctx.string_expression())
         if ctx.array():               return BKType.ARRAY
         if ctx.struct():              return BKType.STRUCT
-        if ctx.array_access():        return self._visit_array_access(ctx.array_access())
-        if ctx.struct_access():       return self._visit_struct_access(ctx.struct_access())
-        if ctx.func_call_statement(): return self._visit_call(ctx.func_call_statement())
+        if ctx.IDENTIFIER():
+            # Only reached for a plain bare identifier (not a call, not array/struct access)
+            name = ctx.IDENTIFIER().getText()
+            sym  = self.current_scope.lookup(name)
+            if sym is None:
+                self._error(ctx, f"Undeclared variable '{name}'.")
+                return BKType.UNKNOWN
+            return sym.bk_type
         return BKType.UNKNOWN
 
     # ── numeric ───────────────────────────────────────────────
@@ -676,7 +718,7 @@ class _SemanticVisitor(BraKetVisitor):
                 return BKType.UNKNOWN
             return sym.bk_type
 
-        if ctx.braket_vector(): return BKType.KET
+        if ctx.braket_vector(): return BKType.UNKNOWN  # context-neutral: ket or bra depending on LHS
         if ctx.op():            return BKType.OPERATOR
         return BKType.UNKNOWN
 
@@ -697,6 +739,12 @@ class _SemanticVisitor(BraKetVisitor):
         if t1 == BKType.OPERATOR and t2 == BKType.KET:      return BKType.KET
         if t1 == BKType.OPERATOR and t2 == BKType.BRA:      return BKType.BRA
         if t1 == BKType.BRA      and t2 == BKType.OPERATOR: return BKType.BRA
+        # Operator applied to an unknown-typed operand (e.g. a function parameter)
+        # still produces a ket; bra applied to unknown operator still produces a bra.
+        if t1 == BKType.OPERATOR and t2 == BKType.UNKNOWN:  return BKType.KET
+        if t1 == BKType.UNKNOWN  and t2 == BKType.KET:      return BKType.KET
+        if t1 == BKType.UNKNOWN  and t2 == BKType.BRA:      return BKType.BRA
+        if t1 == BKType.BRA      and t2 == BKType.UNKNOWN:  return BKType.BRA
         if N(t1) and N(t2): return BKType.promote(t1, t2)
         if BKType.UNKNOWN in (t1, t2): return BKType.UNKNOWN
         self._warn(ctx, f"Unexpected '*' between Dirac types '{t1}' and '{t2}'.")

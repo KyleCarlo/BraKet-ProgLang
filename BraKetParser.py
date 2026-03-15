@@ -90,8 +90,8 @@ def serializedATN():
         0,143,9,1,0,0,0,144,145,5,5,0,0,145,146,3,14,7,0,146,11,1,0,0,0,
         147,149,3,14,7,0,148,147,1,0,0,0,149,150,1,0,0,0,150,148,1,0,0,0,
         150,151,1,0,0,0,151,13,1,0,0,0,152,153,5,49,0,0,153,154,5,30,0,0,
-        154,162,3,60,30,0,155,156,5,6,0,0,156,157,5,30,0,0,157,162,3,64,
-        32,0,158,159,5,7,0,0,159,160,5,30,0,0,160,162,3,64,32,0,161,152,
+        154,162,3,60,30,0,155,156,5,6,0,0,156,157,5,30,0,0,157,162,3,60,
+        30,0,158,159,5,7,0,0,159,160,5,30,0,0,160,162,3,60,30,0,161,152,
         1,0,0,0,161,155,1,0,0,0,161,158,1,0,0,0,162,15,1,0,0,0,163,174,5,
         8,0,0,164,174,5,9,0,0,165,174,5,10,0,0,166,174,5,11,0,0,167,174,
         3,26,13,0,168,174,3,28,14,0,169,174,5,12,0,0,170,174,3,32,16,0,171,
@@ -836,10 +836,6 @@ class BraKetParser ( Parser ):
         def KET_IDENTIFIER(self):
             return self.getToken(BraKetParser.KET_IDENTIFIER, 0)
 
-        def num_expression(self):
-            return self.getTypedRuleContext(BraKetParser.Num_expressionContext,0)
-
-
         def BRA_IDENTIFIER(self):
             return self.getToken(BraKetParser.BRA_IDENTIFIER, 0)
 
@@ -879,7 +875,7 @@ class BraKetParser ( Parser ):
                 self.state = 156
                 self.match(BraKetParser.ASSIGN)
                 self.state = 157
-                self.num_expression()
+                self.expression()
                 pass
             elif token in [7]:
                 self.enterOuterAlt(localctx, 3)
@@ -888,7 +884,7 @@ class BraKetParser ( Parser ):
                 self.state = 159
                 self.match(BraKetParser.ASSIGN)
                 self.state = 160
-                self.num_expression()
+                self.expression()
                 pass
             else:
                 raise NoViableAltException(self)
