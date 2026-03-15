@@ -230,6 +230,8 @@ class IDE:
         self.font_tree.configure(size=max(self.FONT_SIZE_MIN, new_size - 1))
         ttk.Style().configure("Treeview", rowheight=int(new_size * 2.0))
         self.status_var.set(f"  🔎 {new_size}pt  (Ctrl+0 to reset)")
+        digit_w = self.font_mono.measure("0") * 4 + 10
+        self.line_numbers.config(width=max(40, digit_w))
         self._update_line_numbers()
 
     def zoom_in(self,    event=None): self._zoom(+1)
@@ -338,22 +340,39 @@ class IDE:
         body = tk.Frame(frame, bg=DARK_BG)
         body.pack(fill=tk.BOTH, expand=True)
 
-        self.line_numbers = tk.Text(body, width=4, bg="#0d1117",
-                                    fg="#3d444d", state=tk.DISABLED,
-                                    relief=tk.FLAT, font=self.font_mono,
-                                    padx=4, cursor="arrow")
+        # Canvas for line numbers. Numbers are drawn using dlineinfo() pixel
+        # coordinates queried directly from the editor widget, so they are
+        # always pixel-perfectly aligned at every scroll position.
+        self.line_numbers = tk.Canvas(body, width=40, bg="#0d1117",
+                                      highlightthickness=0, bd=0)
         self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
         tk.Frame(body, bg=BORDER, width=1).pack(side=tk.LEFT, fill=tk.Y)
 
-        self.editor = scrolledtext.ScrolledText(
+        vscroll = tk.Scrollbar(body, orient=tk.VERTICAL, bg=PANEL_BG,
+                               troughcolor=DARK_BG, relief=tk.FLAT, width=10)
+        vscroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        hscroll = tk.Scrollbar(body, orient=tk.HORIZONTAL, bg=PANEL_BG,
+                               troughcolor=DARK_BG, relief=tk.FLAT, width=10)
+        hscroll.pack(side=tk.BOTTOM, fill=tk.X)
+
+        self.editor = tk.Text(
             body, wrap=tk.NONE, bg=DARK_BG, fg=FG,
             insertbackground=ACCENT, font=self.font_mono,
             relief=tk.FLAT, undo=True, padx=10, pady=6,
-            selectbackground="#1f3a5f", selectforeground=FG)
+            selectbackground="#1f3a5f", selectforeground=FG,
+            spacing1=0, spacing2=0, spacing3=0,
+            yscrollcommand=self._on_editor_scroll,
+            xscrollcommand=hscroll.set)
         self.editor.pack(fill=tk.BOTH, expand=True)
+
+        vscroll.config(command=self.editor.yview)
+        hscroll.config(command=self.editor.xview)
+
         self.editor.bind("<KeyRelease>",    self._on_key)
         self.editor.bind("<ButtonRelease>", self._update_cursor_pos)
-        self.editor.bind("<Tab>", lambda e: (self.editor.insert(tk.INSERT, "    "), "break")[1])
+        self.editor.bind("<Return>",        self._on_return)
+        self.editor.bind("<Configure>",     lambda e: self._redraw_line_numbers())
         return frame
 
     # ── output / diagnostics panel ────────────────────────────
@@ -385,72 +404,20 @@ class IDE:
     # ── debug notebook ────────────────────────────────────────
 
     def _build_debug_notebook(self, parent):
-        # ── Tab button bar ────────────────────────────────────
-        self._tab_frames: dict[str, tk.Frame] = {}
-        self._tab_buttons: dict[str, tk.Button] = {}
-        self._active_tab: str = ""
-
-        tab_bar = tk.Frame(parent, bg=DARK_BG)
-        tab_bar.pack(fill=tk.X, side=tk.TOP)
-        tk.Frame(parent, bg=BORDER, height=1).pack(fill=tk.X, side=tk.TOP)
-
-        # Container that holds all tab frames stacked on top of each other
-        self._tab_container = tk.Frame(parent, bg=PANEL_BG)
-        self._tab_container.pack(fill=tk.BOTH, expand=True)
-
-        TAB_DEFS = [
-            ("scanner",   "  🔍 Scanner  "),
-            ("parser",    "  🌳 Parse Tree  "),
-            ("symbols",   "  📋 Symbols  "),
-            ("diag",      "  ⚠  Diagnostics  "),
-            ("ic",        "  ⚙  IC  "),
-        ]
-        for key, label in TAB_DEFS:
-            btn = tk.Button(
-                tab_bar, text=label,
-                bg=DARK_BG, fg=FG_DIM,
-                relief=tk.FLAT, bd=0,
-                font=("Segoe UI", 10, "bold"),
-                padx=10, pady=7,
-                cursor="hand2",
-                activebackground=PANEL_BG,
-                activeforeground=ACCENT,
-                command=lambda k=key: self._select_tab(k),
-            )
-            btn.pack(side=tk.LEFT)
-            self._tab_buttons[key] = btn
-
+        self.nb = ttk.Notebook(parent)
+        self.nb.pack(fill=tk.BOTH, expand=True, padx=1, pady=1)
         self._build_scanner_tab()
         self._build_parser_tab()
         self._build_symtable_tab()
         self._build_diag_tab()
         self._build_ic_tab()
 
-        # Show the first tab by default
-        self._select_tab("scanner")
-
-    def _select_tab(self, key: str):
-        """Raise the chosen tab frame and update button highlight states."""
-        if key in self._tab_frames:
-            self._tab_frames[key].tkraise()
-        self._active_tab = key
-        for k, btn in self._tab_buttons.items():
-            if k == key:
-                btn.config(bg=PANEL_BG, fg=ACCENT,
-                           relief=tk.FLAT,
-                           font=("Segoe UI", 10, "bold"))
-            else:
-                btn.config(bg=DARK_BG, fg=FG_DIM,
-                           relief=tk.FLAT,
-                           font=("Segoe UI", 10, "bold"))
-
 
     # ── Intermediate Code tab ─────────────────────────────────
 
     def _build_ic_tab(self):
-        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
-        frame.place(relwidth=1, relheight=1)
-        self._tab_frames["ic"] = frame
+        frame = tk.Frame(self.nb, bg=PANEL_BG)
+        self.nb.add(frame, text="  ⚙  IC  ")
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -477,9 +444,8 @@ class IDE:
     # ── Scanner tab ───────────────────────────────────────────
 
     def _build_scanner_tab(self):
-        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
-        frame.place(relwidth=1, relheight=1)
-        self._tab_frames["scanner"] = frame
+        frame = tk.Frame(self.nb, bg=PANEL_BG)
+        self.nb.add(frame, text="  🔍 Scanner  ")
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -507,9 +473,8 @@ class IDE:
     # ── Parser tab ────────────────────────────────────────────
 
     def _build_parser_tab(self):
-        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
-        frame.place(relwidth=1, relheight=1)
-        self._tab_frames["parser"] = frame
+        frame = tk.Frame(self.nb, bg=PANEL_BG)
+        self.nb.add(frame, text="  🌳 Parse Tree  ")
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -529,9 +494,8 @@ class IDE:
     # ── Symbol Table tab ──────────────────────────────────────
 
     def _build_symtable_tab(self):
-        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
-        frame.place(relwidth=1, relheight=1)
-        self._tab_frames["symbols"] = frame
+        frame = tk.Frame(self.nb, bg=PANEL_BG)
+        self.nb.add(frame, text="  📋 Symbols  ")
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -559,9 +523,8 @@ class IDE:
     # ── Diagnostics tab ───────────────────────────────────────
 
     def _build_diag_tab(self):
-        frame = tk.Frame(self._tab_container, bg=PANEL_BG)
-        frame.place(relwidth=1, relheight=1)
-        self._tab_frames["diag"] = frame
+        frame = tk.Frame(self.nb, bg=PANEL_BG)
+        self.nb.add(frame, text="  ⚠  Diagnostics  ")
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
@@ -636,19 +599,64 @@ class IDE:
                 e = f"1.0+{m.end()}c"
                 self.editor.tag_add(tag, s, e)
 
-    def _update_line_numbers(self):
-        content    = self.editor.get("1.0", tk.END)
-        line_count = content.count("\n")
-        nums = "\n".join(str(i) for i in range(1, line_count + 1))
-        self.line_numbers.config(state=tk.NORMAL)
-        self.line_numbers.delete("1.0", tk.END)
-        self.line_numbers.insert("1.0", nums)
-        self.line_numbers.config(state=tk.DISABLED)
+    def _on_editor_scroll(self, first, last):
+        """Called by editor yscrollcommand; updates scrollbar and redraws numbers."""
+        for w in self.editor.master.pack_slaves():
+            if isinstance(w, tk.Scrollbar) and str(w.cget('orient')) == 'vertical':
+                w.set(first, last)
+                break
+        self._redraw_line_numbers()
 
+    def _redraw_line_numbers(self):
+        """
+        Redraw line numbers on the Canvas by querying dlineinfo() for every
+        visible line in the editor. dlineinfo() returns the exact pixel bbox
+        of each line as rendered by the editor itself, so the numbers are
+        always pixel-perfectly aligned regardless of scroll position or zoom.
+        """
+        self.line_numbers.delete("all")
+        canvas_w = self.line_numbers.winfo_width()
+        if canvas_w < 2:
+            return
+
+        i = self.editor.index("@0,0")          # first visible index
+        while True:
+            info = self.editor.dlineinfo(i)     # (x, y, w, h, baseline)
+            if info is None:
+                break
+            y        = info[1]                  # pixel top of this line
+            h        = info[3]                  # total line height in pixels
+            line_num = int(str(i).split(".")[0])
+            self.line_numbers.create_text(
+                canvas_w - 4,
+                y + h // 2,
+                anchor=tk.E,
+                text=str(line_num),
+                fill="#3d444d",
+                font=self.font_mono)
+            # Advance to the next line
+            next_i = self.editor.index(f"{i} +1line")
+            if next_i == i:
+                break
+            i = next_i
+
+    def _update_line_numbers(self):
+        """Called on key events; schedules a canvas redraw after the event loop settles."""
+        self.root.after_idle(self._redraw_line_numbers)
     def _update_cursor_pos(self, event=None):
         pos  = self.editor.index(tk.INSERT)
         line, col = pos.split(".")
         self.status_var.set(f"  Ln {line}, Col {int(col)+1}")
+
+    def _on_return(self, event=None):
+        """Insert a newline with the same leading indent as the current line."""
+        insert_pos = self.editor.index(tk.INSERT)
+        line_num   = insert_pos.split(".")[0]
+        line_text  = self.editor.get(f"{line_num}.0", f"{line_num}.end")
+        indent     = len(line_text) - len(line_text.lstrip())
+        self.editor.insert(tk.INSERT, "\n" + " " * indent)
+        self._on_key()
+        return "break"
 
     def _on_key(self, event=None):
         self._highlight()
@@ -910,7 +918,7 @@ class IDE:
 
         # Auto-switch: errors → Diagnostics, else output if there is program output
         if syn_errs or sem_errs:
-            self._select_tab("diag")
+            self.nb.select(4)   # diagnostics tab (now index 4)
         elif result.run and result.run.output:
             pass  # stay on current tab; output is in the output panel
 

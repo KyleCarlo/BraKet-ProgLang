@@ -498,12 +498,19 @@ class _SemanticVisitor(BraKetVisitor):
     def _visit_arg(self, ctx: BraKetParser.ArgContext):
         if ctx.assign_statement():
             self.visitAssign_statement(ctx.assign_statement())
-        elif ctx.IDENTIFIER():
-            name = ctx.IDENTIFIER().getText()
-            if self.current_scope.lookup(name) is None:
-                self._error(ctx, f"Undeclared variable '{name}' passed as argument.")
+        elif ctx.KET_IDENTIFIER():
+            raw = ctx.KET_IDENTIFIER().getText()   # |name>
+            key = "|" + raw[1:-1] + ">"
+            if self.current_scope.lookup(key) is None:
+                self._error(ctx, f"Ket '{raw}' used before assignment.")
+        elif ctx.BRA_IDENTIFIER():
+            raw = ctx.BRA_IDENTIFIER().getText()   # <name|
+            key = "<" + raw[1:-1] + "|"
+            if self.current_scope.lookup(key) is None:
+                self._error(ctx, f"Bra '{raw}' used before assignment.")
         elif ctx.array_access():  self._visit_array_access(ctx.array_access())
         elif ctx.struct_access(): self._visit_struct_access(ctx.struct_access())
+        elif ctx.expression():    self._visit_expr(ctx.expression())
 
     # ── expressions ───────────────────────────────────────────
 

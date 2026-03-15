@@ -53,7 +53,6 @@ import cmath
 import operator
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
-from unittest.mock import _Sentinel
 
 # Optional Tkinter import for input() dialog — only used at runtime if called
 try:
@@ -401,14 +400,19 @@ class ICGenerator:
             self._gen_assign_stmt(ctx.assign_statement())
             if ctx.assign_statement().var_decl():
                 return ctx.assign_statement().var_decl().IDENTIFIER().getText()
-        if ctx.IDENTIFIER():
-            return ctx.IDENTIFIER().getText()
-        if ctx.array_access():
+        elif ctx.KET_IDENTIFIER():
+            # Pass ket by its full token name e.g. "|ket0>"
+            return ctx.KET_IDENTIFIER().getText()
+        elif ctx.BRA_IDENTIFIER():
+            # Pass bra by its full token name e.g. "<phi|"
+            return ctx.BRA_IDENTIFIER().getText()
+        elif ctx.array_access():
             return self._gen_array_access(ctx.array_access())
-        if ctx.struct_access():
+        elif ctx.struct_access():
             return self._gen_struct_access(ctx.struct_access())
-        if ctx.value():
-            return self._gen_value_literal(ctx.value())
+        elif ctx.expression():
+            # Covers plain IDENTIFIER, literals, and all other expressions
+            return self._gen_expr(ctx.expression())
         return None
 
     # ── expressions ───────────────────────────────────────────
@@ -647,22 +651,92 @@ class ICGenerator:
             return self._gen_op_matrix(ctx.op())
         return None
 
-    def _gen_braket_vector(self, ctx) -> list:
-        vals = []
-        for bv in ctx.braket_value():
-            if bv.COMPLEX():
-                vals.append(self._parse_complex(bv.COMPLEX().getText()))
-            elif bv.FLOAT():
-                vals.append(float(bv.FLOAT().getText()))
-            elif bv.INT():
-                vals.append(int(bv.INT().getText()))
-        return vals
+    def _gen_braket_vector(self, ctx) -> str:
+        """
+        Build a row-vector from a braket_vector node.
+        Each element is a full braket_expression — supports variables,
+        arithmetic, negation, and function calls like sqrt(2).
+        Emits ARRAY_NEW + ARRAY_SET + VEC_FROM_ARRAY and returns a temp name.
+        """
+        elems = ctx.braket_expression()
+        elem_addrs = [self._gen_braket_expr(be) for be in elems]
+        t = self._tmp()
+        self._emit(ARRAY_NEW, t, len(elem_addrs), line=self._line(ctx))
+        for i, addr in enumerate(elem_addrs):
+            self._emit(ARRAY_SET, t, i, addr, line=self._line(ctx))
+        self._emit("VEC_FROM_ARRAY", t, t, line=self._line(ctx))
+        return t
 
-    def _gen_op_matrix(self, ctx) -> list:
-        rows = []
-        for bvec in ctx.braket_vector():
-            rows.append(self._gen_braket_vector(bvec))
-        return rows
+    def _gen_braket_expr(self, ctx):
+        """Generate IC for a braket_expression; return its address."""
+        if ctx is None:
+            return 0
+        left = self._gen_braket_term(ctx.braket_term())
+        if ctx.braket_expression():
+            right = self._gen_braket_expr(ctx.braket_expression())
+            op = "+" if ctx.ADD() else "-"
+            t = self._tmp()
+            ins = ICInstruction(BINOP, t, left, right, self._line(ctx))
+            ins._op2 = op
+            self._current_ic.append(ins)
+            return t
+        return left
+
+    def _gen_braket_term(self, ctx):
+        left = self._gen_braket_factor(ctx.braket_factor())
+        if ctx.braket_term():
+            right = self._gen_braket_term(ctx.braket_term())
+            if   ctx.MUL(): op = "*"
+            elif ctx.DIV(): op = "/"
+            elif ctx.MOD(): op = "%"
+            elif ctx.EXP(): op = "**"
+            else:           op = "*"
+            t = self._tmp()
+            ins = ICInstruction(BINOP, t, left, right, self._line(ctx))
+            ins._op2 = op
+            self._current_ic.append(ins)
+            return t
+        return left
+
+    def _gen_braket_factor(self, ctx):
+        if ctx.LPAREN() and ctx.braket_expression():
+            return self._gen_braket_expr(ctx.braket_expression())
+        if ctx.func_call_statement():
+            t = self._tmp()
+            return self._gen_call(ctx.func_call_statement(), dest=t)
+        if ctx.COMPLEX():
+            return self._parse_complex(ctx.COMPLEX().getText())
+        if ctx.INT():
+            return int(ctx.INT().getText())
+        if ctx.FLOAT():
+            return float(ctx.FLOAT().getText())
+        if ctx.braket_factor():            # unary +/-
+            inner = self._gen_braket_factor(ctx.braket_factor())
+            if ctx.SUB():
+                t = self._tmp()
+                ins = ICInstruction(UNOP, t, "-", inner, self._line(ctx))
+                ins._op2 = None
+                self._current_ic.append(ins)
+                return t
+            return inner
+        if ctx.IDENTIFIER():
+            return ctx.IDENTIFIER().getText()
+        return 0
+
+    def _gen_op_matrix(self, ctx) -> str:
+        """
+        Build a matrix (operator) from an op node.
+        Collects row temps into a MAT_FROM_ROWS instruction so the
+        interpreter builds a BKOperator at runtime.
+        """
+        row_temps = [self._gen_braket_vector(bvec)
+                     for bvec in ctx.braket_vector()]
+        t = self._tmp()
+        self._emit(ARRAY_NEW, t, len(row_temps), line=self._line(ctx))
+        for i, rt in enumerate(row_temps):
+            self._emit(ARRAY_SET, t, i, rt, line=self._line(ctx))
+        self._emit("MAT_FROM_ROWS", t, t, line=self._line(ctx))
+        return t
 
     # ── array literals ────────────────────────────────────────
 
@@ -1222,6 +1296,24 @@ class Interpreter:
                 else:
                     raise BKRuntimeError(f"'{ins.b}' is not an array", ins.line)
 
+            elif op == "VEC_FROM_ARRAY":
+                arr = env.get(ins.b)
+                if isinstance(arr, BKArray):
+                    env[ins.a] = arr.data
+
+            elif op == "MAT_FROM_ROWS":
+                arr = env.get(ins.b)
+                if isinstance(arr, BKArray):
+                    rows = []
+                    for row in arr.data:
+                        if isinstance(row, list):
+                            rows.append([complex(x) for x in row])
+                        elif isinstance(row, BKVector):
+                            rows.append(row.data)
+                        else:
+                            rows.append([complex(row)])
+                    env[ins.a] = BKOperator(rows)
+
             elif op == STRUCT_SET:
                 obj = self._resolve(ins.a, env)
                 if isinstance(obj, BKStruct):
@@ -1447,7 +1539,7 @@ class Interpreter:
     def _call_function(self, name: str, args: list, line: int) -> Any:
         # Built-ins
         builtin = self._try_builtin(name, args, line)
-        if builtin is not _Sentinel:
+        if builtin is not self._SENTINEL:
             return builtin
 
         if name not in self.functions:
@@ -1887,17 +1979,22 @@ def _patched_run_ic(self, ic, env):
 
         elif op == ASSIGN:
             val = self._resolve(ins.b, env)
-            # ── FIX: use the variable name (ins.a) to decide ket vs bra ──
             if isinstance(val, list):
                 name = ins.a if isinstance(ins.a, str) else ""
                 if name.startswith("<") and name.endswith("|"):
-                    val = BKVector(val, "bra")          # <name| → bra
+                    val = BKVector(val, "bra")
                 elif name.startswith("|") and name.endswith(">"):
-                    val = BKVector(val, "ket")           # |name> → ket
+                    val = BKVector(val, "ket")
                 elif val and isinstance(val[0], list):
-                    val = BKOperator(val)                # nested list → matrix
+                    val = BKOperator(val)
                 else:
-                    val = BKVector(val, "ket")           # bare list fallback → ket
+                    val = BKVector(val, "ket")
+            elif isinstance(val, BKVector):
+                name = ins.a if isinstance(ins.a, str) else ""
+                if name.startswith("<") and name.endswith("|") and val.kind != "bra":
+                    val = BKVector(val.data, "bra")
+                elif name.startswith("|") and name.endswith(">") and val.kind != "ket":
+                    val = BKVector(val.data, "ket")
             env[ins.a] = val
 
         elif op == COPY:
@@ -1973,6 +2070,24 @@ def _patched_run_ic(self, ic, env):
                 env[ins.a] = arr.get(idx)
             else:
                 raise BKRuntimeError(f"'{ins.b}' is not an array", ins.line)
+
+        elif op == "VEC_FROM_ARRAY":
+            arr = env.get(ins.b)
+            if isinstance(arr, BKArray):
+                env[ins.a] = arr.data
+
+        elif op == "MAT_FROM_ROWS":
+            arr = env.get(ins.b)
+            if isinstance(arr, BKArray):
+                rows = []
+                for row in arr.data:
+                    if isinstance(row, list):
+                        rows.append([complex(x) for x in row])
+                    elif isinstance(row, BKVector):
+                        rows.append(row.data)
+                    else:
+                        rows.append([complex(row)])
+                env[ins.a] = BKOperator(rows)
 
         elif op == STRUCT_SET:
             obj = self._resolve(ins.a, env)

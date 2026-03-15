@@ -69,16 +69,7 @@ value
     ;
 
 braket_vector
-    : LPAREN (braket_value (COMMA braket_value)*) RPAREN
-    ;
-braket_value
-    : ADD INT
-    | SUB INT
-    | INT
-    | ADD FLOAT
-    | SUB FLOAT
-    | FLOAT
-    | COMPLEX
+    : LPAREN (braket_expression (COMMA braket_expression)*) RPAREN
     ;
 braket_expression
     : braket_term ADD braket_expression
@@ -94,10 +85,11 @@ braket_term
     ;
 braket_factor
     : LPAREN braket_expression RPAREN
+    | func_call_statement          // e.g. sqrt(2), cos(theta)
     | COMPLEX
-    | ADD braket_factor        // Handles positive prefix (e.g., +5)
-    | SUB braket_factor        // Handles negative prefix (e.g., -5)
-    | INT | FLOAT 
+    | ADD braket_factor            // unary +
+    | SUB braket_factor            // unary -
+    | INT | FLOAT
     | IDENTIFIER
     ;
 
@@ -167,8 +159,9 @@ arg_list
     ;
 arg
     : assign_statement
-    | IDENTIFIER
-    | value
+    | KET_IDENTIFIER
+    | BRA_IDENTIFIER
+    | expression
     | array_access
     | struct_access
     ;
