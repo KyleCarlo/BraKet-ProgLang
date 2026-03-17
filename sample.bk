@@ -24,6 +24,12 @@ func factorial(n){
 }
     
 main() {
+    print("Errors")
+    dfadfafad
+    print(x)
+    |ket0> = (0,1)
+    
+    
     print("Variable Declaration")
     var_test = 5
     y      = 3.14

@@ -1,0 +1,26 @@
+main(){
+    word = "hello"
+    print(type(word))
+    
+    x = 64
+    print(sqrt(x))
+    
+    numbers = [1,2,3]
+    print(max(numbers))
+    print(len(numbers))
+    print(pop(numbers))
+    
+    complex_num = 2+2i
+    print(real(complex_num))
+    print(imag(complex_num))
+    print(conj(complex_num))
+    
+    |ket0> = (0,1)
+    <bra0| = (0,1)
+    
+    print(norm(|ket0>))
+    print(type(dag(|ket0>)))
+    print(<bra0|*|ket0>)
+    print(|ket0>@|ket0>)
+    print(identity(3))    
+}
