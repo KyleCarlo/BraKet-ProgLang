@@ -136,13 +136,37 @@ public class BraKetBaseListener implements BraKetListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBraket_value(BraKetParser.Braket_valueContext ctx) { }
+	@Override public void enterBraket_expression(BraKetParser.Braket_expressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitBraket_value(BraKetParser.Braket_valueContext ctx) { }
+	@Override public void exitBraket_expression(BraKetParser.Braket_expressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBraket_term(BraKetParser.Braket_termContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBraket_term(BraKetParser.Braket_termContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBraket_factor(BraKetParser.Braket_factorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBraket_factor(BraKetParser.Braket_factorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

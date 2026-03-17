@@ -38,6 +38,7 @@ try:
     from braket_interp import (
         ICGenerator, Interpreter, InterpreterResult,
         generate_ic, run_ic, ic_listing,
+        snapshot_ic, DebugSnapshot,
     )
     _INTERP_AVAILABLE = True
 except ImportError:
@@ -351,7 +352,109 @@ class _SemanticVisitor(BraKetVisitor):
     # ── top-level ─────────────────────────────────────────────
 
     def visitProgram(self, ctx: BraKetParser.ProgramContext):
+        # Pass 1: pre-scan every function for its return type so call
+        # sites in main() see a known return type regardless of order.
+        if ctx.func_decl_list():
+            for func_ctx in ctx.func_decl_list().func_decl():
+                self._prescan_func_return_type(func_ctx)
+        # Pass 2: full semantic visit as normal
         self.visitChildren(ctx)
+
+    def _prescan_func_return_type(self, ctx: BraKetParser.Func_declContext):
+        """
+        Two-step shallow pre-scan:
+          Step A -- build a mini local type map by scanning assignments
+                    in the function body (e.g. H = op literal => OPERATOR).
+          Step B -- walk return statements using _infer_expr_type_shallow
+                    with the local map to resolve types like H * state.
+        No diagnostics are emitted here.
+        """
+        name = ctx.IDENTIFIER().getText()
+        if not ctx.statement_list():
+            return
+
+        # Step A: seed local map with parameter names
+        local_types: dict = {}
+        if ctx.param_list() and ctx.param_list().identifier_list():
+            for ident in ctx.param_list().identifier_list().IDENTIFIER():
+                local_types[ident.getText()] = BKType.UNKNOWN
+
+        # Step A: scan top-level assignments for structural type clues
+        for stmt in ctx.statement_list().statement():
+            if stmt.assign_statement() and stmt.assign_statement().var_decl():
+                vd = stmt.assign_statement().var_decl()
+                if vd.IDENTIFIER() and vd.expression():
+                    lname = vd.IDENTIFIER().getText()
+                    rtype = self._infer_expr_type_shallow(vd.expression(), local_types)
+                    if rtype != BKType.UNKNOWN:
+                        local_types[lname] = rtype
+                elif vd.KET_IDENTIFIER():
+                    raw = vd.KET_IDENTIFIER().getText()
+                    local_types["|" + raw[1:-1] + ">"] = BKType.KET
+                elif vd.BRA_IDENTIFIER():
+                    raw = vd.BRA_IDENTIFIER().getText()
+                    local_types["<" + raw[1:-1] + "|"] = BKType.BRA
+
+        # Step B: infer return type with the local map
+        for stmt in ctx.statement_list().statement():
+            if stmt.return_statement():
+                ret_type = self._infer_expr_type_shallow(
+                    stmt.return_statement().expression(), local_types)
+                existing = self._func_return_types.get(name, BKType.UNKNOWN)
+                if existing == BKType.UNKNOWN:
+                    self._func_return_types[name] = ret_type
+                elif ret_type != BKType.UNKNOWN and ret_type != existing:
+                    pass  # inconsistent -- reported in pass 2
+
+    def _infer_expr_type_shallow(self, ctx, local_types: dict = None) -> str:
+        """
+        Determine BKType of an expression by structure only.
+        Never emits diagnostics. local_types supplies function-local names.
+        """
+        if ctx is None:
+            return BKType.UNKNOWN
+        if local_types is None:
+            local_types = {}
+        if ctx.dirac_expression():
+            return self._infer_dirac_type_shallow(ctx.dirac_expression(), local_types)
+        if ctx.func_call_statement():
+            callee = ctx.func_call_statement().IDENTIFIER().getText()
+            return self._func_return_types.get(callee, BKType.UNKNOWN)
+        if ctx.IDENTIFIER():
+            iname = ctx.IDENTIFIER().getText()
+            if iname in local_types:
+                return local_types[iname]
+            sym = self.global_scope.lookup(iname)
+            return sym.bk_type if sym else BKType.UNKNOWN
+        if ctx.bool_expression():   return BKType.BOOL
+        if ctx.string_expression(): return BKType.STRING
+        if ctx.array():             return BKType.ARRAY
+        if ctx.struct():            return BKType.STRUCT
+        return BKType.UNKNOWN
+
+    def _infer_dirac_type_shallow(self, ctx, local_types: dict = None) -> str:
+        """Shallow structural type inference for dirac_expression nodes."""
+        if ctx is None:
+            return BKType.UNKNOWN
+        if local_types is None:
+            local_types = {}
+        if ctx.KET_IDENTIFIER():  return BKType.KET
+        if ctx.BRA_IDENTIFIER():  return BKType.BRA
+        if ctx.op():              return BKType.OPERATOR
+        if ctx.braket_vector():   return BKType.UNKNOWN
+        children = ctx.dirac_expression()
+        if len(children) == 2:
+            t1 = self._infer_dirac_type_shallow(children[0], local_types)
+            t2 = self._infer_dirac_type_shallow(children[1], local_types)
+            if ctx.MUL():    return self._dirac_mul(ctx, t1, t2)
+            if ctx.TENSOR(): return self._dirac_kronecker(ctx, t1, t2)
+        if ctx.IDENTIFIER():
+            iname = ctx.IDENTIFIER().getText()
+            if iname in local_types:
+                return local_types[iname]
+            sym = self.global_scope.lookup(iname)
+            return sym.bk_type if sym else BKType.UNKNOWN
+        return BKType.UNKNOWN
 
     def visitImport_statement(self, ctx):
         pass  # imports are not resolved semantically here
@@ -836,11 +939,12 @@ def run_semantic(code: str) -> SemanticResult:
 @dataclass
 class BraKetResult:
     """Everything the IDE needs after processing a BraKet source file."""
-    tokens:         list[TokenInfo]
-    parse_tree_str: str
-    sem:            SemanticResult
-    ic_listing:     str    = ""
-    run:            object = None   # InterpreterResult | None
+    tokens:          list
+    parse_tree_str:  str
+    sem:             object
+    ic_listing:      str   = ""
+    run:             object = None   # InterpreterResult | None
+    debug_snapshots: list  = None    # list[DebugSnapshot], populated by analyze()
 
     @property
     def all_errors(self) -> list[str]:
@@ -905,8 +1009,9 @@ def analyze(code: str) -> BraKetResult:
     )
 
     # ── IC generation + interpretation (only if no syntax/semantic errors) ──
-    ic_str  = ""
-    run_res = None
+    ic_str    = ""
+    run_res   = None
+    snapshots = []
 
     if _INTERP_AVAILABLE and not (lex_err.errors + parse_err.errors):
         try:
@@ -919,6 +1024,10 @@ def analyze(code: str) -> BraKetResult:
                 ic_str += "\n\n# func " + fname + "(" + param_str + ")\n"
                 ic_str += ic_listing(body)
             run_res = run_ic(gen.instructions, gen.functions)
+            try:
+                snapshots = snapshot_ic(gen.instructions, gen.functions)
+            except Exception:
+                snapshots = []
         except Exception as e:
             run_res = type("_R", (), {
                 "output": [], "error": "IC/Interpreter error: " + str(e),
@@ -931,6 +1040,7 @@ def analyze(code: str) -> BraKetResult:
         sem=sem,
         ic_listing=ic_str,
         run=run_res,
+        debug_snapshots=snapshots,
     )
 
 

@@ -2283,6 +2283,267 @@ def run_ic(instructions:  list[ICInstruction],
     return interp.execute()
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  Step Debugger  —  pre-records every IC step as a snapshot
+# ══════════════════════════════════════════════════════════════════════════════
+
+import copy as _copy
+
+@dataclass
+class DebugSnapshot:
+    """State of the program at one IC step."""
+    step:        int            # 0-based sequential step index
+    pc:          int            # IC instruction index
+    source_line: int            # source line number (0 = unknown)
+    instr_str:   str            # human-readable IC instruction
+    env:         dict           # shallow copy of the user-visible env (no temps)
+    output:      list[str]      # program output accumulated so far
+    changed:     set            # names changed by this step
+
+
+def _user_env(env: dict) -> dict:
+    """Return only non-temporary symbols."""
+    return {k: v for k, v in env.items() if not k.startswith("t")}
+
+
+class _SnapshotInterpreter(Interpreter):
+    """
+    Interpreter subclass that records a DebugSnapshot after *every* IC step
+    (before incrementing PC). Temporaries are excluded from snapshots.
+    """
+
+    def __init__(self, instructions, functions, output_cb=None):
+        super().__init__(instructions, functions, output_cb)
+        self.snapshots: list[DebugSnapshot] = []
+        self._snap_step = 0
+
+    def _run_ic(self, ic: list[ICInstruction], env: dict):
+        labels: dict[str, int] = {}
+        for i, ins in enumerate(ic):
+            if ins.op == LABEL:
+                labels[ins.a] = i
+
+        pc = 0
+        while pc < len(ic):
+            ins = ic[pc]
+            self._steps += 1
+            if self._steps > self.MAX_STEPS:
+                raise BKRuntimeError(
+                    f"Execution limit ({self.MAX_STEPS} steps) exceeded — infinite loop?",
+                    ins.line)
+
+            self._exec_log.append(f"  [{pc:04d}]  {ins}")
+
+            # snapshot BEFORE executing (shows what is ABOUT to run)
+            before = _user_env({**self._global_env, **env})
+
+            op = ins.op
+
+            if op == LABEL:
+                pc += 1; continue
+
+            elif op == ASSIGN:
+                val = self._resolve(ins.b, env)
+                if isinstance(val, list):
+                    name = ins.a if isinstance(ins.a, str) else ""
+                    if name.startswith("<") and name.endswith("|"):
+                        val = BKVector(val, "bra")
+                    elif name.startswith("|") and name.endswith(">"):
+                        val = BKVector(val, "ket")
+                    elif val and isinstance(val[0], list):
+                        val = BKOperator(val)
+                    else:
+                        val = BKVector(val, "ket")
+                env[ins.a] = val
+
+            elif op == COPY:
+                env[ins.a] = self._resolve(ins.b, env)
+
+            elif op == BINOP:
+                op_str = getattr(ins, '_op2', '+')
+                lv = self._resolve(ins.b, env)
+                rv = self._resolve(ins.c, env)
+                env[ins.a] = self._apply_binop(ins.b, ins.c, lv, rv, op_str, ins.line)
+
+            elif op == UNOP:
+                v = self._resolve(ins.c, env)
+                env[ins.a] = self._apply_unop(ins.b, v, ins.line)
+
+            elif op == JUMP:
+                # record before jumping
+                after = _user_env({**self._global_env, **env})
+                self._record(pc, ins, before, after)
+                pc = labels.get(ins.a, pc + 1); continue
+
+            elif op == JUMPF:
+                cond = self._resolve(ins.a, env)
+                after = _user_env({**self._global_env, **env})
+                self._record(pc, ins, before, after)
+                if not self._truthy(cond):
+                    pc = labels.get(ins.b, pc + 1); continue
+                pc += 1; continue
+
+            elif op == JUMPT:
+                cond = self._resolve(ins.a, env)
+                after = _user_env({**self._global_env, **env})
+                self._record(pc, ins, before, after)
+                if self._truthy(cond):
+                    pc = labels.get(ins.b, pc + 1); continue
+                pc += 1; continue
+
+            elif op == PARAM:
+                self._param_buf.append(self._resolve(ins.a, env))
+
+            elif op == CALL:
+                dest  = ins.a
+                fname = ins.b
+                argc  = ins.c
+                args  = self._param_buf[-argc:] if argc else []
+                self._param_buf = self._param_buf[:-argc] if argc else self._param_buf
+                result = self._call_function(fname, args, ins.line)
+                env[dest] = result
+
+            elif op == RETURN_OP:
+                val = self._resolve(ins.a, env) if ins.a is not None else None
+                after = _user_env({**self._global_env, **env})
+                self._record(pc, ins, before, after)
+                raise _ReturnSignal(val)
+
+            elif op == PRINT_OP:
+                val = self._resolve(ins.a, env)
+                s   = _fmt(val)
+                self._output.append(s)
+                self.output_cb(s)
+
+            elif op == ARRAY_NEW:
+                env[ins.a] = BKArray([None] * ins.b)
+
+            elif op == ARRAY_SET:
+                arr = self._resolve(ins.a, env)
+                idx = int(self._resolve(ins.b, env))
+                val = self._resolve(ins.c, env)
+                if isinstance(arr, BKArray):
+                    while len(arr.data) <= idx:
+                        arr.data.append(None)
+                    arr.data[idx] = val
+                elif isinstance(arr, dict):
+                    arr[idx] = val
+                else:
+                    env[ins.a] = BKArray([val])
+
+            elif op == ARRAY_GET:
+                arr = self._resolve(ins.b, env)
+                idx = int(self._resolve(ins.c, env))
+                if isinstance(arr, BKArray):
+                    env[ins.a] = arr.data[idx]
+                elif isinstance(arr, dict):
+                    env[ins.a] = arr.get(idx)
+                else:
+                    raise BKRuntimeError(f"'{ins.b}' is not an array", ins.line)
+
+            elif op == "VEC_FROM_ARRAY":
+                arr = env.get(ins.b)
+                if isinstance(arr, BKArray):
+                    env[ins.a] = arr.data
+
+            elif op == "MAT_FROM_ROWS":
+                arr = env.get(ins.b)
+                if isinstance(arr, BKArray):
+                    rows = []
+                    for row in arr.data:
+                        if isinstance(row, list):
+                            rows.append([complex(x) for x in row])
+                        elif isinstance(row, BKVector):
+                            rows.append(row.data)
+                        else:
+                            rows.append([complex(row)])
+                    env[ins.a] = BKOperator(rows)
+
+            elif op == STRUCT_SET:
+                obj = self._resolve(ins.a, env)
+                if isinstance(obj, BKStruct):
+                    obj.fields[ins.b] = self._resolve(ins.c, env)
+                elif isinstance(obj, dict):
+                    obj[ins.b] = self._resolve(ins.c, env)
+                else:
+                    env[ins.a] = BKStruct({ins.b: self._resolve(ins.c, env)})
+
+            elif op == STRUCT_GET:
+                obj = self._resolve(ins.b, env)
+                if isinstance(obj, BKStruct):
+                    env[ins.a] = obj.fields.get(ins.c)
+                elif isinstance(obj, dict):
+                    env[ins.a] = obj.get(ins.c)
+                else:
+                    raise BKRuntimeError(f"'{ins.b}' is not a struct", ins.line)
+
+            # record snapshot AFTER executing
+            after = _user_env({**self._global_env, **env})
+            changed = {k for k in after if str(after.get(k)) != str(before.get(k))}
+            changed |= {k for k in before if k not in after}
+            self._record(pc, ins, before, after, changed)
+            pc += 1
+
+    def _record(self, pc: int, ins: ICInstruction,
+                before: dict, after: dict, changed: set | None = None):
+        if changed is None:
+            changed = set()
+        # Build a human-readable instruction string
+        op2 = getattr(ins, '_op2', None)
+        if ins.op == BINOP:
+            s = f"[{pc:04d}] BINOP  {ins.a} = {ins.b} {op2 or '?'} {ins.c}"
+        elif ins.op == ASSIGN:
+            s = f"[{pc:04d}] ASSIGN {ins.a} ← {ins.b}"
+        elif ins.op == COPY:
+            s = f"[{pc:04d}] COPY   {ins.a} ← {ins.b}"
+        elif ins.op == JUMP:
+            s = f"[{pc:04d}] JUMP   → {ins.a}"
+        elif ins.op == JUMPF:
+            s = f"[{pc:04d}] JUMPF  if_false({ins.a}) → {ins.b}"
+        elif ins.op == JUMPT:
+            s = f"[{pc:04d}] JUMPT  if_true({ins.a}) → {ins.b}"
+        elif ins.op == PRINT_OP:
+            s = f"[{pc:04d}] PRINT  {ins.a}"
+        elif ins.op == CALL:
+            s = f"[{pc:04d}] CALL   {ins.a} = {ins.b}({ins.c} args)"
+        elif ins.op == RETURN_OP:
+            s = f"[{pc:04d}] RETURN {ins.a}"
+        else:
+            parts = [x for x in (ins.a, ins.b, ins.c) if x is not None]
+            s = f"[{pc:04d}] {ins.op:<10} {'  '.join(str(p) for p in parts)}"
+
+        self.snapshots.append(DebugSnapshot(
+            step        = self._snap_step,
+            pc          = pc,
+            source_line = ins.line,
+            instr_str   = s,
+            env         = dict(after),
+            output      = list(self._output),
+            changed     = set(changed),
+        ))
+        self._snap_step += 1
+
+
+def snapshot_ic(instructions: list[ICInstruction],
+                functions:    dict[str, tuple],
+                max_steps:    int = 10_000) -> list[DebugSnapshot]:
+    """
+    Run the interpreter and return a list of DebugSnapshots — one per
+    executed IC instruction.  Used by the IDE step-debugger.
+    """
+    interp = _SnapshotInterpreter(instructions, functions)
+    interp.MAX_STEPS = max_steps
+    try:
+        interp._run_ic(interp.instructions, interp._global_env)
+    except _ReturnSignal:
+        pass
+    except BKRuntimeError:
+        pass
+    except Exception:
+        pass
+    return interp.snapshots
+
+
 def ic_listing(instructions: list[ICInstruction]) -> str:
     """Return a human-readable IC listing string."""
     lines = []

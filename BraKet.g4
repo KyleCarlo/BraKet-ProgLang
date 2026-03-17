@@ -1,9 +1,13 @@
 grammar BraKet;
+// FIX: EOF anchors the program rule to the full input.
+// Any tokens that do not belong to import_list, const_decl_list, func_decl_list,
+// or main_function will cause a parse error instead of being silently ignored.
 program
     : import_list?
       const_decl_list?
       func_decl_list?
       main_function?
+      EOF
     ;
 
 /* Newlines & whitespace */
@@ -96,15 +100,18 @@ braket_factor
 INT
     : DIGIT+
     ;
+// FIX: removed '| INT' alternative from FLOAT to eliminate ambiguity with the INT token.
+// Integers are now exclusively matched by INT; FLOAT only matches values with a decimal point.
 FLOAT
     : INT? '.' DIGIT+
-    | INT
     ;
+// FIX: CHAR and STRING now use dedicated fragments that exclude newlines,
+// preventing multi-line string/char literals from being accepted by the lexer.
 CHAR
-    : '\''SYMBOL?'\''
+    : '\'' CHAR_SYMBOL? '\''
     ;
 STRING
-    : '"'SYMBOL*'"'
+    : '"' STR_SYMBOL* '"'
     ;
 array
     : LSQUARE (expression (COMMA expression)*)? RSQUARE
@@ -244,7 +251,7 @@ num_term
     ;
 num_factor
     : LPAREN num_expression RPAREN
-    | COMPLEX        // Add this
+    | COMPLEX
     | ADD num_factor        // Handles positive prefix (e.g., +5)
     | SUB num_factor        // Handles negative prefix (e.g., -5)
     | INT | FLOAT | CHAR 
@@ -269,7 +276,7 @@ dirac_expression
     | braket_vector
     | op
     ;
-    
+
 num_comp
     : eq_comp 
     | GT | LT | GTE | LTE
@@ -338,6 +345,7 @@ MAIN
 FUNC
     : 'func'
     ;
+
 /* BASIC OPERATIONS */
 ADD: '+' ;
 SUB: '-' ;
@@ -367,13 +375,15 @@ TENSOR: '@';
 SEMICOLON: ';' ;
 DOT: '.' ;
 
-// /* Helper fragments / Other Productions*/
+// Helper fragments
 fragment LET_DIG_USCORE : (LETTER | DIGIT | '_') ;
 fragment LETTER : [a-zA-Z] ;
 fragment DIGIT : [0-9] ;
 fragment DIGIT_NONZERO : [1-9] ;
-// //fragment SIGN : [+-] ;
-fragment SYMBOL: . ;
+// FIX: STR_SYMBOL matches any character except a double-quote or newline (single-line strings)
+fragment STR_SYMBOL : ~["\r\n] ;
+// FIX: CHAR_SYMBOL matches any character except a single-quote or newline
+fragment CHAR_SYMBOL : ~['\r\n] ;
 
 IDENTIFIER
     : LETTER LET_DIG_USCORE*

@@ -107,15 +107,35 @@ public interface BraKetListener extends ParseTreeListener {
 	 */
 	void exitBraket_vector(BraKetParser.Braket_vectorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link BraKetParser#braket_value}.
+	 * Enter a parse tree produced by {@link BraKetParser#braket_expression}.
 	 * @param ctx the parse tree
 	 */
-	void enterBraket_value(BraKetParser.Braket_valueContext ctx);
+	void enterBraket_expression(BraKetParser.Braket_expressionContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link BraKetParser#braket_value}.
+	 * Exit a parse tree produced by {@link BraKetParser#braket_expression}.
 	 * @param ctx the parse tree
 	 */
-	void exitBraket_value(BraKetParser.Braket_valueContext ctx);
+	void exitBraket_expression(BraKetParser.Braket_expressionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link BraKetParser#braket_term}.
+	 * @param ctx the parse tree
+	 */
+	void enterBraket_term(BraKetParser.Braket_termContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BraKetParser#braket_term}.
+	 * @param ctx the parse tree
+	 */
+	void exitBraket_term(BraKetParser.Braket_termContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link BraKetParser#braket_factor}.
+	 * @param ctx the parse tree
+	 */
+	void enterBraket_factor(BraKetParser.Braket_factorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link BraKetParser#braket_factor}.
+	 * @param ctx the parse tree
+	 */
+	void exitBraket_factor(BraKetParser.Braket_factorContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link BraKetParser#array}.
 	 * @param ctx the parse tree

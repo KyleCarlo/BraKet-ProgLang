@@ -208,6 +208,11 @@ class IDE:
         self.current_file = None
         self.font_size    = FONT_SIZE_DEFAULT
 
+        # ── step-debugger state ───────────────────────────────
+        self._debug_snapshots  = []   # list[DebugSnapshot] from last run
+        self._debug_step       = 0    # current step index
+        self._debug_active     = False
+
         self.font_mono = tkfont.Font(family="Consolas", size=self.font_size)
         self.font_tree = tkfont.Font(family="Consolas", size=self.font_size - 1)
 
@@ -301,6 +306,7 @@ class IDE:
             ("⊘ Open",  self.open_file, "#21262d", FG),
             ("⊙ Save",  self.save_file, "#21262d", FG),
             ("▶  Run",  self.run_code,  GREEN,     "#0d1117"),
+            ("🐛 Debug", self.start_debug, "#1f3a5f", ACCENT),
         ]:
             tk.Button(bar, text=label, command=cmd,
                       bg=bg, fg=fg, relief=tk.FLAT,
@@ -411,6 +417,7 @@ class IDE:
         self._build_symtable_tab()
         self._build_diag_tab()
         self._build_ic_tab()
+        self._build_trace_tab()
 
 
     # ── Intermediate Code tab ─────────────────────────────────
@@ -572,6 +579,9 @@ class IDE:
             self.editor.tag_config(tag, foreground=color)
         # error underline
         self.editor.tag_config("err_line", underline=True, foreground=RED)
+        self.editor.tag_config("debug_line",
+                               background="#2d3b1e",
+                               foreground="#b5f0a0")
 
     def _highlight(self):
         for tag in ("kw", "string", "number", "complex", "op",
@@ -841,6 +851,215 @@ class IDE:
         except (ValueError, IndexError):
             pass
 
+
+    # ── Trace / Step Debugger tab ─────────────────────────────
+
+    def _build_trace_tab(self):
+        frame = tk.Frame(self.nb, bg=PANEL_BG)
+        self.nb.add(frame, text="  🐛 Trace  ")
+
+        # ── top bar: controls ─────────────────────────────────
+        ctrl = tk.Frame(frame, bg="#0d1117")
+        ctrl.pack(fill=tk.X, padx=6, pady=(6, 2))
+
+        tk.Label(ctrl, text="Step Debugger", bg="#0d1117",
+                 fg=ACCENT, font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT)
+
+        self._trace_step_var = tk.StringVar(value="No trace — press 🐛 Debug")
+        tk.Label(ctrl, textvariable=self._trace_step_var,
+                 bg="#0d1117", fg=FG_DIM,
+                 font=("Segoe UI", 10)).pack(side=tk.RIGHT, padx=6)
+
+        # ── button row ────────────────────────────────────────
+        btn_row = tk.Frame(frame, bg=PANEL_BG)
+        btn_row.pack(fill=tk.X, padx=6, pady=2)
+
+        btn_cfg = dict(relief=tk.FLAT, font=("Segoe UI", 11, "bold"),
+                       padx=10, pady=5, cursor="hand2", bd=0,
+                       activeforeground="#0d1117")
+
+        self._btn_back = tk.Button(btn_row, text="◀  Back",
+                                   command=self.debug_back,
+                                   bg="#21262d", fg=FG, **btn_cfg,
+                                   activebackground=ACCENT)
+        self._btn_back.pack(side=tk.LEFT, padx=2)
+
+        self._btn_next = tk.Button(btn_row, text="Next  ▶",
+                                   command=self.debug_next,
+                                   bg="#21262d", fg=FG, **btn_cfg,
+                                   activebackground=ACCENT)
+        self._btn_next.pack(side=tk.LEFT, padx=2)
+
+        self._btn_end = tk.Button(btn_row, text="▶▶ End",
+                                  command=self.debug_end,
+                                  bg="#21262d", fg=FG_DIM, **btn_cfg,
+                                  activebackground=PURPLE)
+        self._btn_end.pack(side=tk.LEFT, padx=2)
+
+        self._btn_reset = tk.Button(btn_row, text="⟳ Reset",
+                                    command=self.debug_reset,
+                                    bg="#21262d", fg=FG_DIM, **btn_cfg,
+                                    activebackground=ORANGE)
+        self._btn_reset.pack(side=tk.LEFT, padx=2)
+
+        tk.Label(btn_row, text="F9=Back  F10=Next",
+                 bg=PANEL_BG, fg=FG_DIM,
+                 font=("Segoe UI", 9)).pack(side=tk.RIGHT, padx=6)
+
+        # ── current instruction display ───────────────────────
+        instr_frame = tk.Frame(frame, bg="#0d1117", pady=3)
+        instr_frame.pack(fill=tk.X, padx=6, pady=(2, 0))
+        tk.Label(instr_frame, text="IC Instruction:", bg="#0d1117",
+                 fg=FG_DIM, font=("Segoe UI", 9)).pack(side=tk.LEFT, padx=(4, 6))
+        self._trace_instr_var = tk.StringVar(value="—")
+        tk.Label(instr_frame, textvariable=self._trace_instr_var,
+                 bg="#0d1117", fg=CYAN,
+                 font=("Consolas", 10)).pack(side=tk.LEFT)
+
+        # ── output so far ─────────────────────────────────────
+        out_frame = tk.Frame(frame, bg=PANEL_BG)
+        out_frame.pack(fill=tk.X, padx=6, pady=(4, 0))
+        tk.Label(out_frame, text="Output so far:", bg=PANEL_BG,
+                 fg=FG_DIM, font=("Segoe UI", 9, "bold")).pack(anchor=tk.W)
+        self._trace_output = tk.Text(out_frame, bg="#0d1117", fg=GREEN,
+                                     font=("Consolas", 10),
+                                     height=3, relief=tk.FLAT,
+                                     state=tk.DISABLED, padx=6, pady=4)
+        self._trace_output.pack(fill=tk.X)
+
+        # ── symbol table ──────────────────────────────────────
+        sym_frame = tk.Frame(frame, bg=PANEL_BG)
+        sym_frame.pack(fill=tk.BOTH, expand=True, padx=6, pady=(6, 4))
+        tk.Label(sym_frame, text="Symbol Values", bg=PANEL_BG,
+                 fg=ACCENT, font=("Segoe UI", 10, "bold")).pack(anchor=tk.W)
+
+        cols = ("Name", "BKType", "Value")
+        self._trace_sym_tree = ttk.Treeview(sym_frame, columns=cols,
+                                             show="headings",
+                                             selectmode="browse")
+        for col, w in zip(cols, [150, 90, 260]):
+            self._trace_sym_tree.heading(col, text=col)
+            self._trace_sym_tree.column(col, width=w, minwidth=w, anchor=tk.W)
+
+        tsb = ttk.Scrollbar(sym_frame, orient=tk.VERTICAL,
+                            command=self._trace_sym_tree.yview)
+        self._trace_sym_tree.configure(yscrollcommand=tsb.set)
+        self._trace_sym_tree.pack(side=tk.LEFT, fill=tk.BOTH,
+                                   expand=True, pady=2)
+        tsb.pack(side=tk.RIGHT, fill=tk.Y, pady=2, padx=(0, 2))
+
+        # colour tags
+        for bktype, color in BKTYPE_COLORS.items():
+            self._trace_sym_tree.tag_configure(bktype, foreground=color)
+        self._trace_sym_tree.tag_configure("changed",
+                                            background="#1a3320",
+                                            foreground="#56d364")
+
+    # ── debugger state helpers ────────────────────────────────
+
+    def _update_trace_readiness(self):
+        """Called after run_code — enables/disables trace buttons."""
+        has = bool(self._debug_snapshots)
+        state = tk.NORMAL if has else tk.DISABLED
+        for btn in (self._btn_back, self._btn_next,
+                    self._btn_end, self._btn_reset):
+            btn.config(state=state)
+        if has:
+            self._trace_step_var.set(
+                f"Ready — {len(self._debug_snapshots)} steps  (press 🐛 Debug or F10)")
+        else:
+            self._trace_step_var.set("No trace — run code first")
+
+    def _clear_debug_highlight(self):
+        self.editor.tag_remove("debug_line", "1.0", tk.END)
+
+    def _apply_debug_snapshot(self, snap):
+        """Render a single DebugSnapshot into the Trace UI."""
+        total = len(self._debug_snapshots)
+        self._trace_step_var.set(
+            f"Step {snap.step + 1} / {total}  "
+            f"(src line {snap.source_line if snap.source_line else '?'})")
+        self._trace_instr_var.set(snap.instr_str)
+
+        # ── highlight source line in editor ───────────────────
+        self._clear_debug_highlight()
+        if snap.source_line and snap.source_line > 0:
+            lstart = f"{snap.source_line}.0"
+            lend   = f"{snap.source_line}.end"
+            self.editor.tag_add("debug_line", lstart, lend)
+            self.editor.see(lstart)
+
+        # ── output panel ──────────────────────────────────────
+        self._trace_output.config(state=tk.NORMAL)
+        self._trace_output.delete("1.0", tk.END)
+        if snap.output:
+            self._trace_output.insert(tk.END, "\n".join(snap.output))
+        self._trace_output.config(state=tk.DISABLED)
+
+        # ── symbol table ──────────────────────────────────────
+        self._trace_sym_tree.delete(*self._trace_sym_tree.get_children())
+        type_map = {
+            "int": "int", "float": "float", "complex": "complex",
+            "bool": "bool", "str": "string",
+            "BKVector": "ket/bra", "BKOperator": "operator",
+            "BKArray": "array", "BKStruct": "struct",
+            "NoneType": "unknown",
+        }
+        for name, val in sorted(snap.env.items()):
+            type_name = type(val).__name__
+            bkt  = type_map.get(type_name, type_name)
+            val_str = str(val)
+            if len(val_str) > 50:
+                val_str = val_str[:47] + "…"
+            tag = "changed" if name in snap.changed else (
+                bkt if bkt in BKTYPE_COLORS else "unknown")
+            self._trace_sym_tree.insert("", tk.END,
+                                         values=(name, bkt, val_str),
+                                         tags=(tag,))
+
+    # ── public debugger commands ──────────────────────────────
+
+    def start_debug(self, event=None):
+        """Enter debug mode: run if needed, switch to Trace tab, go to step 0."""
+        if not self._debug_snapshots:
+            self.run_code()
+        if not self._debug_snapshots:
+            return
+        self._debug_active = True
+        self._debug_step   = 0
+        self.nb.select(5)   # Trace tab index
+        self._apply_debug_snapshot(self._debug_snapshots[0])
+
+    def debug_next(self, event=None):
+        if not self._debug_snapshots:
+            return
+        if self._debug_step < len(self._debug_snapshots) - 1:
+            self._debug_step += 1
+        self.nb.select(5)
+        self._apply_debug_snapshot(self._debug_snapshots[self._debug_step])
+
+    def debug_back(self, event=None):
+        if not self._debug_snapshots:
+            return
+        if self._debug_step > 0:
+            self._debug_step -= 1
+        self.nb.select(5)
+        self._apply_debug_snapshot(self._debug_snapshots[self._debug_step])
+
+    def debug_end(self, event=None):
+        if not self._debug_snapshots:
+            return
+        self._debug_step = len(self._debug_snapshots) - 1
+        self.nb.select(5)
+        self._apply_debug_snapshot(self._debug_snapshots[self._debug_step])
+
+    def debug_reset(self, event=None):
+        if not self._debug_snapshots:
+            return
+        self._debug_step = 0
+        self.nb.select(5)
+        self._apply_debug_snapshot(self._debug_snapshots[0])
+
     # ── Run ───────────────────────────────────────────────────
 
     def run_code(self, event=None):
@@ -905,6 +1124,12 @@ class IDE:
                 self.output.insert(tk.END, NL + "❌ " + prog_err + NL, "error")
                 self.output.config(state=tk.DISABLED)
 
+        # ── Store debug snapshots ────────────────────────────
+        self._debug_snapshots = getattr(result, "debug_snapshots", []) or []
+        self._debug_step      = 0
+        self._debug_active    = False
+        self._update_trace_readiness()
+
         # ── Debug panels ──────────────────────────────────────
         self._update_scanner(result.tokens)
         self._update_parse_tree(result.parse_tree_str)
@@ -968,6 +1193,9 @@ class IDE:
     def _bind_shortcuts(self):
         self.root.bind("<Control-r>", self.run_code)
         self.root.bind("<F5>",        self.run_code)
+        self.root.bind("<F6>",        self.start_debug)
+        self.root.bind("<F10>",       self.debug_next)
+        self.root.bind("<F9>",        self.debug_back)
         self.root.bind("<Control-s>", self.save_file)
         self.root.bind("<Control-o>", self.open_file)
         self.root.bind("<Control-n>", self.new_file)
