@@ -1116,11 +1116,12 @@ class _ReturnSignal(Exception):
 
 @dataclass
 class InterpreterResult:
-    output:       list[str]
-    error:        Optional[str]
-    symbol_table: dict[str, Any]   # global env after execution
-    ic_trace:     list[str]        # formatted IC listing
-    exec_log:     list[str]        # step-by-step execution log
+    output:          list[str]
+    error:           Optional[str]
+    symbol_table:    dict[str, Any]              # global env after execution
+    function_scopes: dict[str, dict[str, Any]]   # fname -> last-seen local frame
+    ic_trace:        list[str]                   # formatted IC listing
+    exec_log:        list[str]                   # step-by-step execution log
 
 
 class Interpreter:
@@ -1157,17 +1158,23 @@ class Interpreter:
     def __init__(self,
                  instructions: list[ICInstruction],
                  functions:    dict[str, tuple[list[str], list[ICInstruction]]],
-                 output_cb:    Callable[[str], None] | None = None):
+                 output_cb:    Callable[[str], None] | None = None,
+                 tmp_names:    set | None = None):
         self.instructions = instructions
         self.functions    = functions
         self.output_cb    = output_cb or (lambda s: None)
-
+        self._tmp_names   = tmp_names or set()  # temp variable names to hide from symbol table
+    
         self._global_env: dict[str, Any] = {}
         self._call_stack: list[dict[str, Any]] = []
         self._param_buf:  list[Any] = []
         self._output:     list[str] = []
         self._exec_log:   list[str] = []
         self._steps       = 0
+    
+        # Captures the local frame of each user function after it returns,
+        # so the IDE can display per-function symbol scopes.
+        self._function_frames: dict[str, dict[str, Any]] = {}
 
     # ── public entry point ────────────────────────────────────
 
@@ -1184,12 +1191,13 @@ class Interpreter:
             error = f"Internal error: {type(e).__name__}: {e}"
 
         return InterpreterResult(
-            output       = self._output,
-            error        = error,
-            symbol_table = {k: v for k, v in self._global_env.items()
-                            if not k.startswith("t")},
-            ic_trace     = ic_trace,
-            exec_log     = self._exec_log,
+            output          = self._output,
+            error           = error,
+            symbol_table    = {k: v for k, v in self._global_env.items()
+                               if k not in self._tmp_names},
+            function_scopes = self._function_frames,
+            ic_trace        = ic_trace,
+            exec_log        = self._exec_log,
         )
 
     # ── IC runner ─────────────────────────────────────────────
@@ -1571,6 +1579,13 @@ class Interpreter:
             result = r.value
         finally:
             self._call_stack.pop()
+            # Save a snapshot of this function's local frame (excluding temps)
+            # so the IDE can show per-function symbols in the symbol table.
+            self._function_frames[name] = {
+                k: v for k, v in frame.items()
+                if k not in self._tmp_names
+            }
+            
 
         return result
 

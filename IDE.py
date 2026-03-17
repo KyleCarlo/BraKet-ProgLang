@@ -68,6 +68,8 @@ if not _ENGINE_AVAILABLE:
             self.sem = _Sem()
             self.all_errors = _Sem.syntax_errors
             self.has_errors = True
+            self.ic_listing = ""
+            self.run        = None
 
     def analyze(code: str):                     # type: ignore[misc]
         tokens, line, col = [], 1, 0
@@ -415,7 +417,7 @@ class IDE:
         self._build_scanner_tab()
         self._build_parser_tab()
         self._build_symtable_tab()
-        self._build_diag_tab()
+        self._diag_tab_frame = self._build_diag_tab()   # keep reference for auto-select
         self._build_ic_tab()
         self._build_trace_tab()
 
@@ -506,15 +508,19 @@ class IDE:
 
         hdr = tk.Frame(frame, bg=PANEL_BG)
         hdr.pack(fill=tk.X, padx=8, pady=(6, 2))
-        tk.Label(hdr, text="Global Symbol Table", bg=PANEL_BG,
+        tk.Label(hdr, text="Symbol Table", bg=PANEL_BG,
                  fg=ACCENT, font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT)
         self.sym_count_var = tk.StringVar(value="0 symbols")
         tk.Label(hdr, textvariable=self.sym_count_var,
                  bg=PANEL_BG, fg=FG_DIM, font=("Segoe UI", 10)).pack(side=tk.RIGHT)
 
+        # "tree headings" shows the expand/collapse arrow column plus named columns
         cols = ("Name", "BKType", "Const?", "Value")
         self.sym_tree = ttk.Treeview(frame, columns=cols,
-                                      show="headings", selectmode="browse")
+                                      show="tree headings", selectmode="browse")
+        # The implicit #0 tree column holds the scope group label
+        self.sym_tree.heading("#0",      text="Scope")
+        self.sym_tree.column( "#0",      width=120, minwidth=80, anchor=tk.W)
         for col, w in zip(cols, [150, 90, 60, 180]):
             self.sym_tree.heading(col, text=col)
             self.sym_tree.column(col, width=w, minwidth=w, anchor=tk.W)
@@ -524,6 +530,12 @@ class IDE:
         self.sym_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(6, 0), pady=4)
         sb.pack(side=tk.RIGHT, fill=tk.Y, pady=4, padx=(0, 4))
 
+        self.sym_tree.tag_configure("scope_global", foreground=ACCENT,
+                                    font=("Segoe UI", 10, "bold"))
+        self.sym_tree.tag_configure("scope_func",   foreground=ORANGE,
+                                    font=("Segoe UI", 10, "bold"))
+        self.sym_tree.tag_configure("scope_block",  foreground=FG_DIM,
+                                    font=("Segoe UI", 10, "bold"))
         for bktype, color in BKTYPE_COLORS.items():
             self.sym_tree.tag_configure(bktype, foreground=color)
 
@@ -559,6 +571,8 @@ class IDE:
 
         # Double-click → jump to line in editor
         self.diag_tree.bind("<Double-1>", self._jump_to_diag)
+
+        return frame   # caller stores this for reference-based tab selection
 
     # ── editor helpers ────────────────────────────────────────
 
@@ -729,20 +743,95 @@ class IDE:
 
         self.parse_tree_text.config(state=tk.DISABLED)
 
-    def _update_symbol_table(self, global_scope):
+    def _update_symbol_table(self, global_scope, closed_scopes=None):
+        """Populate symbol table from semantic analysis scopes (no runtime values)."""
         self.sym_tree.delete(*self.sym_tree.get_children())
-        symbols = global_scope._symbols
-        for name, sym in sorted(symbols.items()):
-            bkt     = sym.bk_type
-            is_const = "✓" if sym.is_const else ""
-            val_str = str(sym.literal_value) if sym.literal_value is not None else "—"
-            tag     = bkt if bkt in BKTYPE_COLORS else "unknown"
-            self.sym_tree.insert("", tk.END,
-                                  values=(name, bkt, is_const, val_str),
-                                  tags=(tag,))
-        n = len(symbols)
-        self.sym_count_var.set(f"{n} symbol{'s' if n != 1 else ''}")
+        
+        total = 0
 
+        def _insert_scope(scope, label, scope_tag):
+            nonlocal total
+            syms = scope._symbols
+            if not syms:
+                return
+            # Parent row — scope header (no symbol columns)
+            parent = self.sym_tree.insert(
+                "", tk.END, text=f"  {label}",
+                values=("", "", "", ""), tags=(scope_tag,), open=True)
+            for name, sym in sorted(syms.items()):
+                bkt      = sym.bk_type
+                is_const = "✓" if sym.is_const else ""
+                val_str  = str(sym.literal_value) if sym.literal_value is not None else "—"
+                tag      = bkt if bkt in BKTYPE_COLORS else "unknown"
+                self.sym_tree.insert(parent, tk.END, text="",
+                                      values=(name, bkt, is_const, val_str),
+                                      tags=(tag,))
+                total += 1
+
+        # Always show the global scope first
+        _insert_scope(global_scope, "global", "scope_global")
+
+        # Then each closed scope (functions, main, if/for/while blocks)
+        if closed_scopes:
+            for scope in closed_scopes:
+                sname = scope.scope_name
+                if sname.startswith("func:"):
+                    label     = f"func  {sname[5:]}"
+                    scope_tag = "scope_func"
+                elif sname == "main":
+                    label     = "main"
+                    scope_tag = "scope_func"
+                else:
+                    label     = sname
+                    scope_tag = "scope_block"
+                _insert_scope(scope, label, scope_tag)
+
+        self.sym_count_var.set(f"{total} symbol{'s' if total != 1 else ''}")
+
+    def _update_runtime_symbols(self, symbol_table: dict,
+                                 function_scopes: dict | None = None):
+        """Populate symbol table from the interpreter's live runtime values."""
+        self.sym_tree.delete(*self.sym_tree.get_children())
+        total = 0
+
+        type_map = {
+            "int": "int", "float": "float", "complex": "complex",
+            "bool": "bool", "str": "string",
+            "BKVector": "ket/bra", "BKOperator": "operator",
+            "BKArray": "array", "BKStruct": "struct",
+            "NoneType": "unknown",
+        }
+
+        def _insert_runtime_scope(label, scope_tag, items):
+            nonlocal total
+            if not items:
+                return
+            parent = self.sym_tree.insert(
+                "", tk.END, text=f"  {label}",
+                values=("", "", "", ""), tags=(scope_tag,), open=True)
+            for name, val in sorted(items):
+                type_name = type(val).__name__
+                bkt       = type_map.get(type_name, type_name)
+                val_str   = str(val)
+                val_str   = val_str[:38] + "…" if len(val_str) > 38 else val_str
+                tag       = bkt if bkt in BKTYPE_COLORS else "unknown"
+                self.sym_tree.insert(parent, tk.END, text="",
+                                      values=(name, bkt, "", val_str),
+                                      tags=(tag,))
+                total += 1
+
+        # Global / main scope
+        _insert_runtime_scope("global / main", "scope_global",
+                               symbol_table.items())
+
+        # Per-function scopes
+        if function_scopes:
+            for fname, frame in sorted(function_scopes.items()):
+                _insert_runtime_scope(f"func  {fname}", "scope_func",
+                                       frame.items())
+
+        self.sym_count_var.set(
+            f"{total} symbol{'s' if total != 1 else ''} (runtime)")
 
     def _update_ic(self, ic_str: str):
         NL = "\n"
@@ -777,29 +866,6 @@ class IDE:
                           and not l.strip().startswith("#"))
         self.ic_count_var.set(f"{instr_count} instructions")
         self.ic_text.config(state=tk.DISABLED)
-
-
-    def _update_runtime_symbols(self, symbol_table: dict):
-        """Populate symbol table from the interpreter's live runtime values."""
-        self.sym_tree.delete(*self.sym_tree.get_children())
-        for name, val in sorted(symbol_table.items()):
-            type_name = type(val).__name__
-            # Map Python/BKType names to display names
-            type_map = {
-                "int": "int", "float": "float", "complex": "complex",
-                "bool": "bool", "str": "string",
-                "BKVector": "ket/bra", "BKOperator": "operator",
-                "BKArray": "array", "BKStruct": "struct",
-                "NoneType": "unknown",
-            }
-            bkt = type_map.get(type_name, type_name)
-            val_str = str(val)[:40] + ("…" if len(str(val)) > 40 else "")
-            tag = bkt if bkt in BKTYPE_COLORS else "unknown"
-            self.sym_tree.insert("", tk.END,
-                                  values=(name, bkt, "", val_str),
-                                  tags=(tag,))
-        n = len(symbol_table)
-        self.sym_count_var.set(f"{n} symbol{'s' if n != 1 else ''} (runtime)")
 
     def _update_diagnostics(self, sem_result, syntax_errors: list):
         self.diag_tree.delete(*self.diag_tree.get_children())
@@ -850,9 +916,8 @@ class IDE:
                 self.editor.focus_set()
         except (ValueError, IndexError):
             pass
-
-
-    # ── Trace / Step Debugger tab ─────────────────────────────
+        
+        # ── Trace / Step Debugger tab ─────────────────────────────
 
     def _build_trace_tab(self):
         frame = tk.Frame(self.nb, bg=PANEL_BG)
@@ -1059,7 +1124,6 @@ class IDE:
         self._debug_step = 0
         self.nb.select(5)
         self._apply_debug_snapshot(self._debug_snapshots[0])
-
     # ── Run ───────────────────────────────────────────────────
 
     def run_code(self, event=None):
@@ -1082,47 +1146,48 @@ class IDE:
         sem_errs = [d for d in result.sem.diagnostics if d.kind == "error"]
         warnings = [d for d in result.sem.diagnostics if d.kind == "warning"]
 
-        if syn_errs or sem_errs:
-            self.output.insert(tk.END, f"❌  {len(syn_errs) + len(sem_errs)} error(s)"
-                               f"{',' if warnings else ''} ", "error")
-            if warnings:
-                self.output.insert(tk.END, f"{len(warnings)} warning(s)\n", "warning")
+        try:
+            if syn_errs or sem_errs:
+                self.output.insert(tk.END, f"❌  {len(syn_errs) + len(sem_errs)} error(s)"
+                                   f"{',' if warnings else ''} ", "error")
+                if warnings:
+                    self.output.insert(tk.END, f"{len(warnings)} warning(s)\n", "warning")
+                else:
+                    self.output.insert(tk.END, "\n")
+                for e in syn_errs:
+                    self.output.insert(tk.END, f"  [syntax]  {e}\n", "error")
+                for d in sem_errs:
+                    self.output.insert(tk.END,
+                        f"  [line {d.line}:{d.col}]  {d.message}\n", "error")
+                self.status_var.set(f"  ✗ {len(syn_errs)+len(sem_errs)} error(s)")
             else:
-                self.output.insert(tk.END, "\n")
-            for e in syn_errs:
-                self.output.insert(tk.END, f"  [syntax]  {e}\n", "error")
-            for d in sem_errs:
+                self.output.insert(tk.END, "✓  Analysis complete — no errors\n", "success")
+                if warnings:
+                    self.output.insert(tk.END,
+                        f"⚠  {len(warnings)} warning(s)\n", "warning")
+                self.status_var.set("  ✓ Done")
+
+            for w in warnings:
                 self.output.insert(tk.END,
-                    f"  [line {d.line}:{d.col}]  {d.message}\n", "error")
-            self.status_var.set(f"  ✗ {len(syn_errs)+len(sem_errs)} error(s)")
-        else:
-            self.output.insert(tk.END, "✓  Analysis complete — no errors\n", "success")
-            if warnings:
-                self.output.insert(tk.END,
-                    f"⚠  {len(warnings)} warning(s)\n", "warning")
-            self.status_var.set("  ✓ Done")
+                    f"  [line {w.line}:{w.col}]  {w.message}\n", "warning")
 
-        for w in warnings:
-            self.output.insert(tk.END,
-                f"  [line {w.line}:{w.col}]  {w.message}\n", "warning")
-
-        self.output.config(state=tk.DISABLED)
-
-        # ── Program output ────────────────────────────────────
-        if result.run:
-            prog_out = result.run.output
-            prog_err = result.run.error
-            NL = "\n"
-            if prog_out:
-                self.output.config(state=tk.NORMAL)
-                self.output.insert(tk.END, NL + "── Program Output ──" + NL, "info")
-                for line in prog_out:
-                    self.output.insert(tk.END, line + NL, "success")
-                self.output.config(state=tk.DISABLED)
-            if prog_err:
-                self.output.config(state=tk.NORMAL)
-                self.output.insert(tk.END, NL + "❌ " + prog_err + NL, "error")
-                self.output.config(state=tk.DISABLED)
+            self.output.config(state=tk.DISABLED)
+            # ── Program output ────────────────────────────────────
+            if result.run:
+                prog_out = result.run.output
+                prog_err = result.run.error
+                NL = "\n"
+                if prog_out:
+                    self.output.config(state=tk.NORMAL)
+                    self.output.insert(tk.END, NL + "── Program Output ──" + NL, "info")
+                    for line in prog_out:
+                        self.output.insert(tk.END, line + NL, "success")
+                    self.output.config(state=tk.DISABLED)
+                if prog_err:
+                    self.output.config(state=tk.NORMAL)
+                    self.output.insert(tk.END, NL + "❌ " + prog_err + NL, "error")
+        finally:            
+            self.output.config(state=tk.DISABLED)
 
         # ── Store debug snapshots ────────────────────────────
         self._debug_snapshots = getattr(result, "debug_snapshots", []) or []
@@ -1135,9 +1200,11 @@ class IDE:
         self._update_parse_tree(result.parse_tree_str)
         # Use runtime symbol table if available, else fall back to semantic scope
         if result.run and result.run.symbol_table:
-            self._update_runtime_symbols(result.run.symbol_table)
+            self._update_runtime_symbols(result.run.symbol_table,
+                                        result.run.function_scopes)
         else:
-            self._update_symbol_table(result.sem.global_scope)
+            self._update_symbol_table(result.sem.global_scope,
+                                    result.sem.closed_scopes)
         self._update_ic(result.ic_listing)
         self._update_diagnostics(result.sem, syn_errs)
 
