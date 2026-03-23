@@ -986,10 +986,18 @@ class BraKetResult:
         return self.run.output if self.run else []
 
 
-def analyze(code: str) -> BraKetResult:
+def analyze(code: str, input_cb=None, ready_cb=None) -> BraKetResult:
     """
     One-stop entry point: tokenize, parse, and semantically analyse `code`.
     Returns a BraKetResult that the IDE can consume directly.
+
+    input_cb(prompt) — optional callable invoked when the program calls
+    input().  Must return a str.  If None, falls back to tkinter dialog.
+
+    ready_cb(partial_result) — optional callable invoked after static analysis
+    (tokens, parse tree, semantics) but BEFORE the interpreter runs.  The IDE
+    can use this to update the Scanner/Parse-Tree/Diagnostics panels immediately
+    so they are visible while waiting for input() dialogs.
     """
     # Single ANTLR pass shared by scanner + parser
     stream = InputStream(code)
@@ -1036,6 +1044,20 @@ def analyze(code: str) -> BraKetResult:
     run_res   = None
     snapshots = []
 
+    # Fire ready_cb now — static analysis is complete, interpreter hasn't run yet.
+    # The IDE uses this to populate Scanner/Parse-Tree/Diagnostics before any
+    # input() dialog appears.
+    if ready_cb is not None:
+        _partial = BraKetResult(
+            tokens=tokens,
+            parse_tree_str=parse_tree_str,
+            sem=sem,
+            ic_listing="",
+            run=None,
+            debug_snapshots=[],
+        )
+        ready_cb(_partial)
+
     if _INTERP_AVAILABLE and not (lex_err.errors + parse_err.errors):
         try:
             gen = ICGenerator()
@@ -1046,9 +1068,26 @@ def analyze(code: str) -> BraKetResult:
                 param_str = ", ".join(params)
                 ic_str += "\n\n# func " + fname + "(" + param_str + ")\n"
                 ic_str += ic_listing(body)
-            run_res = run_ic(gen.instructions, gen.functions)
+            # Capture inputs during the real run, then replay them silently
+            # for snapshot_ic so the dialog never opens a second time.
+            _captured_inputs: list[str] = []
+            _replay_index = [0]
+
+            _original_input_cb = input_cb
+
+            def _capturing_input_cb(prompt: str) -> str:
+                val = _original_input_cb(prompt) if _original_input_cb else ""
+                _captured_inputs.append(val)
+                return val
+
+            def _replaying_input_cb(prompt: str) -> str:
+                idx = _replay_index[0]
+                _replay_index[0] += 1
+                return _captured_inputs[idx] if idx < len(_captured_inputs) else ""
+
+            run_res = run_ic(gen.instructions, gen.functions, input_cb=_capturing_input_cb)
             try:
-                snapshots = snapshot_ic(gen.instructions, gen.functions)
+                snapshots = snapshot_ic(gen.instructions, gen.functions, input_cb=_replaying_input_cb)
             except Exception:
                 snapshots = []
         except Exception as e:

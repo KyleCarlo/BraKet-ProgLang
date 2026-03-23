@@ -1201,10 +1201,12 @@ class Interpreter:
                  instructions: list[ICInstruction],
                  functions:    dict[str, tuple[list[str], list[ICInstruction]]],
                  output_cb:    Callable[[str], None] | None = None,
-                 tmp_names:    set | None = None):
+                 tmp_names:    set | None = None,
+                 input_cb:     Callable[[str], str] | None = None):
         self.instructions = instructions
         self.functions    = functions
         self.output_cb    = output_cb or (lambda s: None)
+        self.input_cb     = input_cb  # callable(prompt) -> str, or None
         self._tmp_names   = tmp_names or set()  # temp variable names to hide from symbol table
     
         self._global_env: dict[str, Any] = {}
@@ -1650,13 +1652,17 @@ class Interpreter:
 
         if name == "input":
             prompt = _fmt(args[0]) if args else ""
-            if _TK_AVAILABLE:
+            if self.input_cb is not None:
+                # IDE-supplied callback: it handles all display (prompt + echo).
+                # Do NOT append to _output here — the IDE already shows the value.
+                val = self.input_cb(prompt) or ""
+            elif _TK_AVAILABLE:
                 val = _tk_simpledialog.askstring(
                     "Input", prompt or "Enter a value:") or ""
+                self._output.append(f"{prompt}{val}")
+                self.output_cb(f"{prompt}{val}")
             else:
                 val = ""   # headless fallback
-            self._output.append(f"{prompt}{val}")
-            self.output_cb(f"{prompt}{val}")
             return val
 
         # ── Type conversion ───────────────────────────────────────────────────
@@ -2377,12 +2383,14 @@ def generate_ic(tree, parser=None) -> tuple[list[ICInstruction],
 def run_ic(instructions:  list[ICInstruction],
            functions:     dict[str, tuple],
            output_cb:     Callable[[str], None] | None = None,
-           max_steps:     int = 100_000) -> InterpreterResult:
+           max_steps:     int = 100_000,
+           input_cb:      Callable[[str], str] | None = None) -> InterpreterResult:
     """
     Execute pre-generated IC instructions.
     output_cb is called with each printed string as it is produced.
+    input_cb(prompt) is called when input() is evaluated; it must return a str.
     """
-    interp = Interpreter(instructions, functions, output_cb)
+    interp = Interpreter(instructions, functions, output_cb, input_cb=input_cb)
     interp.MAX_STEPS = max_steps
     return interp.execute()
 
@@ -2416,8 +2424,8 @@ class _SnapshotInterpreter(Interpreter):
     (before incrementing PC). Temporaries are excluded from snapshots.
     """
 
-    def __init__(self, instructions, functions, output_cb=None):
-        super().__init__(instructions, functions, output_cb)
+    def __init__(self, instructions, functions, output_cb=None, input_cb=None):
+        super().__init__(instructions, functions, output_cb, input_cb=input_cb)
         self.snapshots: list[DebugSnapshot] = []
         self._snap_step = 0
 
@@ -2667,12 +2675,13 @@ class _SnapshotInterpreter(Interpreter):
 
 def snapshot_ic(instructions: list[ICInstruction],
                 functions:    dict[str, tuple],
-                max_steps:    int = 10_000) -> list[DebugSnapshot]:
+                max_steps:    int = 10_000,
+                input_cb:     Callable[[str], str] | None = None) -> list[DebugSnapshot]:
     """
     Run the interpreter and return a list of DebugSnapshots — one per
     executed IC instruction.  Used by the IDE step-debugger.
     """
-    interp = _SnapshotInterpreter(instructions, functions)
+    interp = _SnapshotInterpreter(instructions, functions, input_cb=input_cb)
     interp.MAX_STEPS = max_steps
     try:
         interp._run_ic(interp.instructions, interp._global_env)

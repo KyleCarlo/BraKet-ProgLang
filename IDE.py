@@ -11,7 +11,7 @@
 #             ⚠  Diagnostics — semantic errors & warnings with line:col
 
 import tkinter as tk
-from tkinter import ttk, scrolledtext, filedialog
+from tkinter import ttk, scrolledtext, filedialog, simpledialog as _tk_simpledialog
 from tkinter import font as tkfont
 import re
 
@@ -1277,8 +1277,38 @@ class IDE:
         self.status_var.set("  Analysing…")
         self.root.update_idletasks()
 
+        def _input_cb(prompt: str) -> str:
+            """Called by the interpreter whenever input() is executed.
+            Shows the prompt inline in the output panel, then opens a
+            modal dialog on the main Tk thread and echoes the typed value."""
+            self.output.config(state=tk.NORMAL)
+            if prompt:
+                self.output.insert(tk.END, prompt, "info")
+            self.output.config(state=tk.DISABLED)
+            self.root.update_idletasks()
+            val = _tk_simpledialog.askstring(
+                "Program Input",
+                prompt or "Enter a value:",
+                parent=self.root,
+            ) or ""
+            self.output.config(state=tk.NORMAL)
+            self.output.insert(tk.END, val + "\n", "success")
+            self.output.config(state=tk.DISABLED)
+            self.root.update_idletasks()
+            return val
+
+        def _ready_cb(partial):
+            """Called after static analysis, before interpreter runs.
+            Updates Scanner, Parse Tree, and Diagnostics panels immediately
+            so they are visible while any input() dialog is open."""
+            self._update_scanner(partial.tokens)
+            self._update_parse_tree(partial.parse_tree_str)
+            self._update_diagnostics(partial.sem,
+                partial.sem.syntax_errors if hasattr(partial.sem, "syntax_errors") else [])
+            self.root.update_idletasks()
+
         try:
-            result = analyze(source) # CALLS ENGINE
+            result = analyze(source, input_cb=_input_cb, ready_cb=_ready_cb) # CALLS ENGINE
         except Exception as exc:
             self._write_output(f"Internal engine error:\n{exc}\n", "error")
             self.status_var.set("  Engine error")
