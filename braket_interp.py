@@ -491,6 +491,10 @@ class ICGenerator:
     def _gen_num_factor(self, ctx) -> Any:
         if ctx.LPAREN() and ctx.num_expression():
             return self._gen_num_expr(ctx.num_expression())
+        if ctx.func_call_statement():
+            # Function call result used as a numeric operand: n + summation(n-1)
+            t = self._tmp()
+            return self._gen_call(ctx.func_call_statement(), dest=t)
         if ctx.COMPLEX():
             return self._parse_complex(ctx.COMPLEX().getText())
         if ctx.INT():
@@ -602,6 +606,10 @@ class ICGenerator:
         if ctx.BOOL_TRUE():   return True
         if ctx.BOOL_FALSE():  return False
         if ctx.INT():         return int(ctx.INT().getText())
+        if ctx.func_call_statement():
+            # Function call result used as a boolean: if (isValid(x))
+            t = self._tmp()
+            return self._gen_call(ctx.func_call_statement(), dest=t)
         if ctx.IDENTIFIER():  return ctx.IDENTIFIER().getText()
         if ctx.bool_expression():
             return self._gen_bool_expr(ctx.bool_expression())
@@ -647,13 +655,19 @@ class ICGenerator:
             right = self._gen_dirac(children[1])
             op    = "*" if ctx.MUL() else "@"
             t     = self._tmp()
-            self._emit(BINOP, t, left, op, line=self._line(ctx))
-            self._instructions_last().c = right
+            # FIX: use _op2 pattern (not the broken b=op / c=right hack)
+            ins = ICInstruction(BINOP, t, left, right, self._line(ctx))
+            ins._op2 = op
+            self._current_ic.append(ins)
             return t
         if ctx.KET_IDENTIFIER():
             return ctx.KET_IDENTIFIER().getText()
         if ctx.BRA_IDENTIFIER():
             return ctx.BRA_IDENTIFIER().getText()
+        if ctx.func_call_statement():
+            # Function call result used as a dirac operand: hadamard(|ket>), normalize(v)
+            t = self._tmp()
+            return self._gen_call(ctx.func_call_statement(), dest=t)
         if ctx.IDENTIFIER():
             return ctx.IDENTIFIER().getText()
         if ctx.braket_vector():
@@ -2256,6 +2270,10 @@ def _patched_gen_dirac(self, ctx):
         return t
     if ctx.KET_IDENTIFIER(): return ctx.KET_IDENTIFIER().getText()
     if ctx.BRA_IDENTIFIER(): return ctx.BRA_IDENTIFIER().getText()
+    if ctx.func_call_statement():
+        # Function call result used as a dirac operand: hadamard(|ket>), normalize(v)
+        t = self._tmp()
+        return self._gen_call(ctx.func_call_statement(), dest=t)
     if ctx.IDENTIFIER():     return ctx.IDENTIFIER().getText()
     if ctx.braket_vector():  return self._gen_braket_vector(ctx.braket_vector())
     if ctx.op():             return self._gen_op_matrix(ctx.op())

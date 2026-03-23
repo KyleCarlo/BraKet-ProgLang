@@ -251,6 +251,7 @@ num_term
     ;
 num_factor
     : LPAREN num_expression RPAREN
+    | func_call_statement          // e.g. summation(n-1), sqrt(x), myFunc(a, b)
     | COMPLEX
     | ADD num_factor        // Handles positive prefix (e.g., +5)
     | SUB num_factor        // Handles negative prefix (e.g., -5)
@@ -272,6 +273,7 @@ dirac_expression
     | dirac_expression TENSOR dirac_expression
     | KET_IDENTIFIER
     | BRA_IDENTIFIER
+    | func_call_statement          // e.g. hadamard(|ket>), normalize(v)
     | IDENTIFIER
     | braket_vector
     | op
@@ -307,6 +309,7 @@ bool_unary
     ;
 bool_primary
     : LPAREN bool_expression RPAREN
+    | func_call_statement          // e.g. isValid(x), check(a, b)
     | BOOL_TRUE
     | BOOL_FALSE
     | INT        // 0 = false, non-zero = true
