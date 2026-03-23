@@ -1299,70 +1299,72 @@ class IDE:
 
         def _ready_cb(partial):
             """Called after static analysis, before interpreter runs.
-            Updates Scanner, Parse Tree, and Diagnostics panels immediately
-            so they are visible while any input() dialog is open."""
+            Clears the output panel, writes the analysis header, and updates
+            all static debug panels — before any input() dialog appears."""
+            p_syn = partial.sem.syntax_errors if hasattr(partial.sem, "syntax_errors") else []
+            p_sem = [d for d in partial.sem.diagnostics if d.kind == "error"]
+            p_warn = [d for d in partial.sem.diagnostics if d.kind == "warning"]
+
+            self.output.config(state=tk.NORMAL)
+            self.output.delete("1.0", tk.END)
+            if p_syn or p_sem:
+                self.output.insert(tk.END,
+                    f"❌  {len(p_syn) + len(p_sem)} error(s)"
+                    f"{',' if p_warn else ''} ", "error")
+                if p_warn:
+                    self.output.insert(tk.END, f"{len(p_warn)} warning(s)\n", "warning")
+                else:
+                    self.output.insert(tk.END, "\n")
+                for e in p_syn:
+                    self.output.insert(tk.END, f"  [syntax]  {e}\n", "error")
+                for d in p_sem:
+                    self.output.insert(tk.END, f"  [line {d.line}:{d.col}]  {d.message}\n", "error")
+                self.status_var.set(f"  ✗ {len(p_syn)+len(p_sem)} error(s)")
+            else:
+                self.output.insert(tk.END, "✓  Analysis complete — no errors\n", "success")
+                if p_warn:
+                    self.output.insert(tk.END, f"⚠  {len(p_warn)} warning(s)\n", "warning")
+                self.status_var.set("  ✓ Done")
+            for w in p_warn:
+                self.output.insert(tk.END, f"  [line {w.line}:{w.col}]  {w.message}\n", "warning")
+            # "── Program Output ──" header, written once before any live lines
+            # (only when there are no errors — otherwise the interpreter won't run)
+            if not (p_syn or p_sem):
+                self.output.insert(tk.END, "\n── Program Output ──\n", "info")
+            self.output.config(state=tk.DISABLED)
+
             self._update_scanner(partial.tokens)
             self._update_parse_tree(partial.parse_tree_str)
-            self._update_diagnostics(partial.sem,
-                partial.sem.syntax_errors if hasattr(partial.sem, "syntax_errors") else [])
+            self._update_diagnostics(partial.sem, p_syn)
+            self.root.update_idletasks()
+
+        def _output_cb(line: str):
+            """Streams each print() line into the output panel live."""
+            self.output.config(state=tk.NORMAL)
+            self.output.insert(tk.END, line + "\n", "success")
+            self.output.config(state=tk.DISABLED)
             self.root.update_idletasks()
 
         try:
-            result = analyze(source, input_cb=_input_cb, ready_cb=_ready_cb) # CALLS ENGINE
+            result = analyze(source, input_cb=_input_cb, ready_cb=_ready_cb,
+                             output_cb=_output_cb) # CALLS ENGINE
         except Exception as exc:
             self._write_output(f"Internal engine error:\n{exc}\n", "error")
             self.status_var.set("  Engine error")
             return
 
-        # ── Output panel ──────────────────────────────────────
-        self.output.config(state=tk.NORMAL)
-        self.output.delete("1.0", tk.END)
-
+        # Analysis header and program output were already written live by
+        # _ready_cb and _output_cb.  Only handle runtime errors and the
+        # remaining debug panels here.
         syn_errs = result.sem.syntax_errors if hasattr(result.sem, "syntax_errors") else []
         sem_errs = [d for d in result.sem.diagnostics if d.kind == "error"]
-        warnings = [d for d in result.sem.diagnostics if d.kind == "warning"]
 
         try:
-            if syn_errs or sem_errs:
-                self.output.insert(tk.END, f"❌  {len(syn_errs) + len(sem_errs)} error(s)"
-                                   f"{',' if warnings else ''} ", "error")
-                if warnings:
-                    self.output.insert(tk.END, f"{len(warnings)} warning(s)\n", "warning")
-                else:
-                    self.output.insert(tk.END, "\n")
-                for e in syn_errs:
-                    self.output.insert(tk.END, f"  [syntax]  {e}\n", "error")
-                for d in sem_errs:
-                    self.output.insert(tk.END,
-                        f"  [line {d.line}:{d.col}]  {d.message}\n", "error")
-                self.status_var.set(f"  ✗ {len(syn_errs)+len(sem_errs)} error(s)")
-            else:
-                self.output.insert(tk.END, "✓  Analysis complete — no errors\n", "success")
-                if warnings:
-                    self.output.insert(tk.END,
-                        f"⚠  {len(warnings)} warning(s)\n", "warning")
-                self.status_var.set("  ✓ Done")
-
-            for w in warnings:
-                self.output.insert(tk.END,
-                    f"  [line {w.line}:{w.col}]  {w.message}\n", "warning")
-
-            self.output.config(state=tk.DISABLED)
-            # ── Program output ────────────────────────────────────
-            if result.run:
-                prog_out = result.run.output
-                prog_err = result.run.error
-                NL = "\n"
-                if prog_out:
-                    self.output.config(state=tk.NORMAL)
-                    self.output.insert(tk.END, NL + "── Program Output ──" + NL, "info")
-                    for line in prog_out:
-                        self.output.insert(tk.END, line + NL, "success")
-                    self.output.config(state=tk.DISABLED)
-                if prog_err:
-                    self.output.config(state=tk.NORMAL)
-                    self.output.insert(tk.END, NL + "❌ " + prog_err + NL, "error")
-        finally:            
+            if result.run and result.run.error:
+                self.output.config(state=tk.NORMAL)
+                self.output.insert(tk.END, "\n❌ " + result.run.error + "\n", "error")
+                self.output.config(state=tk.DISABLED)
+        finally:
             self.output.config(state=tk.DISABLED)
 
         # ── Store debug snapshots ────────────────────────────

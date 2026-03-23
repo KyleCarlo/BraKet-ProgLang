@@ -986,18 +986,16 @@ class BraKetResult:
         return self.run.output if self.run else []
 
 
-def analyze(code: str, input_cb=None, ready_cb=None) -> BraKetResult:
+def analyze(code: str, input_cb=None, ready_cb=None, output_cb=None) -> BraKetResult:
     """
     One-stop entry point: tokenize, parse, and semantically analyse `code`.
     Returns a BraKetResult that the IDE can consume directly.
 
-    input_cb(prompt) — optional callable invoked when the program calls
-    input().  Must return a str.  If None, falls back to tkinter dialog.
-
-    ready_cb(partial_result) — optional callable invoked after static analysis
-    (tokens, parse tree, semantics) but BEFORE the interpreter runs.  The IDE
-    can use this to update the Scanner/Parse-Tree/Diagnostics panels immediately
-    so they are visible while waiting for input() dialogs.
+    input_cb(prompt)  — optional callable invoked when the program calls
+                        input().  Must return a str.  If None, falls back to tkinter dialog.
+    ready_cb(partial) — optional callable invoked after static analysis
+                        (tokens, parse tree, semantics) but BEFORE the interpreter runs.
+    output_cb(line)   — optional callable invoked live for each print() line.
     """
     # Single ANTLR pass shared by scanner + parser
     stream = InputStream(code)
@@ -1085,7 +1083,8 @@ def analyze(code: str, input_cb=None, ready_cb=None) -> BraKetResult:
                 _replay_index[0] += 1
                 return _captured_inputs[idx] if idx < len(_captured_inputs) else ""
 
-            run_res = run_ic(gen.instructions, gen.functions, input_cb=_capturing_input_cb)
+            run_res = run_ic(gen.instructions, gen.functions,
+                             output_cb=output_cb, input_cb=_capturing_input_cb)
             try:
                 snapshots = snapshot_ic(gen.instructions, gen.functions, input_cb=_replaying_input_cb)
             except Exception:
