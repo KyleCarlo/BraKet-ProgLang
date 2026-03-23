@@ -156,6 +156,7 @@ assign_statement
     : var_decl
     | array_access ASSIGN expression
     | struct_access ASSIGN expression
+    | MUL IDENTIFIER ASSIGN expression
     ;
 
 func_call_statement
@@ -255,7 +256,9 @@ num_factor
     | COMPLEX
     | ADD num_factor        // Handles positive prefix (e.g., +5)
     | SUB num_factor        // Handles negative prefix (e.g., -5)
-    | INT | FLOAT | CHAR 
+    | AMPERSAND IDENTIFIER  // address-of:   &x
+    | MUL IDENTIFIER        // dereference:  *ptr
+    | INT | FLOAT | CHAR
     | dirac_expression
     | IDENTIFIER
     ;
@@ -352,6 +355,7 @@ FUNC
 /* BASIC OPERATIONS */
 ADD: '+' ;
 SUB: '-' ;
+AMPERSAND: '&' ;
 MUL: '*' ;
 DIV: '/' ;
 EXP: '**' ;

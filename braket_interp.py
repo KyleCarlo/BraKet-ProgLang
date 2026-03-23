@@ -97,8 +97,11 @@ PRINT_OP  = "PRINT"
 ARRAY_NEW = "ARRAY_NEW"
 ARRAY_SET = "ARRAY_SET"
 ARRAY_GET = "ARRAY_GET"
-STRUCT_SET = "STRUCT_SET"
-STRUCT_GET = "STRUCT_GET"
+STRUCT_SET  = "STRUCT_SET"
+STRUCT_GET  = "STRUCT_GET"
+ADDR_OF     = "ADDR_OF"      # dest = &var_name
+DEREF       = "DEREF"        # dest = *ptr_name
+DEREF_ASSIGN = "DEREF_ASSIGN" # *ptr_name = src
 
 
 @dataclass
@@ -259,6 +262,11 @@ class ICGenerator:
             name  = ctx.struct_access().IDENTIFIER(0).getText()
             field_name = ctx.struct_access().IDENTIFIER(1).getText()
             self._emit(STRUCT_SET, name, field_name, val, line=self._line(ctx))
+        elif ctx.MUL():
+            # *ptr = expr
+            ptr_name = ctx.IDENTIFIER().getText()
+            val      = self._gen_expr(ctx.expression())
+            self._emit(DEREF_ASSIGN, ptr_name, val, line=self._line(ctx))
 
     def _gen_rhs(self, ctx):
         """
@@ -401,8 +409,8 @@ class ICGenerator:
         args = []
         if ctx.arg():
             args.append(self._gen_arg(ctx.arg()))
-        if ctx.arg_list():
-            args.extend(self._collect_args(ctx.arg_list()))
+        for sub in ctx.arg_list():
+            args.extend(self._collect_args(sub))
         return args
 
     def _gen_arg(self, ctx):
@@ -489,6 +497,16 @@ class ICGenerator:
         return left
 
     def _gen_num_factor(self, ctx) -> Any:
+        if ctx.AMPERSAND():                          # &var_name
+            var_name = ctx.IDENTIFIER().getText()
+            t = self._tmp()
+            self._emit(ADDR_OF, t, var_name, line=self._line(ctx))
+            return t
+        if ctx.MUL() and not ctx.num_factor():       # *ptr (not a unary ± with nested num_factor)
+            var_name = ctx.IDENTIFIER().getText()
+            t = self._tmp()
+            self._emit(DEREF, t, var_name, line=self._line(ctx))
+            return t
         if ctx.LPAREN() and ctx.num_expression():
             return self._gen_num_expr(ctx.num_expression())
         if ctx.func_call_statement():
@@ -851,6 +869,16 @@ class BKStruct:
         return "{" + inner + "}"
 
 
+class BKPointer:
+    """Pointer to a named variable in the interpreter's address space."""
+    def __init__(self, var_name: str, address: int):
+        self.var_name = var_name
+        self.address  = address
+
+    def __repr__(self):
+        return f"*{self.var_name} @ 0x{self.address:08x}"
+
+
 class BKVector:
     """Ket or bra state vector."""
     def __init__(self, data: list, kind: str = "ket"):
@@ -898,7 +926,7 @@ def _fmt(v: Any) -> str:
     if isinstance(v, float):
         return str(int(v)) if v == int(v) else str(v)
     if isinstance(v, bool):     return "true" if v else "false"
-    if isinstance(v, (BKVector, BKOperator, BKArray, BKStruct)):
+    if isinstance(v, (BKVector, BKOperator, BKArray, BKStruct, BKPointer)):
         return repr(v)
     return str(v)
 
@@ -1185,6 +1213,10 @@ class Interpreter:
         self._output:     list[str] = []
         self._exec_log:   list[str] = []
         self._steps       = 0
+        # Simulated address space for pointer support
+        self._heap:      dict[int, Any] = {}
+        self._var_addrs: dict[str, int] = {}
+        self._addr_next: int = 0x1000
     
         # Captures the local frame of each user function after it returns,
         # so the IDE can display per-function symbol scopes.
@@ -2149,6 +2181,45 @@ def _patched_run_ic(self, ic, env):
             else:
                 raise BKRuntimeError(f"'{ins.b}' is not a struct", ins.line)
 
+        elif op == ADDR_OF:
+            var_name = ins.b
+            if var_name not in self._var_addrs:
+                self._addr_next += 4
+                self._var_addrs[var_name] = self._addr_next
+            addr = self._var_addrs[var_name]
+            self._heap[addr] = self._resolve(var_name, env)
+            env[ins.a] = BKPointer(var_name, addr)
+
+        elif op == DEREF:
+            ptr = self._resolve(ins.b, env)
+            if isinstance(ptr, BKPointer):
+                val = self._resolve(ptr.var_name, env)
+                # _resolve returns the name string when variable not found; fall back to heap
+                if isinstance(val, str) and val == ptr.var_name:
+                    val = self._heap.get(ptr.address)
+                env[ins.a] = val
+            elif isinstance(ptr, int):
+                env[ins.a] = self._heap.get(ptr)
+            else:
+                raise BKRuntimeError(f"Cannot dereference '{ins.b}'", ins.line)
+
+        elif op == DEREF_ASSIGN:
+            ptr = self._resolve(ins.a, env)
+            val = self._resolve(ins.b, env)
+            if not isinstance(ptr, BKPointer):
+                raise BKRuntimeError(f"'{ins.a}' is not a pointer", ins.line)
+            # Update the pointed-to variable in whichever scope owns it
+            for frame in reversed(self._call_stack):
+                if ptr.var_name in frame:
+                    frame[ptr.var_name] = val
+                    break
+            else:
+                if ptr.var_name in env:
+                    env[ptr.var_name] = val
+                else:
+                    self._global_env[ptr.var_name] = val
+            self._heap[ptr.address] = val
+
         pc += 1
 
 Interpreter._run_ic = _patched_run_ic
@@ -2509,6 +2580,43 @@ class _SnapshotInterpreter(Interpreter):
                     env[ins.a] = obj.get(ins.c)
                 else:
                     raise BKRuntimeError(f"'{ins.b}' is not a struct", ins.line)
+
+            elif op == ADDR_OF:
+                var_name = ins.b
+                if var_name not in self._var_addrs:
+                    self._addr_next += 4
+                    self._var_addrs[var_name] = self._addr_next
+                addr = self._var_addrs[var_name]
+                self._heap[addr] = self._resolve(var_name, env)
+                env[ins.a] = BKPointer(var_name, addr)
+
+            elif op == DEREF:
+                ptr = self._resolve(ins.b, env)
+                if isinstance(ptr, BKPointer):
+                    val = self._resolve(ptr.var_name, env)
+                    if isinstance(val, str) and val == ptr.var_name:
+                        val = self._heap.get(ptr.address)
+                    env[ins.a] = val
+                elif isinstance(ptr, int):
+                    env[ins.a] = self._heap.get(ptr)
+                else:
+                    raise BKRuntimeError(f"Cannot dereference '{ins.b}'", ins.line)
+
+            elif op == DEREF_ASSIGN:
+                ptr = self._resolve(ins.a, env)
+                val = self._resolve(ins.b, env)
+                if not isinstance(ptr, BKPointer):
+                    raise BKRuntimeError(f"'{ins.a}' is not a pointer", ins.line)
+                for frame in reversed(self._call_stack):
+                    if ptr.var_name in frame:
+                        frame[ptr.var_name] = val
+                        break
+                else:
+                    if ptr.var_name in env:
+                        env[ptr.var_name] = val
+                    else:
+                        self._global_env[ptr.var_name] = val
+                self._heap[ptr.address] = val
 
             # record snapshot AFTER executing
             after = _user_env({**self._global_env, **env})

@@ -176,6 +176,7 @@ class BKType:
     BRA      = "bra"
     OPERATOR = "op"
     FUNCTION = "function"
+    POINTER  = "pointer"
     UNKNOWN  = "unknown"
 
     NUMERIC: frozenset[str] = frozenset({INT, FLOAT, COMPLEX})
@@ -527,6 +528,14 @@ class _SemanticVisitor(BraKetVisitor):
         if ctx.struct_access() and ctx.expression():
             self._visit_struct_access(ctx.struct_access())
             return self._visit_expr(ctx.expression())
+        if ctx.MUL():   # *ptr = expr
+            ptr_name = ctx.IDENTIFIER().getText()
+            sym = self.current_scope.lookup(ptr_name)
+            if sym is None:
+                self._error(ctx, f"Undeclared pointer '{ptr_name}'.")
+            elif sym.bk_type not in (BKType.POINTER, BKType.UNKNOWN):
+                self._warn(ctx, f"'{ptr_name}' (type '{sym.bk_type}') may not be a pointer.")
+            return self._visit_expr(ctx.expression())
         if ctx.expression():
             return self._visit_expr(ctx.expression())
         return BKType.UNKNOWN
@@ -630,7 +639,7 @@ class _SemanticVisitor(BraKetVisitor):
 
     def _visit_arg_list(self, ctx: BraKetParser.Arg_listContext):
         if ctx.arg():      self._visit_arg(ctx.arg())
-        if ctx.arg_list(): self._visit_arg_list(ctx.arg_list())
+        for sub in ctx.arg_list(): self._visit_arg_list(sub)
 
     def _visit_arg(self, ctx: BraKetParser.ArgContext):
         if ctx.assign_statement():
@@ -705,6 +714,20 @@ class _SemanticVisitor(BraKetVisitor):
         return t1
 
     def _visit_num_factor(self, ctx: BraKetParser.Num_factorContext) -> str:
+        if ctx.AMPERSAND():        # &var_name
+            name = ctx.IDENTIFIER().getText()
+            sym  = self.current_scope.lookup(name)
+            if sym is None:
+                self._error(ctx, f"Undeclared variable '{name}' for '&{name}'.")
+            return BKType.POINTER
+        if ctx.MUL() and not ctx.num_factor():   # *ptr (dereference)
+            name = ctx.IDENTIFIER().getText()
+            sym  = self.current_scope.lookup(name)
+            if sym is None:
+                self._error(ctx, f"Undeclared pointer '{name}'.")
+            elif sym.bk_type not in (BKType.POINTER, BKType.UNKNOWN):
+                self._warn(ctx, f"'{name}' (type '{sym.bk_type}') may not be a pointer.")
+            return BKType.UNKNOWN
         if ctx.num_expression():   return self._visit_num_expr(ctx.num_expression())
         if ctx.COMPLEX():          return BKType.COMPLEX
         if ctx.INT():              return BKType.INT
