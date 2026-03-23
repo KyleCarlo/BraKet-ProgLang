@@ -659,13 +659,13 @@ class IDE:
                  bg=PANEL_BG, fg=FG_DIM, font=("Segoe UI", 10)).pack(side=tk.RIGHT)
 
         # "tree headings" shows the expand/collapse arrow column plus named columns
-        cols = ("Name", "BKType", "Const?", "Value")
+        cols = ("Name", "BKType", "Const?", "Value", "Address")
         self.sym_tree = ttk.Treeview(frame, columns=cols,
                                       show="tree headings", selectmode="browse")
         # The implicit #0 tree column holds the scope group label
         self.sym_tree.heading("#0",      text="Scope")
         self.sym_tree.column( "#0",      width=120, minwidth=80, anchor=tk.W)
-        for col, w in zip(cols, [150, 90, 60, 180]):
+        for col, w in zip(cols, [130, 90, 55, 160, 100]):
             self.sym_tree.heading(col, text=col)
             self.sym_tree.column(col, width=w, minwidth=w, anchor=tk.W)
 
@@ -901,14 +901,14 @@ class IDE:
             # Parent row — scope header (no symbol columns)
             parent = self.sym_tree.insert(
                 "", tk.END, text=f"  {label}",
-                values=("", "", "", ""), tags=(scope_tag,), open=True)
+                values=("", "", "", "", ""), tags=(scope_tag,), open=True)
             for name, sym in sorted(syms.items()):
                 bkt      = sym.bk_type
                 is_const = "✓" if sym.is_const else ""
                 val_str  = str(sym.literal_value) if sym.literal_value is not None else "—"
                 tag      = bkt if bkt in BKTYPE_COLORS else "unknown"
                 self.sym_tree.insert(parent, tk.END, text="",
-                                      values=(name, bkt, is_const, val_str),
+                                      values=(name, bkt, is_const, val_str, "—"),
                                       tags=(tag,))
                 total += 1
 
@@ -933,10 +933,12 @@ class IDE:
         self.sym_count_var.set(f"{total} symbol{'s' if total != 1 else ''}")
 
     def _update_runtime_symbols(self, symbol_table: dict,
-                                 function_scopes: dict | None = None):
+                                 function_scopes: dict | None = None,
+                                 var_addrs: dict | None = None):
         """Populate symbol table from the interpreter's live runtime values."""
         self.sym_tree.delete(*self.sym_tree.get_children())
         total = 0
+        var_addrs = var_addrs or {}
 
         type_map = {
             "int": "int", "float": "float", "complex": "complex",
@@ -953,15 +955,17 @@ class IDE:
                 return
             parent = self.sym_tree.insert(
                 "", tk.END, text=f"  {label}",
-                values=("", "", "", ""), tags=(scope_tag,), open=True)
+                values=("", "", "", "", ""), tags=(scope_tag,), open=True)
             for name, val in sorted(items):
                 type_name = type(val).__name__
                 bkt       = type_map.get(type_name, type_name)
                 val_str   = str(val)
                 val_str   = val_str[:38] + "…" if len(val_str) > 38 else val_str
+                addr      = var_addrs.get(name)
+                addr_str  = f"0x{addr:04X}" if addr is not None else "—"
                 tag       = bkt if bkt in BKTYPE_COLORS else "unknown"
                 self.sym_tree.insert(parent, tk.END, text="",
-                                      values=(name, bkt, "", val_str),
+                                      values=(name, bkt, "", val_str, addr_str),
                                       tags=(tag,))
                 total += 1
 
@@ -1143,11 +1147,11 @@ class IDE:
         tk.Label(sym_frame, text="Symbol Values", bg=PANEL_BG,
                  fg=ACCENT, font=("Segoe UI", 10, "bold")).pack(anchor=tk.W)
 
-        cols = ("Name", "BKType", "Value")
+        cols = ("Name", "BKType", "Value", "Address")
         self._trace_sym_tree = ttk.Treeview(sym_frame, columns=cols,
                                              show="headings",
                                              selectmode="browse")
-        for col, w in zip(cols, [150, 90, 260]):
+        for col, w in zip(cols, [130, 90, 210, 100]):
             self._trace_sym_tree.heading(col, text=col)
             self._trace_sym_tree.column(col, width=w, minwidth=w, anchor=tk.W)
 
@@ -1222,10 +1226,12 @@ class IDE:
             val_str = str(val)
             if len(val_str) > 50:
                 val_str = val_str[:47] + "…"
+            addr     = snap.var_addrs.get(name)
+            addr_str = f"0x{addr:04X}" if addr is not None else "—"
             tag = "changed" if name in snap.changed else (
                 bkt if bkt in BKTYPE_COLORS else "unknown")
             self._trace_sym_tree.insert("", tk.END,
-                                         values=(name, bkt, val_str),
+                                         values=(name, bkt, val_str, addr_str),
                                          tags=(tag,))
 
     # ── public debugger commands ──────────────────────────────
@@ -1379,7 +1385,8 @@ class IDE:
         # Use runtime symbol table if available, else fall back to semantic scope
         if result.run and result.run.symbol_table:
             self._update_runtime_symbols(result.run.symbol_table,
-                                        result.run.function_scopes)
+                                        result.run.function_scopes,
+                                        getattr(result.run, "var_addrs", None))
         else:
             self._update_symbol_table(result.sem.global_scope,
                                     result.sem.closed_scopes)

@@ -1164,6 +1164,7 @@ class InterpreterResult:
     function_scopes: dict[str, dict[str, Any]]   # fname -> last-seen local frame
     ic_trace:        list[str]                   # formatted IC listing
     exec_log:        list[str]                   # step-by-step execution log
+    var_addrs:       dict[str, int]              # variable name -> simulated address
 
 
 class Interpreter:
@@ -1246,6 +1247,7 @@ class Interpreter:
             function_scopes = self._function_frames,
             ic_trace        = ic_trace,
             exec_log        = self._exec_log,
+            var_addrs       = dict(self._var_addrs),
         )
 
     # ── IC runner ─────────────────────────────────────────────
@@ -2411,6 +2413,7 @@ class DebugSnapshot:
     env:         dict           # shallow copy of the user-visible env (no temps)
     output:      list[str]      # program output accumulated so far
     changed:     set            # names changed by this step
+    var_addrs:   dict           # variable name -> simulated address at this step
 
 
 def _user_env(env: dict) -> dict:
@@ -2669,6 +2672,7 @@ class _SnapshotInterpreter(Interpreter):
             env         = dict(after),
             output      = list(self._output),
             changed     = set(changed),
+            var_addrs   = dict(self._var_addrs),
         ))
         self._snap_step += 1
 
