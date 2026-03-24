@@ -1,0 +1,58 @@
+// 7-simple_math.bk
+// Demonstrates simple arithmetic expressions:
+//   x = id OP num,  x = id OP id,  x = num OP num
+
+main() {
+    a = 10
+    b = 3
+
+    // id + num
+    sum = a + 7
+    print(sum)
+
+    // id + id
+    total = a + b
+    print(total)
+
+    // num + num
+    lit_sum = 4 + 6
+    print(lit_sum)
+
+    // Subtraction
+    diff = a - b
+    print(diff)
+
+    // Multiplication
+    prod = a * b
+    print(prod)
+
+    // Division
+    quot = a / b
+    print(quot)
+
+    // Modulo
+    rem = a % b
+    print(rem)
+
+    // Exponentiation
+    power = a ** 2
+    print(power)
+
+    // Unary negation
+    neg = -a
+    print(neg)
+
+    // Unary positive (no-op)
+    pos = +b
+    print(pos)
+
+    // Mixed integer and float
+    x = 7
+    y = 2.5
+    mixed = x + y
+    print(mixed)
+
+    // Operator precedence: * before +
+    result = 2 + 3 * 4
+    print(result)          // 14, not 20
+}

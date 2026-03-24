@@ -1,0 +1,44 @@
+// 6-assignment.bk
+// Demonstrates the various forms of assignment statements in BraKet.
+
+main() {
+    // Simple variable assignment
+    x = 10
+    print(x)
+
+    // Reassignment — same variable, new value
+    x = x + 5
+    print(x)
+
+    // Assign result of expression
+    y = 3 * x - 2
+    print(y)
+
+    // Array element assignment
+    arr = [0, 0, 0, 0]
+    arr[0] = 42
+    arr[1] = 7
+    arr[2] = arr[0] + arr[1]
+    print(arr[0])
+    print(arr[1])
+    print(arr[2])
+
+    // Struct field assignment
+    point = { x = 0, y = 0 }
+    point.x = 3
+    point.y = 4
+    print(point.x)
+    print(point.y)
+
+    // Ket / bra assignment
+    |psi> = (0.707, 0.707)
+    <phi| = (1, 0)
+    print(|psi>)
+    print(<phi|)
+
+    // Pointer-based assignment (address-of & dereference)
+    val = 100
+    ptr = &val
+    *ptr = 200
+    print(val)       // val was modified through pointer
+}

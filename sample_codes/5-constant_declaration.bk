@@ -1,0 +1,33 @@
+// 5-constant_declaration.bk
+// Demonstrates constant declarations using the 'const' keyword.
+// Constants cannot be reassigned after declaration.
+
+const MAX_SIZE = 100
+const PI = 3.14159265
+const GRAVITY = 9.81
+const APP_NAME = "BraKet"
+const EULER = 2.71828
+
+// Quantum constants — ket and bra can also be const
+const |ket0> = (1, 0)
+const |ket1> = (0, 1)
+
+main() {
+    print(MAX_SIZE)
+    print(PI)
+    print(GRAVITY)
+    print(APP_NAME)
+    print(EULER)
+    print(|ket0>)
+    print(|ket1>)
+
+    // Using constants in expressions
+    radius = 5.0
+    area = PI * radius * radius
+    print(area)
+
+    height = 20.0
+    fall_time = sqrt(2 * height / GRAVITY)
+    print(fall_time)
+}
+

@@ -1,0 +1,46 @@
+// 18-variable_scope.bk
+// Demonstrates variable scope: variables declared inside a function are
+// local to that function and do not affect the caller's variables.
+
+func set_local() {
+    // x here is a new LOCAL variable — separate from main's x
+    x = 999
+    print(x)    // 999
+}
+
+func compute(n) {
+    // n and result are local to compute()
+    result = n * n + 2 * n + 1
+    return result
+}
+
+func shadow_param(x) {
+    // parameter x shadows the caller's binding — changes are not visible outside
+    x = x + 100
+    print(x)    // modified local copy
+    return x
+}
+
+func has_own_vars() {
+    a = 10
+    b = 20
+    c = a + b
+    print(c)    // 30 — all local
+}
+
+main() {
+    x = 10
+    print(x)          // 10
+
+    set_local()       // prints 999 (its own x)
+    print(x)          // still 10 — main's x unchanged
+
+    r = compute(4)
+    print(r)          // 25
+
+    shadow_param(x)   // prints 110 inside the function
+    print(x)          // still 10 — main's x unchanged
+
+    has_own_vars()    // prints 30 using its own a, b, c
+    print(x)          // still 10
+}

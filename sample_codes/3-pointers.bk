@@ -1,0 +1,70 @@
+// 3-pointers.bk
+// BONUS — Demonstrates pointer operations:
+//   &x   address-of (creates a pointer to x)
+//   *ptr dereference (read value through pointer)
+//   *ptr = val (write through pointer — modifies the pointed-to variable)
+
+func double_in_place(ptr) {
+    *ptr = *ptr * 2
+}
+
+func swap(pa, pb) {
+    temp = *pa
+    *pa  = *pb
+    *pb  = temp
+}
+
+func sum_via_ptrs(pa, pb) {
+    return *pa + *pb
+}
+
+main() {
+    // Basic address-of and dereference
+    x = 10
+    ptr = &x
+    print(*ptr)     // 10
+
+    // Modify the original variable through the pointer
+    *ptr = 42
+    print(x)        // 42 — x was modified through ptr
+
+    // Two pointers to the same variable
+    y  = 100
+    p1 = &y
+    p2 = &y
+    *p1 = 55
+    print(*p2)      // 55 — p2 sees the change made via p1
+
+    // Pass pointer to function — double n in place
+    n  = 7
+    pn = &n
+    double_in_place(pn)
+    print(n)        // 14
+
+    // Pass address directly (& inside argument)
+    m = 3
+    double_in_place(&m)
+    print(m)        // 6
+
+    // Sum via pointers
+    a  = 3
+    b  = 8
+    pa = &a
+    pb = &b
+    print(sum_via_ptrs(pa, pb))   // 11
+
+    // Swap via pointers
+    u = 100
+    v = 200
+    swap(&u, &v)
+    print(u)    // 200
+    print(v)    // 100
+
+    // Pointer in condition
+    val = 5
+    pv  = &val
+    if (*pv > 3) {
+        print("pointed value > 3")
+    }
+}
+

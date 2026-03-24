@@ -1,0 +1,47 @@
+// 10-while_loop.bk
+// Demonstrates the while loop — event-controlled iteration.
+// The loop runs as long as a boolean condition holds true.
+
+main() {
+    // Basic while: count up
+    count = 0
+    while (count < 5) {
+        print(count)
+        count = count + 1
+    }
+
+    // Accumulator: sum 1 to 10
+    sum = 0
+    i = 1
+    while (i <= 10) {
+        sum = sum + i
+        i = i + 1
+    }
+    print(sum)       // 55
+
+    // While with compound condition
+    a = 100
+    b = 1
+    while (a > 1 && b < 10) {
+        a = a / 2
+        b = b + 1
+    }
+    print(a)
+    print(b)
+
+    // Countdown
+    n = 5
+    while (n > 0) {
+        print(n)
+        n = n - 1
+    }
+
+    // While building a product
+    product = 1
+    k = 1
+    while (k <= 5) {
+        product = product * k
+        k = k + 1
+    }
+    print(product)   // 120 (5!)
+}

@@ -1,0 +1,45 @@
+// 2-variable_declaration.bk
+// Demonstrates all variable data types supported in BraKet.
+
+main() {
+    // Integer
+    age = 25
+    print(age)
+
+    // Float
+    pi = 3.14159
+    print(pi)
+
+    // Boolean
+    flag = true
+    print(flag)
+
+    // Character
+    letter = 'A'
+    print(letter)
+
+    // Escaped character
+    tab_char = '\t'
+    print("tab follows:")
+    print(tab_char)
+
+    // String
+    greeting = "Hello, BraKet!"
+    print(greeting)
+
+    // Complex number
+    z = 3+4i
+    print(z)
+
+    // Array (ordered list of values)
+    numbers = [10, 20, 30, 40]
+    print(numbers)
+
+    // Ket state vector
+    |psi> = (1, 0)
+    print(|psi>)
+
+    // Bra state vector
+    <phi| = (0, 1)
+    print(<phi|)
+}

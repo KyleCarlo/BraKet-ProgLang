@@ -1,0 +1,47 @@
+// 17-function_calls_function.bk
+// Demonstrates a function calling another function (function composition).
+
+func to_celsius(fahrenheit) {
+    return (fahrenheit - 32) * 5 / 9
+}
+
+func is_freezing(fahrenheit) {
+    celsius = to_celsius(fahrenheit)   // calls to_celsius
+    return celsius <= 0
+}
+
+func describe_temp(fahrenheit) {
+    // calls both is_freezing and to_celsius
+    if (is_freezing(fahrenheit)) {
+        print("Freezing!")
+    } else {
+        print("Above freezing")
+    }
+    c = to_celsius(fahrenheit)
+    print(c)
+}
+
+func double(n) {
+    return n * 2
+}
+
+func quadruple(n) {
+    return double(double(n))   // calls double twice
+}
+
+func sum_squares(a, b) {
+    return square(a) + square(b)
+}
+
+func square(n) {
+    return n * n
+}
+
+main() {
+    describe_temp(32)    // Freezing! → 0 Celsius
+    describe_temp(72)    // Above freezing → ~22 Celsius
+
+    print(quadruple(5))       // 20
+
+    print(sum_squares(3, 4))  // 25
+}

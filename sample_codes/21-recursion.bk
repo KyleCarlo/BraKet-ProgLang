@@ -1,0 +1,54 @@
+// 21-recursion.bk
+// Demonstrates recursive functions: factorial, Fibonacci, and sum.
+
+func factorial(n) {
+    if (n == 0 || n == 1) {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
+
+func fibonacci(n) {
+    if (n <= 1) {
+        return n
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+// Sum of all integers from 1 to n
+func sum_to(n) {
+    if (n <= 0) {
+        return 0
+    }
+    return n + sum_to(n - 1)
+}
+
+// Count-down printer
+func countdown(n) {
+    if (n <= 0) {
+        print("Liftoff!")
+        return 0
+    }
+    print(n)
+    return countdown(n - 1)
+}
+
+main() {
+    // Factorial
+    print(factorial(0))   // 1
+    print(factorial(1))   // 1
+    print(factorial(5))   // 120
+    print(factorial(7))   // 5040
+
+    // Fibonacci sequence
+    print(fibonacci(0))   // 0
+    print(fibonacci(1))   // 1
+    print(fibonacci(6))   // 8
+    print(fibonacci(8))   // 21
+
+    // Sum 1 + 2 + ... + 10
+    print(sum_to(10))     // 55
+
+    // Countdown
+    countdown(5)
+}

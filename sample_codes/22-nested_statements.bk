@@ -1,0 +1,60 @@
+// 22-nested_statements.bk
+// Demonstrates nesting: loops inside loops, conditions inside loops,
+// loops inside conditions, and mixed deep nesting.
+
+main() {
+    // Nested for loops — 3x3 multiplication table
+    for (i = 1; i <= 3; i = i + 1) {
+        for (j = 1; j <= 3; j = j + 1) {
+            print(i * j)
+        }
+    }
+
+    // if inside for — classify numbers 1..10
+    for (n = 1; n <= 10; n = n + 1) {
+        if (n % 2 == 0) {
+            if (n % 4 == 0) {
+                print("divisible by 4")
+            } else {
+                print("even")
+            }
+        } else {
+            print("odd")
+        }
+    }
+
+    // while inside if
+    x = 10
+    if (x > 0) {
+        count = 0
+        while (count < x) {
+            count = count + 1
+        }
+        print(count)      // 10
+    }
+
+    // for inside while — find first pair (i,j) where i*j > 15
+    found = false
+    i = 1
+    while (i <= 5 && !found) {
+        for (j = 1; j <= 5; j = j + 1) {
+            if (i * j > 15 && !found) {
+                print(i)
+                print(j)
+                found = true
+            }
+        }
+        i = i + 1
+    }
+
+    // Three-level nesting: for > for > if
+    total = 0
+    for (a = 1; a <= 3; a = a + 1) {
+        for (b = 1; b <= 3; b = b + 1) {
+            if (a != b) {
+                total = total + a * b
+            }
+        }
+    }
+    print(total)
+}

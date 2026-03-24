@@ -1,0 +1,40 @@
+// 16-input_output.bk
+// Demonstrates input() and print() — the I/O statements of BraKet.
+
+main() {
+    // Basic output — various types
+    print("Hello, BraKet!")
+    print(42)
+    print(3.14)
+    print(true)
+
+    // Escape sequences in output
+    print("Line 1\nLine 2\nLine 3")
+    print("Column1\tColumn2\tColumn3")
+    print("Quoted: \"Hello, World!\"")
+    print("Backslash: \\")
+
+    // String concatenation in print argument
+    lang = "BraKet"
+    version = "1.0"
+    print(lang + " v" + version)
+
+    // Input — prompts user and reads a string
+    name = input("Enter your name: ")
+    print("Hello, " + name + "!")
+
+    // Input converted to integer
+    age_str = input("Enter your age: ")
+    age = int(age_str)
+    next_year = age + 1
+    print("Next year you will be", str(next_year))
+
+    // Input used in a condition
+    answer = input("Type yes or no: ")
+    if (answer == "yes") {
+        print("You said yes!")
+    } else {
+        print("You did not say yes.")
+    }
+}
+

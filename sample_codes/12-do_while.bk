@@ -1,0 +1,37 @@
+// 12-do_while.bk
+// Demonstrates the do-while loop — repeat-until style.
+// The body always executes at least once, then checks the condition.
+
+main() {
+    // Basic do-while — body runs, then condition checked
+    x = 0
+    do {
+        print(x)
+        x = x + 1
+    } while (x < 3)
+
+    // Executes ONCE even when condition is false from the start
+    n = 10
+    do {
+        print("runs exactly once even though n >= 5")
+        n = n + 1
+    } while (n < 5)
+
+    // Accumulating total from 0 to 5
+    total = 0
+    count = 0
+    do {
+        total = total + count
+        count = count + 1
+    } while (count <= 5)
+    print(total)    // 15
+
+    // Digit counter — count digits in a number
+    num = 1234
+    digits = 0
+    do {
+        num = num / 10
+        digits = digits + 1
+    } while (num >= 1)
+    print(digits)   // 4
+}

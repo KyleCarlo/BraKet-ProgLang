@@ -1,0 +1,29 @@
+func square(x) {
+    return x * x
+}
+
+func accumulate(sum, val) {
+    return sum + val
+}
+
+main() {
+    print("Calling function multiple times in a while loop")
+    i = 1
+    while (i <= 5) {
+        print(square(i))
+        i = i + 1
+    }
+
+    print("Calling function multiple times in a for loop")
+    for (i = 0; i < 5; i = i + 1) {
+        print(square(i))
+    }
+
+    print("Accumulating results across calls")
+    total = 0
+    for (i = 1; i <= 5; i = i + 1) {
+        total = accumulate(total, i)
+    }
+    print(total)
+}
+

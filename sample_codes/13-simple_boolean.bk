@@ -1,0 +1,55 @@
+// 13-simple_boolean.bk
+// Demonstrates simple relational (boolean) expressions using
+//   <  >  <=  >=  ==  !=  !
+
+main() {
+    a = 5
+    b = 10
+
+    // Greater than
+    print(a > b)       // false
+
+    // Less than
+    print(a < b)       // true
+
+    // Greater than or equal
+    print(b >= 10)     // true
+    print(b >= 11)     // false
+
+    // Less than or equal
+    print(a <= 5)      // true
+    print(a <= 4)      // false
+
+    // Equal
+    print(a == 5)      // true
+    print(a == 6)      // false
+
+    // Not equal
+    print(a != b)      // true
+    print(a != 5)      // false
+
+    // Boolean negation
+    flag = true
+    print(!flag)       // false
+    print(!false)      // true
+
+    // Relational in if
+    if (a < b) {
+        print("a is less than b")
+    }
+
+    // Comparing expressions
+    if (a + 5 == b) {
+        print("a + 5 equals b")
+    }
+
+    // String equality
+    lang = "BraKet"
+    if (lang == "BraKet") {
+        print("string matches")
+    }
+
+    if (lang != "Python") {
+        print("not Python")
+    }
+}

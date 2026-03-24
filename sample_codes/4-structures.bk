@@ -1,0 +1,56 @@
+// 4-structures.bk
+// Demonstrates struct (record) declaration, field access, and structs in functions.
+
+func area_rect(rect) {
+    w = rect.width
+    h = rect.height
+    return w * h
+}
+
+func distance(p1, p2) {
+    x1 = p1.x
+    y1 = p1.y
+    x2 = p2.x
+    y2 = p2.y
+    dx = x1 - x2
+    dy = y1 - y2
+    return sqrt(dx * dx + dy * dy)
+}
+
+main() {
+    // Basic struct literal
+    person = { name = "Alice", age = 30 }
+    print(person.name)
+    print(person.age)
+
+    // Field modification
+    person.age = 31
+    print(person.age)
+
+    // Numeric struct fields
+    p1 = { x = 0.0, y = 0.0 }
+    p2 = { x = 3.0, y = 4.0 }
+    d = distance(p1, p2)
+    print(d)     // 5.0
+
+    // Struct passed to function
+    rect = { width = 8, height = 5 }
+    print(area_rect(rect))   // 40
+
+    // Struct field used in arithmetic
+    box = { length = 3, width = 4, height = 5 }
+    l = box.length
+    w = box.width
+    h = box.height
+    volume = l * w * h
+    print(volume)   // 60
+
+    // Multiple structs
+    a = { val = 10, label = "alpha" }
+    b = { val = 20, label = "beta" }
+    print(a.label)
+    print(b.label)
+    av = a.val
+    bv = b.val
+    print(av + bv)   // 30
+}

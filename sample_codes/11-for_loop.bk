@@ -1,0 +1,43 @@
+// 11-for_loop.bk
+// Demonstrates the for loop — count-controlled iteration.
+// Syntax: for (init; condition; update) { body }
+
+main() {
+    // Basic for — print 0 to 4
+    for (i = 0; i < 5; i = i + 1) {
+        print(i)
+    }
+
+    // For with step of 2 — sum even numbers 0..10
+    sum = 0
+    for (i = 0; i <= 10; i = i + 2) {
+        sum = sum + i
+    }
+    print(sum)       // 30
+
+    // Countdown
+    for (n = 5; n > 0; n = n - 1) {
+        print(n)
+    }
+
+    // For computing factorial
+    product = 1
+    for (k = 1; k <= 5; k = k + 1) {
+        product = product * k
+    }
+    print(product)   // 120
+
+    // For with expression in condition using sqrt
+    for (j = 1; j * j <= 25; j = j + 1) {
+        print(j)
+    }
+
+    // For iterating over array with len()
+    arr = [10, 20, 30, 40, 50]
+    total = 0
+    for (i = 0; i < len(arr); i = i + 1) {
+        elem = arr[i]
+        total = total + elem
+    }
+    print(total)     // 150
+}

@@ -1,3 +1,6 @@
+// 0-errors.bk
+// Demonstrates errors and warnings.
+
 const |ket0> = (1, 0)
 const |ket1> = (0, 1)
 const PI = 3.14159
@@ -117,4 +120,7 @@ main() {
          }
      }
 }
+
+cray
+
 

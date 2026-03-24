@@ -1,0 +1,43 @@
+// 1-comments.bk
+// Demonstrates single-line (//) and block (/* */) comment syntax.
+// Comments are completely ignored by the interpreter.
+
+/*
+    Block comment — can span multiple lines.
+    Useful for section headers, longer explanations, or
+    temporarily disabling blocks of code.
+*/
+
+const VERSION = 1   // inline comment: VERSION is a compile-time constant
+
+/* Another inline block comment */
+main() {
+    // Single-line comment: the next line is active code
+    x = 10
+
+    /*
+     * Multi-line block comment explaining the computation below.
+     * We compute x squared using exponentiation.
+     */
+    x_squared = x ** 2
+    print(x_squared)   // 100
+
+    // Commented-out code is never executed:
+    // print("this line is skipped by the interpreter")
+
+    /*
+    y = 99
+    print(y)
+    This entire block is ignored.
+    */
+
+    result = x + 5   /* add five */ + 3   // and three
+    print(result)    // 18
+
+    // Comments work inside any block
+    for (i = 0; i < 3; i = i + 1) {
+        // print the loop variable each iteration
+        print(i)
+        /* nothing else needed here */
+    }
+}

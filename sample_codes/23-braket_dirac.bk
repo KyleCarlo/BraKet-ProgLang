@@ -1,0 +1,60 @@
+// 23-braket_dirac.bk
+// Demonstrates BraKet's core quantum features:
+//   ket |v>, bra <v|, inner product, tensor product @,
+//   operator application *, norm, dag, normalize, dirac() visual popup.
+
+const |ket0> = (1, 0)
+const |ket1> = (0, 1)
+
+func hadamard(state) {
+    // Hadamard gate: H = 1/sqrt(2) * [[1,1],[1,-1]]
+    H = ((0.707, 0.707), (0.707, -0.707))
+    return H * state
+}
+
+main() {
+    // Ket state vector
+    |psi> = (0.707, 0.707)
+    print(|psi>)
+
+    // Bra state vector
+    <phi| = (1, 0)
+    print(<phi|)
+
+    // Inner product: <bra| * |ket>
+    inner = <phi| * |ket0>
+    print(inner)
+
+    // Tensor product: |A> @ |B>  (Kronecker product)
+    |bell> = |ket0> @ |ket1>
+    print(|bell>)
+
+    // Operator applied to ket: op * |ket>
+    |plus>  = hadamard(|ket0>)
+    |minus> = hadamard(|ket1>)
+    print(|plus>)
+    print(|minus>)
+
+    // Norm of a ket
+    n = norm(|psi>)
+    print(n)
+
+    // Conjugate transpose: dag flips ket <-> bra and conjugates
+    print(dag(|psi>))
+    print(dag(<phi|))
+
+    // Normalize a ket to unit length
+    |raw> = (3, 4)
+    |unit> = normalize(|raw>)
+    print(|unit>)
+    print(norm(|unit>))   // should be 1.0
+
+    // identity and zero_ket built-ins
+    print(identity(2))
+    print(zero_ket(2))
+
+    // dirac() — renders as math notation popup with save option
+    dirac(|ket0>, "ket0")
+    dirac(<phi|, "phi")
+    dirac(hadamard(|ket0>), "H ket0")
+}

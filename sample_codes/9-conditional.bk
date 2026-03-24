@@ -1,0 +1,65 @@
+// 9-conditional.bk
+// Demonstrates if / elif / else conditional statements.
+
+main() {
+    // Simple if
+    x = 10
+    if (x > 0) {
+        print("x is positive")
+    }
+
+    // if-else
+    y = -3
+    if (y >= 0) {
+        print("non-negative")
+    } else {
+        print("negative")
+    }
+
+    // if-elif-else chain (grade classifier)
+    score = 75
+    if (score >= 90) {
+        print("A")
+    } elif (score >= 80) {
+        print("B")
+    } elif (score >= 70) {
+        print("C")
+    } elif (score >= 60) {
+        print("D")
+    } else {
+        print("F")
+    }
+
+    // Nested if-else
+    a = 5
+    b = 3
+    if (a > 0) {
+        if (b > 0) {
+            print("both positive")
+        } else {
+            print("a positive, b not")
+        }
+    } else {
+        print("a is not positive")
+    }
+
+    // Condition using boolean expression
+    n = 6
+    if (n % 2 == 0 && n > 0) {
+        print("positive even")
+    } else {
+        print("odd or non-positive")
+    }
+
+    // elif with complex condition
+    temp = 22
+    if (temp < 0) {
+        print("freezing")
+    } elif (temp >= 0 && temp < 15) {
+        print("cold")
+    } elif (temp >= 15 && temp < 25) {
+        print("comfortable")
+    } else {
+        print("hot")
+    }
+}

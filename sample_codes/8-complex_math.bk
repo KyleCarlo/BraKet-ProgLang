@@ -1,0 +1,64 @@
+// 8-complex_math.bk
+// Demonstrates complex arithmetic expressions:
+//   nested operations, function calls in expressions, array values.
+
+func square(n) {
+    return n * n
+}
+
+func cube(n) {
+    return n * n * n
+}
+
+func clamp(v, lo, hi) {
+    if (v < lo) {
+        return lo
+    }
+    if (v > hi) {
+        return hi
+    }
+    return v
+}
+
+main() {
+    // Nested arithmetic with multiple operators
+    a = 2
+    b = 3
+    c = 4
+    result = a + b * c - a ** 2
+    print(result)
+
+    // Function calls inside expressions
+    x = square(3) + cube(2) - 1
+    print(x)
+
+    // Chained function calls
+    chain = square(b) + square(c) - cube(a)
+    print(chain)
+
+    // Complex nested expression
+    n = 5
+    val = square(n) + 2 * n + 1
+    print(val)
+
+    // Mixed grouping
+    r = (a + b) * (c - a) / b + square(2)
+    print(r)
+
+    // Function call as argument to another function call
+    clamped = clamp(square(10), 0, 50)
+    print(clamped)
+
+    // Array elements via intermediate variables
+    arr = [5, 10, 15, 20]
+    v0 = arr[0]
+    v1 = arr[1]
+    v2 = arr[2]
+    v3 = arr[3]
+    avg = (v0 + v1 + v2 + v3) / 4
+    print(avg)
+
+    // Built-in math functions in expressions
+    hyp = sqrt(square(3) + square(4))
+    print(hyp)
+}

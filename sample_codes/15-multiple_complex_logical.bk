@@ -1,0 +1,46 @@
+// 15-multiple_complex_logical.bk
+// Demonstrates multiple and deeply nested logical expressions.
+// Covers: (complex_math rel_op complex_math logical_op !(complex_math) ...)
+
+main() {
+    a = 3
+    b = 7
+    c = 5
+    d = 0
+
+    // Three-way AND
+    if (a > 0 && b > 0 && c > 0) {
+        print("all three positive")
+    }
+
+    // Nested grouping: (AND) OR (simple)
+    if ((a + b > c) && (b - c < 5) || (d == 0)) {
+        print("complex condition met")
+    }
+
+    // Negation of a compound expression
+    if (!(a > 10 || b < 2)) {
+        print("neither a>10 nor b<2")
+    }
+
+    // Negation of AND
+    if (!(a == 0 && b == 0)) {
+        print("not both zero")
+    }
+
+    // Mixed arithmetic in comparisons with multiple logical ops
+    val = (a * b > 10) && !(c == 0) || (d + 1 == 1 && a != b)
+    print(val)
+
+    // Chained OR with AND groups
+    flag = (a == 3 && b == 7) || (c == 5 && d == 0) || (a + b + c > 10)
+    print(flag)
+
+    // Deep nesting
+    deep = ((a + b) * c > 20) && ((b - a) * d == 0) || !((a + d) > b)
+    print(deep)
+
+    // Expression from rubric: (complex relop complex logop !(complex))
+    expr = (a * c + b > 10) && !(b * d - c < 0) || (a + c == b - 1)
+    print(expr)
+}
