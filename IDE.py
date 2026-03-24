@@ -934,7 +934,8 @@ class IDE:
 
     def _update_runtime_symbols(self, symbol_table: dict,
                                  function_scopes: dict | None = None,
-                                 var_addrs: dict | None = None):
+                                 var_addrs: dict | None = None,
+                                 tmp_table: dict | None = None):
         """Populate symbol table from the interpreter's live runtime values."""
         self.sym_tree.delete(*self.sym_tree.get_children())
         total = 0
@@ -949,7 +950,7 @@ class IDE:
             "NoneType": "unknown",
         }
 
-        def _insert_runtime_scope(label, scope_tag, items):
+        def _insert_runtime_scope(label, scope_tag, items, freed=False):
             nonlocal total
             if not items:
                 return
@@ -962,7 +963,10 @@ class IDE:
                 val_str   = str(val)
                 val_str   = val_str[:38] + "…" if len(val_str) > 38 else val_str
                 addr      = var_addrs.get(name)
-                addr_str  = f"0x{addr:04X}" if addr is not None else "—"
+                if addr is not None:
+                    addr_str = f"0x{addr:04X} [freed]" if freed else f"0x{addr:04X}"
+                else:
+                    addr_str = "—"
                 tag       = bkt if bkt in BKTYPE_COLORS else "unknown"
                 self.sym_tree.insert(parent, tk.END, text="",
                                       values=(name, bkt, "", val_str, addr_str),
@@ -978,6 +982,11 @@ class IDE:
             for fname, frame in sorted(function_scopes.items()):
                 _insert_runtime_scope(f"func  {fname}", "scope_func",
                                        frame.items())
+
+        # Temporaries (addresses freed at end of execution)
+        if tmp_table:
+            _insert_runtime_scope("temporaries (freed)", "scope_block",
+                                   tmp_table.items(), freed=True)
 
         self.sym_count_var.set(
             f"{total} symbol{'s' if total != 1 else ''} (runtime)")
@@ -1386,7 +1395,8 @@ class IDE:
         if result.run and result.run.symbol_table:
             self._update_runtime_symbols(result.run.symbol_table,
                                         result.run.function_scopes,
-                                        getattr(result.run, "var_addrs", None))
+                                        getattr(result.run, "var_addrs", None),
+                                        getattr(result.run, "tmp_table", None))
         else:
             self._update_symbol_table(result.sem.global_scope,
                                     result.sem.closed_scopes)

@@ -869,6 +869,11 @@ class BKStruct:
         return "{" + inner + "}"
 
 
+def _is_tmp_name(name: object) -> bool:
+    """Return True if *name* is an auto-generated temporary (t0, t1, …)."""
+    return isinstance(name, str) and len(name) >= 2 and name[0] == 't' and name[1:].isdigit()
+
+
 class BKPointer:
     """Pointer to a named variable in the interpreter's address space."""
     def __init__(self, var_name: str, address: int):
@@ -1160,11 +1165,12 @@ class _ReturnSignal(Exception):
 class InterpreterResult:
     output:          list[str]
     error:           Optional[str]
-    symbol_table:    dict[str, Any]              # global env after execution
+    symbol_table:    dict[str, Any]              # global env after execution (user vars only)
     function_scopes: dict[str, dict[str, Any]]   # fname -> last-seen local frame
     ic_trace:        list[str]                   # formatted IC listing
     exec_log:        list[str]                   # step-by-step execution log
-    var_addrs:       dict[str, int]              # variable name -> simulated address
+    var_addrs:       dict[str, int]              # variable name -> simulated address (incl. freed temps)
+    tmp_table:       dict[str, Any]              # temporaries at end of execution (addresses freed)
 
 
 class Interpreter:
@@ -1239,15 +1245,23 @@ class Interpreter:
         except Exception as e:
             error = f"Internal error: {type(e).__name__}: {e}"
 
+        # Collect temporaries before freeing their address slots
+        _tmp_set = {k for k in self._global_env if _is_tmp_name(k)}
+        _tmp_tbl = {k: v for k, v in self._global_env.items() if k in _tmp_set}
+        _all_addrs = dict(self._var_addrs)   # snapshot includes freed temp addresses
+        for _k in _tmp_set:
+            self._var_addrs.pop(_k, None)    # free temp address slots
+
         return InterpreterResult(
             output          = self._output,
             error           = error,
             symbol_table    = {k: v for k, v in self._global_env.items()
-                               if k not in self._tmp_names},
+                               if k not in self._tmp_names and not _is_tmp_name(k)},
             function_scopes = self._function_frames,
             ic_trace        = ic_trace,
             exec_log        = self._exec_log,
-            var_addrs       = dict(self._var_addrs),
+            var_addrs       = _all_addrs,
+            tmp_table       = _tmp_tbl,
         )
 
     # ── IC runner ─────────────────────────────────────────────
@@ -1442,6 +1456,22 @@ class Interpreter:
         # We need to store op differently.  See _fix below.
         return "+"   # fallback — see _fix_binop_storage below
 
+    def _assign_var_addr(self, name: object) -> int:
+        """Auto-assign a simulated memory address to any variable or temporary.
+
+        User variables keep a stable address once assigned.
+        Temporaries receive a fresh address each time they are overwritten
+        (simulating the release and re-use of a temporary slot).
+        """
+        if not isinstance(name, str):
+            return 0
+        if name in self._var_addrs and not _is_tmp_name(name):
+            return self._var_addrs[name]   # stable address for user variables
+        # Temporaries: release old slot implicitly, allocate a new one
+        self._addr_next += 4
+        self._var_addrs[name] = self._addr_next
+        return self._addr_next
+
     # ── binary operation evaluation ───────────────────────────
 
     def _apply_binop(self, left_name, right_name, lv: Any, rv: Any, op: str, line: int) -> Any:
@@ -1629,11 +1659,11 @@ class Interpreter:
             result = r.value
         finally:
             self._call_stack.pop()
-            # Save a snapshot of this function's local frame (excluding temps)
+            # Save a snapshot of this function's local frame (user vars only)
             # so the IDE can show per-function symbols in the symbol table.
             self._function_frames[name] = {
                 k: v for k, v in frame.items()
-                if k not in self._tmp_names
+                if k not in self._tmp_names and not _is_tmp_name(k)
             }
             
 
@@ -2076,19 +2106,23 @@ def _patched_run_ic(self, ic, env):
                 elif name.startswith("|") and name.endswith(">") and val.kind != "ket":
                     val = BKVector(val.data, "ket")
             env[ins.a] = val
+            self._assign_var_addr(ins.a)
 
         elif op == COPY:
             env[ins.a] = self._resolve(ins.b, env)
+            self._assign_var_addr(ins.a)
 
         elif op == BINOP:
             op_str = getattr(ins, '_op2', '+')
             lv = self._resolve(ins.b, env)
             rv = self._resolve(ins.c, env)
             env[ins.a] = self._apply_binop(ins.b, ins.c, lv, rv, op_str, ins.line)
+            self._assign_var_addr(ins.a)
 
         elif op == UNOP:
             v = self._resolve(ins.c, env)
             env[ins.a] = self._apply_unop(ins.b, v, ins.line)
+            self._assign_var_addr(ins.a)
 
         elif op == JUMP:
             pc = labels.get(ins.a, pc + 1); continue
@@ -2114,6 +2148,7 @@ def _patched_run_ic(self, ic, env):
             self._param_buf = self._param_buf[:-argc] if argc else self._param_buf
             result = self._call_function(fname, args, ins.line)
             env[dest] = result
+            self._assign_var_addr(dest)
 
         elif op == RETURN_OP:
             val = self._resolve(ins.a, env) if ins.a is not None else None
@@ -2127,6 +2162,7 @@ def _patched_run_ic(self, ic, env):
 
         elif op == ARRAY_NEW:
             env[ins.a] = BKArray([None] * (ins.b or 0))
+            self._assign_var_addr(ins.a)
 
         elif op == ARRAY_SET:
             arr = self._resolve(ins.a, env)
@@ -2150,11 +2186,13 @@ def _patched_run_ic(self, ic, env):
                 env[ins.a] = arr.get(idx)
             else:
                 raise BKRuntimeError(f"'{ins.b}' is not an array", ins.line)
+            self._assign_var_addr(ins.a)
 
         elif op == "VEC_FROM_ARRAY":
             arr = env.get(ins.b)
             if isinstance(arr, BKArray):
                 env[ins.a] = arr.data
+            self._assign_var_addr(ins.a)
 
         elif op == "MAT_FROM_ROWS":
             arr = env.get(ins.b)
@@ -2168,6 +2206,7 @@ def _patched_run_ic(self, ic, env):
                     else:
                         rows.append([complex(row)])
                 env[ins.a] = BKOperator(rows)
+            self._assign_var_addr(ins.a)
 
         elif op == STRUCT_SET:
             obj = self._resolve(ins.a, env)
@@ -2188,6 +2227,7 @@ def _patched_run_ic(self, ic, env):
                 env[ins.a] = obj.get(ins.c)
             else:
                 raise BKRuntimeError(f"'{ins.b}' is not a struct", ins.line)
+            self._assign_var_addr(ins.a)
 
         elif op == ADDR_OF:
             var_name = ins.b
@@ -2197,6 +2237,7 @@ def _patched_run_ic(self, ic, env):
             addr = self._var_addrs[var_name]
             self._heap[addr] = self._resolve(var_name, env)
             env[ins.a] = BKPointer(var_name, addr)
+            self._assign_var_addr(ins.a)
 
         elif op == DEREF:
             ptr = self._resolve(ins.b, env)
@@ -2417,8 +2458,8 @@ class DebugSnapshot:
 
 
 def _user_env(env: dict) -> dict:
-    """Return only non-temporary symbols."""
-    return {k: v for k, v in env.items() if not k.startswith("t")}
+    """Return all symbols (user variables and temporaries)."""
+    return dict(env)
 
 
 class _SnapshotInterpreter(Interpreter):
@@ -2470,19 +2511,23 @@ class _SnapshotInterpreter(Interpreter):
                     else:
                         val = BKVector(val, "ket")
                 env[ins.a] = val
+                self._assign_var_addr(ins.a)
 
             elif op == COPY:
                 env[ins.a] = self._resolve(ins.b, env)
+                self._assign_var_addr(ins.a)
 
             elif op == BINOP:
                 op_str = getattr(ins, '_op2', '+')
                 lv = self._resolve(ins.b, env)
                 rv = self._resolve(ins.c, env)
                 env[ins.a] = self._apply_binop(ins.b, ins.c, lv, rv, op_str, ins.line)
+                self._assign_var_addr(ins.a)
 
             elif op == UNOP:
                 v = self._resolve(ins.c, env)
                 env[ins.a] = self._apply_unop(ins.b, v, ins.line)
+                self._assign_var_addr(ins.a)
 
             elif op == JUMP:
                 # record before jumping
@@ -2517,6 +2562,7 @@ class _SnapshotInterpreter(Interpreter):
                 self._param_buf = self._param_buf[:-argc] if argc else self._param_buf
                 result = self._call_function(fname, args, ins.line)
                 env[dest] = result
+                self._assign_var_addr(dest)
 
             elif op == RETURN_OP:
                 val = self._resolve(ins.a, env) if ins.a is not None else None
@@ -2532,6 +2578,7 @@ class _SnapshotInterpreter(Interpreter):
 
             elif op == ARRAY_NEW:
                 env[ins.a] = BKArray([None] * ins.b)
+                self._assign_var_addr(ins.a)
 
             elif op == ARRAY_SET:
                 arr = self._resolve(ins.a, env)
@@ -2555,11 +2602,13 @@ class _SnapshotInterpreter(Interpreter):
                     env[ins.a] = arr.get(idx)
                 else:
                     raise BKRuntimeError(f"'{ins.b}' is not an array", ins.line)
+                self._assign_var_addr(ins.a)
 
             elif op == "VEC_FROM_ARRAY":
                 arr = env.get(ins.b)
                 if isinstance(arr, BKArray):
                     env[ins.a] = arr.data
+                self._assign_var_addr(ins.a)
 
             elif op == "MAT_FROM_ROWS":
                 arr = env.get(ins.b)
@@ -2573,6 +2622,7 @@ class _SnapshotInterpreter(Interpreter):
                         else:
                             rows.append([complex(row)])
                     env[ins.a] = BKOperator(rows)
+                self._assign_var_addr(ins.a)
 
             elif op == STRUCT_SET:
                 obj = self._resolve(ins.a, env)
@@ -2591,6 +2641,7 @@ class _SnapshotInterpreter(Interpreter):
                     env[ins.a] = obj.get(ins.c)
                 else:
                     raise BKRuntimeError(f"'{ins.b}' is not a struct", ins.line)
+                self._assign_var_addr(ins.a)
 
             elif op == ADDR_OF:
                 var_name = ins.b
@@ -2600,6 +2651,7 @@ class _SnapshotInterpreter(Interpreter):
                 addr = self._var_addrs[var_name]
                 self._heap[addr] = self._resolve(var_name, env)
                 env[ins.a] = BKPointer(var_name, addr)
+                self._assign_var_addr(ins.a)
 
             elif op == DEREF:
                 ptr = self._resolve(ins.b, env)
@@ -2612,6 +2664,7 @@ class _SnapshotInterpreter(Interpreter):
                     env[ins.a] = self._heap.get(ptr)
                 else:
                     raise BKRuntimeError(f"Cannot dereference '{ins.b}'", ins.line)
+                self._assign_var_addr(ins.a)
 
             elif op == DEREF_ASSIGN:
                 ptr = self._resolve(ins.a, env)
