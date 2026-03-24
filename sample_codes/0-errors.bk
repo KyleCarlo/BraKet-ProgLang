@@ -4,27 +4,7 @@
 const |ket0> = (1, 0)
 const |ket1> = (0, 1)
 const PI = 3.14159
-
-func hadamard(state) {
-    H = ((0.707, 0.707), (0.707, -0.707))
-    return H * state
-}
-
-func get_1(){
-    return 1
-}
-
-func get_state(){
-    return get_1()
-}
-
-func factorial(n){
-    if(n==0 || n == 1){
-        return 1
-    }
-    val = factorial(n - 1)
-    return val * n
-}
+const op = ((1,0,0),(0,1,0),(0,0,1))
     
 main() {
     print("Errors")
@@ -57,7 +37,7 @@ main() {
     print(math_test)
     
     print("Complex Math")
-    |psi>  = |ket0> @ |ket1>
+    |psi>  = |ket0> * |ket1>
     <phi|  = (0.707, 0.707)
     inner  = <phi| * |psi>
     print(inner)
@@ -120,7 +100,3 @@ main() {
          }
      }
 }
-
-cray
-
-

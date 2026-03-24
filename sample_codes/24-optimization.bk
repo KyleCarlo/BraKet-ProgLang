@@ -1,0 +1,26 @@
+// 24-optimization.bk
+main() {
+    /* 1. Short Circuit of && / ||
+    - Shown in the Trace Tab
+    - Click Debug and step through — the x / 0 side is never evaluated (but still noted) because false && short-circuits.
+    */
+    x = 0
+    if (false && (x / 0 > 1)) {
+        print("unreachable")
+    }
+    print("jumped")
+
+    /* 2. Constant Folding
+    - Shown in IC Tab
+    - Immediately computed in compile fall_time (no BINOP)
+    */
+    y = 2 + 3 * 4
+    print("y =", y)
+    
+    
+
+    /* 3. Freeing of Temporary Addresses
+    - Shown in Symbol Table
+    - Space allocated for temporary variables are freed upon use
+    */
+}

@@ -434,14 +434,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_program
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterProgram" ):
-                listener.enterProgram(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitProgram" ):
-                listener.exitProgram(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitProgram" ):
                 return visitor.visitProgram(self)
@@ -518,14 +510,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_import_list
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterImport_list" ):
-                listener.enterImport_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitImport_list" ):
-                listener.exitImport_list(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitImport_list" ):
                 return visitor.visitImport_list(self)
@@ -585,14 +569,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_import_statement
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterImport_statement" ):
-                listener.enterImport_statement(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitImport_statement" ):
-                listener.exitImport_statement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitImport_statement" ):
@@ -663,14 +639,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_func_list
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterFunc_list" ):
-                listener.enterFunc_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitFunc_list" ):
-                listener.exitFunc_list(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFunc_list" ):
                 return visitor.visitFunc_list(self)
@@ -727,14 +695,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_const_decl_list
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterConst_decl_list" ):
-                listener.enterConst_decl_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitConst_decl_list" ):
-                listener.exitConst_decl_list(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConst_decl_list" ):
                 return visitor.visitConst_decl_list(self)
@@ -789,14 +749,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_const_decl
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterConst_decl" ):
-                listener.enterConst_decl(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitConst_decl" ):
-                listener.exitConst_decl(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConst_decl" ):
                 return visitor.visitConst_decl(self)
@@ -841,14 +793,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_var_decl_list
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterVar_decl_list" ):
-                listener.enterVar_decl_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitVar_decl_list" ):
-                listener.exitVar_decl_list(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitVar_decl_list" ):
@@ -912,14 +856,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_var_decl
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterVar_decl" ):
-                listener.enterVar_decl(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitVar_decl" ):
-                listener.exitVar_decl(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitVar_decl" ):
@@ -1019,14 +955,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_value
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterValue" ):
-                listener.enterValue(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitValue" ):
-                listener.exitValue(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitValue" ):
@@ -1136,14 +1064,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_braket_vector
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBraket_vector" ):
-                listener.enterBraket_vector(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBraket_vector" ):
-                listener.exitBraket_vector(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBraket_vector" ):
                 return visitor.visitBraket_vector(self)
@@ -1211,14 +1131,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_braket_expression
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBraket_expression" ):
-                listener.enterBraket_expression(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBraket_expression" ):
-                listener.exitBraket_expression(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBraket_expression" ):
@@ -1302,14 +1214,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_braket_term
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBraket_term" ):
-                listener.enterBraket_term(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBraket_term" ):
-                listener.exitBraket_term(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBraket_term" ):
@@ -1430,14 +1334,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_braket_factor
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBraket_factor" ):
-                listener.enterBraket_factor(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBraket_factor" ):
-                listener.exitBraket_factor(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBraket_factor" ):
                 return visitor.visitBraket_factor(self)
@@ -1550,14 +1446,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_array
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterArray" ):
-                listener.enterArray(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitArray" ):
-                listener.exitArray(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitArray" ):
                 return visitor.visitArray(self)
@@ -1627,14 +1515,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_struct
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterStruct" ):
-                listener.enterStruct(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitStruct" ):
-                listener.exitStruct(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStruct" ):
                 return visitor.visitStruct(self)
@@ -1696,14 +1576,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_struct_value
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterStruct_value" ):
-                listener.enterStruct_value(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitStruct_value" ):
-                listener.exitStruct_value(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStruct_value" ):
@@ -1793,14 +1665,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_op
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterOp" ):
-                listener.enterOp(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitOp" ):
-                listener.exitOp(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitOp" ):
                 return visitor.visitOp(self)
@@ -1860,14 +1724,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_statement_list
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterStatement_list" ):
-                listener.enterStatement_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitStatement_list" ):
-                listener.exitStatement_list(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStatement_list" ):
@@ -1943,14 +1799,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_statement
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterStatement" ):
-                listener.enterStatement(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitStatement" ):
-                listener.exitStatement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStatement" ):
@@ -2056,14 +1904,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_assign_statement
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterAssign_statement" ):
-                listener.enterAssign_statement(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitAssign_statement" ):
-                listener.exitAssign_statement(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitAssign_statement" ):
                 return visitor.visitAssign_statement(self)
@@ -2152,14 +1992,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_func_call_statement
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterFunc_call_statement" ):
-                listener.enterFunc_call_statement(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitFunc_call_statement" ):
-                listener.exitFunc_call_statement(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFunc_call_statement" ):
                 return visitor.visitFunc_call_statement(self)
@@ -2225,14 +2057,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_arg_list
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterArg_list" ):
-                listener.enterArg_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitArg_list" ):
-                listener.exitArg_list(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitArg_list" ):
@@ -2304,14 +2128,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_arg
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterArg" ):
-                listener.enterArg(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitArg" ):
-                listener.exitArg(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitArg" ):
@@ -2393,14 +2209,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_return_statement
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterReturn_statement" ):
-                listener.enterReturn_statement(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitReturn_statement" ):
-                listener.exitReturn_statement(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitReturn_statement" ):
                 return visitor.visitReturn_statement(self)
@@ -2472,14 +2280,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_if_statement
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterIf_statement" ):
-                listener.enterIf_statement(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitIf_statement" ):
-                listener.exitIf_statement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitIf_statement" ):
@@ -2571,14 +2371,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_elif
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterElif" ):
-                listener.enterElif(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitElif" ):
-                listener.exitElif(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitElif" ):
                 return visitor.visitElif(self)
@@ -2639,14 +2431,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_else
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterElse" ):
-                listener.enterElse(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitElse" ):
-                listener.exitElse(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitElse" ):
@@ -2725,14 +2509,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_for_statement
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterFor_statement" ):
-                listener.enterFor_statement(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitFor_statement" ):
-                listener.exitFor_statement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFor_statement" ):
@@ -2813,14 +2589,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_while_statement
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterWhile_statement" ):
-                listener.enterWhile_statement(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitWhile_statement" ):
-                listener.exitWhile_statement(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitWhile_statement" ):
                 return visitor.visitWhile_statement(self)
@@ -2894,14 +2662,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_do_statement
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterDo_statement" ):
-                listener.enterDo_statement(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitDo_statement" ):
-                listener.exitDo_statement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitDo_statement" ):
@@ -2991,14 +2751,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_expression
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterExpression" ):
-                listener.enterExpression(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitExpression" ):
-                listener.exitExpression(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitExpression" ):
@@ -3113,14 +2865,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_string_expression
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterString_expression" ):
-                listener.enterString_expression(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitString_expression" ):
-                listener.exitString_expression(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitString_expression" ):
                 return visitor.visitString_expression(self)
@@ -3208,14 +2952,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_num_expression
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterNum_expression" ):
-                listener.enterNum_expression(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitNum_expression" ):
-                listener.exitNum_expression(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitNum_expression" ):
                 return visitor.visitNum_expression(self)
@@ -3298,14 +3034,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_num_term
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterNum_term" ):
-                listener.enterNum_term(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitNum_term" ):
-                listener.exitNum_term(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitNum_term" ):
@@ -3442,14 +3170,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_num_factor
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterNum_factor" ):
-                listener.enterNum_factor(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitNum_factor" ):
-                listener.exitNum_factor(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitNum_factor" ):
@@ -3600,14 +3320,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_array_access
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterArray_access" ):
-                listener.enterArray_access(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitArray_access" ):
-                listener.exitArray_access(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitArray_access" ):
                 return visitor.visitArray_access(self)
@@ -3673,14 +3385,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_struct_access
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterStruct_access" ):
-                listener.enterStruct_access(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitStruct_access" ):
-                listener.exitStruct_access(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStruct_access" ):
@@ -3766,14 +3470,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_dirac_expression
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterDirac_expression" ):
-                listener.enterDirac_expression(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitDirac_expression" ):
-                listener.exitDirac_expression(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitDirac_expression" ):
@@ -3904,14 +3600,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_num_comp
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterNum_comp" ):
-                listener.enterNum_comp(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitNum_comp" ):
-                listener.exitNum_comp(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitNum_comp" ):
                 return visitor.visitNum_comp(self)
@@ -3982,14 +3670,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_eq_comp
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterEq_comp" ):
-                listener.enterEq_comp(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitEq_comp" ):
-                listener.exitEq_comp(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitEq_comp" ):
                 return visitor.visitEq_comp(self)
@@ -4035,14 +3715,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_expression
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBool_expression" ):
-                listener.enterBool_expression(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBool_expression" ):
-                listener.exitBool_expression(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_expression" ):
@@ -4093,14 +3765,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_or
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBool_or" ):
-                listener.enterBool_or(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBool_or" ):
-                listener.exitBool_or(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_or" ):
@@ -4176,14 +3840,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_and
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBool_and" ):
-                listener.enterBool_and(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBool_and" ):
-                listener.exitBool_and(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_and" ):
@@ -4275,14 +3931,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_cmp
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBool_cmp" ):
-                listener.enterBool_cmp(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBool_cmp" ):
-                listener.exitBool_cmp(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_cmp" ):
                 return visitor.visitBool_cmp(self)
@@ -4367,14 +4015,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_unary
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBool_unary" ):
-                listener.enterBool_unary(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBool_unary" ):
-                listener.exitBool_unary(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_unary" ):
                 return visitor.visitBool_unary(self)
@@ -4451,14 +4091,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_primary
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterBool_primary" ):
-                listener.enterBool_primary(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitBool_primary" ):
-                listener.exitBool_primary(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_primary" ):
@@ -4544,14 +4176,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_func_decl_list
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterFunc_decl_list" ):
-                listener.enterFunc_decl_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitFunc_decl_list" ):
-                listener.exitFunc_decl_list(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFunc_decl_list" ):
                 return visitor.visitFunc_decl_list(self)
@@ -4624,14 +4248,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_func_decl
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterFunc_decl" ):
-                listener.enterFunc_decl(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitFunc_decl" ):
-                listener.exitFunc_decl(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFunc_decl" ):
@@ -4707,14 +4323,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_param_list
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterParam_list" ):
-                listener.enterParam_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitParam_list" ):
-                listener.exitParam_list(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitParam_list" ):
                 return visitor.visitParam_list(self)
@@ -4787,14 +4395,6 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_identifier_list
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterIdentifier_list" ):
-                listener.enterIdentifier_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitIdentifier_list" ):
-                listener.exitIdentifier_list(self)
-
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitIdentifier_list" ):
                 return visitor.visitIdentifier_list(self)
@@ -4856,14 +4456,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_default_list
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterDefault_list" ):
-                listener.enterDefault_list(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitDefault_list" ):
-                listener.exitDefault_list(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitDefault_list" ):
@@ -4936,14 +4528,6 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_main_function
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMain_function" ):
-                listener.enterMain_function(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMain_function" ):
-                listener.exitMain_function(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMain_function" ):

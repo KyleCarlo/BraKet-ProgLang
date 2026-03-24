@@ -2432,7 +2432,39 @@ def _patched_run_ic(self, ic, env):
 Interpreter._run_ic = _patched_run_ic
 
 
-# ── Also patch _gen_num_expr to store op in _op2 ─────────────
+# ── Constant folding helper ───────────────────────────────────
+
+def _const_fold(left, op, right):
+    """Try to evaluate a binary operation at compile time.
+    Returns (result, True) when both operands are numeric literals,
+    (None, False) otherwise.  Division/modulo by zero is left for
+    the runtime so the error is reported with a proper source line."""
+    if not (isinstance(left, (int, float, complex))
+            and isinstance(right, (int, float, complex))):
+        return None, False
+    try:
+        if op == "+":  return left + right, True
+        if op == "-":  return left - right, True
+        if op == "*":  return left * right, True
+        if op == "/":
+            if right == 0: return None, False
+            return left / right, True
+        if op == "%":
+            if right == 0: return None, False
+            return left % right, True
+        if op == "**": return left ** right, True
+        if op == "==": return left == right, True
+        if op == "!=": return left != right, True
+        if op == "<":  return left <  right, True
+        if op == ">":  return left >  right, True
+        if op == "<=": return left <= right, True
+        if op == ">=": return left >= right, True
+    except Exception:
+        pass
+    return None, False
+
+
+# ── Also patch _gen_num_expr / _gen_num_term / _gen_num_factor ─
 
 def _patched_gen_num_expr(self, ctx):
     if ctx is None: return 0
@@ -2440,8 +2472,11 @@ def _patched_gen_num_expr(self, ctx):
     if ctx.num_expression():
         right = self._gen_num_expr(ctx.num_expression())
         op    = "+" if ctx.ADD() else "-"
-        t     = self._tmp()
-        ins   = ICInstruction(BINOP, t, left, right, self._line(ctx))
+        folded, ok = _const_fold(left, op, right)
+        if ok:
+            return folded
+        t   = self._tmp()
+        ins = ICInstruction(BINOP, t, left, right, self._line(ctx))
         ins._op2 = op
         self._current_ic.append(ins)
         return t
@@ -2456,6 +2491,9 @@ def _patched_gen_num_term(self, ctx):
         elif ctx.MOD(): op = "%"
         elif ctx.EXP(): op = "**"
         else:           op = "*"
+        folded, ok = _const_fold(left, op, right)
+        if ok:
+            return folded
         t   = self._tmp()
         ins = ICInstruction(BINOP, t, left, right, self._line(ctx))
         ins._op2 = op
@@ -2463,17 +2501,73 @@ def _patched_gen_num_term(self, ctx):
         return t
     return left
 
+def _patched_gen_num_factor(self, ctx):
+    if ctx.AMPERSAND():
+        t = self._tmp()
+        self._current_ic.append(ICInstruction(ADDR_OF, t, ctx.IDENTIFIER().getText(), None, self._line(ctx)))
+        return t
+    if ctx.MUL() and not ctx.num_factor():
+        t = self._tmp()
+        self._current_ic.append(ICInstruction(DEREF, t, ctx.IDENTIFIER().getText(), None, self._line(ctx)))
+        return t
+    if ctx.LPAREN() and ctx.num_expression():
+        return self._gen_num_expr(ctx.num_expression())
+    if ctx.func_call_statement():
+        t = self._tmp()
+        return self._gen_call(ctx.func_call_statement(), dest=t)
+    if ctx.COMPLEX():
+        return self._parse_complex(ctx.COMPLEX().getText())
+    if ctx.INT():
+        return int(ctx.INT().getText())
+    if ctx.FLOAT():
+        return float(ctx.FLOAT().getText())
+    if ctx.CHAR():
+        return _unescape(ctx.CHAR().getText()[1:-1])
+    if ctx.num_factor():
+        inner = self._gen_num_factor(ctx.num_factor())
+        if ctx.SUB():
+            if isinstance(inner, (int, float, complex)) and not isinstance(inner, bool):
+                return -inner          # fold unary minus on a literal
+            t = self._tmp()
+            self._current_ic.append(ICInstruction(UNOP, t, "-", inner, self._line(ctx)))
+            return t
+        return inner   # unary +
+    if ctx.array_access():
+        return self._gen_array_access(ctx.array_access())
+    if ctx.dirac_expression():
+        return self._gen_dirac(ctx.dirac_expression())
+    if ctx.IDENTIFIER():
+        return ctx.IDENTIFIER().getText()
+    return 0
+
 def _patched_gen_bool_or(self, ctx):
     bool_ors = ctx.bool_or()
     if bool_ors:
         left  = self._gen_bool_or(bool_ors[0])
+        # Constant folding: left is a compile-time bool
+        if isinstance(left, bool):
+            if left:    # true || anything → True (right side never emitted)
+                return True
+            # false || anything → just the right side
+            return (self._gen_bool_or(bool_ors[1])
+                    if len(bool_ors) > 1
+                    else self._gen_bool_and(ctx.bool_and()))
+        t     = self._tmp()
+        l_sc  = self._label()   # short-circuit label (left was true)
+        l_end = self._label()   # end label
+        ln    = self._line(ctx)
+        # if left is true, skip right entirely
+        self._current_ic.append(ICInstruction(JUMPT, left, l_sc, None, ln))
+        # left was false — evaluate right
         right = (self._gen_bool_or(bool_ors[1])
                  if len(bool_ors) > 1
                  else self._gen_bool_and(ctx.bool_and()))
-        t   = self._tmp()
-        ins = ICInstruction(BINOP, t, left, right, self._line(ctx))
-        ins._op2 = "||"
-        self._current_ic.append(ins)
+        self._current_ic.append(ICInstruction(COPY,  t, right, None, ln))
+        self._current_ic.append(ICInstruction(JUMP,  l_end, None, None, ln))
+        # short-circuit path: left was true → result is True
+        self._current_ic.append(ICInstruction(LABEL, l_sc,  None, None, ln))
+        self._current_ic.append(ICInstruction(ASSIGN, t, True, None, ln))
+        self._current_ic.append(ICInstruction(LABEL, l_end, None, None, ln))
         return t
     return self._gen_bool_and(ctx.bool_and())
 
@@ -2481,13 +2575,30 @@ def _patched_gen_bool_and(self, ctx):
     bool_ands = ctx.bool_and()
     if bool_ands:
         left  = self._gen_bool_and(bool_ands[0])
+        # Constant folding: left is a compile-time bool
+        if isinstance(left, bool):
+            if not left:  # false && anything → False (right side never emitted)
+                return False
+            # true && anything → just the right side
+            return (self._gen_bool_and(bool_ands[1])
+                    if len(bool_ands) > 1
+                    else self._gen_bool_cmp(ctx.bool_cmp()))
+        t     = self._tmp()
+        l_sc  = self._label()   # short-circuit label (left was false)
+        l_end = self._label()   # end label
+        ln    = self._line(ctx)
+        # if left is false, skip right entirely
+        self._current_ic.append(ICInstruction(JUMPF, left, l_sc, None, ln))
+        # left was true — evaluate right
         right = (self._gen_bool_and(bool_ands[1])
                  if len(bool_ands) > 1
                  else self._gen_bool_cmp(ctx.bool_cmp()))
-        t   = self._tmp()
-        ins = ICInstruction(BINOP, t, left, right, self._line(ctx))
-        ins._op2 = "&&"
-        self._current_ic.append(ins)
+        self._current_ic.append(ICInstruction(COPY,  t, right, None, ln))
+        self._current_ic.append(ICInstruction(JUMP,  l_end, None, None, ln))
+        # short-circuit path: left was false → result is False
+        self._current_ic.append(ICInstruction(LABEL, l_sc,  None, None, ln))
+        self._current_ic.append(ICInstruction(ASSIGN, t, False, None, ln))
+        self._current_ic.append(ICInstruction(LABEL, l_end, None, None, ln))
         return t
     return self._gen_bool_cmp(ctx.bool_cmp())
 
@@ -2497,6 +2608,9 @@ def _patched_gen_bool_cmp(self, ctx):
     bool_unaries = ctx.bool_unary()
 
     def _make_cmp(left, right, op):
+        folded, ok = _const_fold(left, op, right)
+        if ok:
+            return folded
         t   = self._tmp()
         ins = ICInstruction(BINOP, t, left, right, self._line(ctx))
         ins._op2 = op
@@ -2559,6 +2673,7 @@ def _patched_gen_dirac(self, ctx):
 
 ICGenerator._gen_num_expr    = _patched_gen_num_expr
 ICGenerator._gen_num_term    = _patched_gen_num_term
+ICGenerator._gen_num_factor  = _patched_gen_num_factor
 ICGenerator._gen_bool_or     = _patched_gen_bool_or
 ICGenerator._gen_bool_and    = _patched_gen_bool_and
 ICGenerator._gen_bool_cmp    = _patched_gen_bool_cmp
