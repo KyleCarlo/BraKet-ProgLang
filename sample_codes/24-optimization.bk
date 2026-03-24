@@ -1,21 +1,29 @@
 // 24-optimization.bk
 main() {
-    /* 1a. Short Circuit of && — JUMPF
-    - Shown in the Trace Tab
-    - Left operand is false, so JUMPF fires and the right side (x / 0) is never evaluated.
+    /* 1a. Branch Simplification + Unreachable Elimination (JUMPF)
+    - Shown in IC Tab
+    - count = 3, limit = 10  →  constant propagation substitutes into (count - limit > 0)
+    - (3 - 10 > 0)  →  constant folded to false
+    - JUMPF false, L         →  simplified to JUMP L (always taken)
+    - Body print("unreachable") is now unreachable and removed from IC.
     */
-    x = 0
-    if (false && (x / 0 > 1)) {
+    count = 3
+    limit = 10
+    if ((count - limit > 0) && (count / 0 > 1)) {
         print("unreachable")
     }
     print("&& short-circuited (JUMPF)")
 
-    /* 1b. Short Circuit of || — JUMPT
-    - Left operand is a true variable, so JUMPT fires and the right side (x / 0) is never evaluated.
-    - Must use a variable (not literal true) so constant folding doesn't collapse it before IC is emitted.
+    /* 1b. Branch Simplification + Unreachable Elimination (JUMPT)
+    - Shown in IC Tab
+    - score = 100, threshold = 50  →  constant propagation substitutes into (score - threshold > 0)
+    - (100 - 50 > 0)  →  constant folded to true
+    - JUMPT true, L  →  simplified to JUMP L (always taken)
+    - Right side (count / 0) and intermediate temps are unreachable and removed.
     */
-    a = true
-    if (a || (x / 0 > 1)) {
+    score = 100
+    threshold = 50
+    if ((score - threshold > 0) || (count / 0 > 1)) {
         print("|| short-circuited (JUMPT)")
     }
 

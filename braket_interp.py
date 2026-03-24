@@ -2455,7 +2455,7 @@ def _dtae_sources(ins) -> set:
     elif op == DEREF:        cands = [ins.b]
     elif op == DEREF_ASSIGN: cands = [ins.a, ins.b]
     else:                    cands = []
-    return {v for v in cands if _is_tmp_name(v)}
+    return {v for v in cands if isinstance(v, str)}
 
 
 def _elim_dead_temps(ic: list) -> list:
@@ -2479,7 +2479,7 @@ def _elim_dead_temps(ic: list) -> list:
         new_ic = []
         for ins in ic:
             if (ins.op in _DTAE_ELIMINABLE
-                    and _is_tmp_name(ins.a)
+                    and isinstance(ins.a, str)
                     and ins.a not in used):
                 changed = True
                 continue
@@ -2620,10 +2620,12 @@ def _const_propagate(ic: list) -> list:
                     new_ic.append(ins)
 
             else:
-                # For JUMPF/JUMPT conditions and observable instructions (PARAM, RETURN, PRINT),
-                # only substitute temps — not user variables — so user variables remain live
-                # in the IC and visible in the symbol table.
-                if ins.op in (JUMPF, JUMPT, PARAM, RETURN_OP, PRINT_OP):
+                # JUMPF/JUMPT: substitute all constants so branch simplification can fire.
+                # PARAM/RETURN/PRINT: substitute only temps — preserves user variable
+                # assignments that are directly observed (printed, returned).
+                if ins.op in (JUMPF, JUMPT):
+                    a = _sub(ins.a, const_map)
+                elif ins.op in (PARAM, RETURN_OP, PRINT_OP):
                     tmp_only = {k: v for k, v in const_map.items() if _is_tmp_name(k)}
                     a = _sub(ins.a, tmp_only)
                 else:
@@ -2637,6 +2639,96 @@ def _const_propagate(ic: list) -> list:
         ic = new_ic
 
     return ic
+
+
+# ── Branch Simplification ─────────────────────────────────────
+
+def _simplify_branches(ic: list) -> list:
+    """
+    Branch Simplification pass.
+
+    When a JUMPF/JUMPT condition is a compile-time constant (exposed by
+    constant propagation), replace it with either an unconditional JUMP or
+    remove it entirely:
+      JUMPF  falsy,  label  →  JUMP label   (always taken)
+      JUMPF  truthy, label  →  (removed, never taken)
+      JUMPT  truthy, label  →  JUMP label   (always taken)
+      JUMPT  falsy,  label  →  (removed, never taken)
+    """
+    def _is_literal(v):
+        return isinstance(v, bool) or isinstance(v, (int, float, complex))
+
+    def _truthy(v):
+        if isinstance(v, complex): return bool(v.real or v.imag)
+        return bool(v)
+
+    new_ic = []
+    for ins in ic:
+        if ins.op == JUMPF and _is_literal(ins.a):
+            if not _truthy(ins.a):              # always taken → unconditional jump
+                new_ins = ICInstruction(JUMP, ins.b, None, None, ins.line)
+                new_ins._op2 = None
+                new_ic.append(new_ins)
+            # else: never taken → drop entirely
+        elif ins.op == JUMPT and _is_literal(ins.a):
+            if _truthy(ins.a):                  # always taken → unconditional jump
+                new_ins = ICInstruction(JUMP, ins.b, None, None, ins.line)
+                new_ins._op2 = None
+                new_ic.append(new_ins)
+            # else: never taken → drop entirely
+        else:
+            new_ic.append(ins)
+    return new_ic
+
+
+# ── Unreachable Code Elimination ──────────────────────────────
+
+def _elim_unreachable(ic: list) -> list:
+    """
+    Unreachable Code Elimination pass.
+
+    Performs a forward reachability analysis from instruction 0.
+    Instructions that cannot be reached by any control-flow path are removed.
+
+    Control-flow rules:
+      JUMP L          → only successor is label L (no fall-through)
+      JUMPF/JUMPT …L  → successors are next instruction AND label L
+      RETURN          → no successors
+      everything else → fall-through to next instruction
+    """
+    if not ic:
+        return ic
+
+    # Build label → instruction index map
+    label_idx: dict = {}
+    for i, ins in enumerate(ic):
+        if ins.op == LABEL:
+            label_idx[ins.a] = i
+
+    # Forward BFS from instruction 0
+    reachable: set = set()
+    worklist = [0]
+    while worklist:
+        i = worklist.pop()
+        if i < 0 or i >= len(ic) or i in reachable:
+            continue
+        reachable.add(i)
+        ins = ic[i]
+        if ins.op == JUMP:
+            t = label_idx.get(ins.a)
+            if t is not None:
+                worklist.append(t)
+        elif ins.op in (JUMPF, JUMPT):
+            worklist.append(i + 1)
+            t = label_idx.get(ins.b)
+            if t is not None:
+                worklist.append(t)
+        elif ins.op == RETURN_OP:
+            pass
+        else:
+            worklist.append(i + 1)
+
+    return [ins for i, ins in enumerate(ic) if i in reachable]
 
 
 # ── Also patch _gen_num_expr / _gen_num_term / _gen_num_factor ─
@@ -2867,8 +2959,14 @@ def generate_ic(tree, parser=None) -> tuple[list[ICInstruction],
     Returns (global_instructions, functions_dict).
     """
     def _optimize(ic):
-        ic = _const_propagate(ic)
-        ic = _elim_dead_temps(ic)
+        for _ in range(4):          # iterate to handle cascading simplifications
+            prev = len(ic)
+            ic = _const_propagate(ic)
+            ic = _simplify_branches(ic)
+            ic = _elim_unreachable(ic)
+            ic = _elim_dead_temps(ic)
+            if len(ic) == prev:
+                break
         return ic
 
     gen = ICGenerator()
