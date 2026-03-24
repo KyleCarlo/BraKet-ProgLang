@@ -1469,6 +1469,7 @@ class IDE:
             self._update_scanner(partial.tokens)
             self._update_parse_tree(partial.parse_tree_str)
             self._update_diagnostics(partial.sem, p_syn)
+            self._update_ic(partial.ic_listing)
             self.root.update_idletasks()
 
         def _output_cb(line: str):

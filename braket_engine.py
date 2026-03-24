@@ -1041,31 +1041,39 @@ def analyze(code: str, input_cb=None, ready_cb=None, output_cb=None) -> BraKetRe
     ic_str    = ""
     run_res   = None
     snapshots = []
+    _gen      = None
 
-    # Fire ready_cb now — static analysis is complete, interpreter hasn't run yet.
-    # The IDE uses this to populate Scanner/Parse-Tree/Diagnostics before any
-    # input() dialog appears.
+    if _INTERP_AVAILABLE and not (lex_err.errors + parse_err.errors):
+        try:
+            _gen = ICGenerator()
+            _gen.generate(tree)
+            ic_str = ic_listing(_gen.instructions)
+            # Include function IC in listing
+            for fname, (params, body, *_) in _gen.functions.items():
+                param_str = ", ".join(params)
+                ic_str += "\n\n# func " + fname + "(" + param_str + ")\n"
+                ic_str += ic_listing(body)
+        except Exception as e:
+            ic_str = ""
+            _gen   = None
+
+    # Fire ready_cb now — static analysis and IC generation are complete,
+    # interpreter hasn't run yet.  The IDE uses this to populate all panels
+    # (including IC listing) before any input() dialog appears.
     if ready_cb is not None:
         _partial = BraKetResult(
             tokens=tokens,
             parse_tree_str=parse_tree_str,
             sem=sem,
-            ic_listing="",
+            ic_listing=ic_str,
             run=None,
             debug_snapshots=[],
         )
         ready_cb(_partial)
 
-    if _INTERP_AVAILABLE and not (lex_err.errors + parse_err.errors):
+    if _gen is not None:
         try:
-            gen = ICGenerator()
-            gen.generate(tree)
-            ic_str  = ic_listing(gen.instructions)
-            # Include function IC in listing
-            for fname, (params, body, *_) in gen.functions.items():
-                param_str = ", ".join(params)
-                ic_str += "\n\n# func " + fname + "(" + param_str + ")\n"
-                ic_str += ic_listing(body)
+            gen = _gen  # alias for readability below
             # Capture inputs during the real run, then replay them silently
             # for snapshot_ic so the dialog never opens a second time.
             _captured_inputs: list[str] = []
