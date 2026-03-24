@@ -521,10 +521,22 @@ class IDE:
         vscroll.config(command=self.editor.yview)
         hscroll.config(command=self.editor.xview)
 
-        self.editor.bind("<KeyRelease>",    self._on_key)
-        self.editor.bind("<ButtonRelease>", self._update_cursor_pos)
-        self.editor.bind("<Return>",        self._on_return)
-        self.editor.bind("<Configure>",     lambda e: self._redraw_line_numbers())
+        self.editor.bind("<KeyRelease>",            self._on_key)
+        self.editor.bind("<ButtonRelease>",         self._update_cursor_pos)
+        self.editor.bind("<Return>",                self._on_return)
+        self.editor.bind("<Tab>",                   self._on_tab)
+        self.editor.bind("<Shift-Tab>",             self._on_shift_tab)
+        # Auto-pair: opening characters
+        self.editor.bind("<KeyPress-parenleft>",    self._on_open_paren)
+        self.editor.bind("<KeyPress-bracketleft>",  self._on_open_bracket)
+        self.editor.bind("<KeyPress-braceleft>",    self._on_open_brace)
+        self.editor.bind("<KeyPress-quotedbl>",     self._on_quote_dbl)
+        self.editor.bind("<KeyPress-apostrophe>",   self._on_quote_single)
+        # Auto-pair: closing characters (skip-over or dedent)
+        self.editor.bind("<KeyPress-parenright>",   self._on_close_paren)
+        self.editor.bind("<KeyPress-bracketright>", self._on_close_bracket)
+        self.editor.bind("<KeyPress-braceright>",   self._on_closing_brace)
+        self.editor.bind("<Configure>",             lambda e: self._redraw_line_numbers())
         return frame
 
     # ── output / diagnostics panel ────────────────────────────
@@ -819,12 +831,116 @@ class IDE:
         self.status_var.set(f"  Ln {line}, Col {int(col)+1}")
 
     def _on_return(self, event=None):
-        """Insert a newline with the same leading indent as the current line."""
+        """Newline with smart indent.
+
+        - Matches current line's indent.
+        - Adds +4 after a line ending with '{'.
+        - When cursor sits between '{' and '}' (auto-pair), splits into three
+          lines: opening line, indented cursor line, closing-brace line.
+        """
         insert_pos = self.editor.index(tk.INSERT)
         line_num   = insert_pos.split(".")[0]
         line_text  = self.editor.get(f"{line_num}.0", f"{line_num}.end")
         indent     = len(line_text) - len(line_text.lstrip())
-        self.editor.insert(tk.INSERT, "\n" + " " * indent)
+        next_char  = self.editor.get(insert_pos, f"{insert_pos}+1c")
+
+        if next_char == "}" and line_text[:int(insert_pos.split(".")[1])].rstrip().endswith("{"):
+            # Cursor is between { and } — split into three lines
+            self.editor.insert(tk.INSERT, "\n" + " " * (indent + 4) + "\n" + " " * indent)
+            # Place cursor on the middle (body) line
+            self.editor.mark_set(tk.INSERT, f"{int(line_num) + 1}.{indent + 4}")
+        else:
+            extra = 4 if line_text.rstrip().endswith("{") else 0
+            self.editor.insert(tk.INSERT, "\n" + " " * (indent + extra))
+
+        self._on_key()
+        return "break"
+
+    def _on_tab(self, event=None):
+        """Insert 4 spaces instead of a tab character."""
+        self.editor.insert(tk.INSERT, "    ")
+        self._on_key()
+        return "break"
+
+    def _on_shift_tab(self, event=None):
+        """Remove up to 4 leading spaces from the current line (dedent)."""
+        insert_pos = self.editor.index(tk.INSERT)
+        line_num   = insert_pos.split(".")[0]
+        line_start = f"{line_num}.0"
+        line_text  = self.editor.get(line_start, f"{line_num}.end")
+        spaces     = len(line_text) - len(line_text.lstrip(" "))
+        remove     = min(4, spaces)
+        if remove:
+            self.editor.delete(line_start, f"{line_num}.{remove}")
+        self._on_key()
+        return "break"
+
+    # ── auto-pair helpers ─────────────────────────────────────
+
+    def _insert_pair(self, open_ch, close_ch):
+        """Insert open+close and leave cursor between them."""
+        self.editor.insert(tk.INSERT, open_ch + close_ch)
+        pos = self.editor.index(tk.INSERT)
+        self.editor.mark_set(tk.INSERT, f"{pos}-1c")
+        self._on_key()
+        return "break"
+
+    def _skip_or_insert(self, close_ch):
+        """Skip over an auto-inserted closer; otherwise insert it normally."""
+        pos       = self.editor.index(tk.INSERT)
+        next_char = self.editor.get(pos, f"{pos}+1c")
+        if next_char == close_ch:
+            self.editor.mark_set(tk.INSERT, f"{pos}+1c")
+            self._on_key()
+            return "break"
+        self.editor.insert(tk.INSERT, close_ch)
+        self._on_key()
+        return "break"
+
+    def _on_open_paren(self,   event=None): return self._insert_pair("(", ")")
+    def _on_open_bracket(self, event=None): return self._insert_pair("[", "]")
+    def _on_open_brace(self,   event=None): return self._insert_pair("{", "}")
+    def _on_close_paren(self,  event=None): return self._skip_or_insert(")")
+    def _on_close_bracket(self,event=None): return self._skip_or_insert("]")
+
+    def _on_quote_dbl(self, event=None):
+        pos       = self.editor.index(tk.INSERT)
+        next_char = self.editor.get(pos, f"{pos}+1c")
+        if next_char == '"':          # skip over existing closing quote
+            self.editor.mark_set(tk.INSERT, f"{pos}+1c")
+            self._on_key()
+            return "break"
+        return self._insert_pair('"', '"')
+
+    def _on_quote_single(self, event=None):
+        pos       = self.editor.index(tk.INSERT)
+        next_char = self.editor.get(pos, f"{pos}+1c")
+        if next_char == "'":          # skip over existing closing quote
+            self.editor.mark_set(tk.INSERT, f"{pos}+1c")
+            self._on_key()
+            return "break"
+        return self._insert_pair("'", "'")
+
+    def _on_closing_brace(self, event=None):
+        """Skip-over auto-inserted '}', or auto-dedent when at line start."""
+        insert_pos    = self.editor.index(tk.INSERT)
+        line_num      = insert_pos.split(".")[0]
+        line_start    = f"{line_num}.0"
+        before_cursor = self.editor.get(line_start, insert_pos)
+        next_char     = self.editor.get(insert_pos, f"{insert_pos}+1c")
+
+        if next_char == "}":                      # skip over auto-inserted '}'
+            self.editor.mark_set(tk.INSERT, f"{insert_pos}+1c")
+            self._on_key()
+            return "break"
+
+        if before_cursor.strip() == "":           # auto-dedent at line start
+            spaces = len(before_cursor)
+            remove = min(4, spaces)
+            if remove:
+                self.editor.delete(line_start, f"{line_num}.{remove}")
+
+        self.editor.insert(tk.INSERT, "}")
         self._on_key()
         return "break"
 
