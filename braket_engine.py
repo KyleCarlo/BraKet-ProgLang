@@ -1062,7 +1062,7 @@ def analyze(code: str, input_cb=None, ready_cb=None, output_cb=None) -> BraKetRe
             gen.generate(tree)
             ic_str  = ic_listing(gen.instructions)
             # Include function IC in listing
-            for fname, (params, body) in gen.functions.items():
+            for fname, (params, body, *_) in gen.functions.items():
                 param_str = ", ".join(params)
                 ic_str += "\n\n# func " + fname + "(" + param_str + ")\n"
                 ic_str += ic_listing(body)

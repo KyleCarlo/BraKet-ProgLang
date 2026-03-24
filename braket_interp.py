@@ -218,7 +218,7 @@ class ICGenerator:
 
     def _gen_func_decl(self, ctx):
         name   = ctx.IDENTIFIER().getText()
-        params = self._get_param_names(ctx.param_list()) if ctx.param_list() else []
+        params, default_ics = self._get_param_info(ctx.param_list()) if ctx.param_list() else ([], [])
 
         # Save and swap emit target
         saved = self._current_ic
@@ -232,18 +232,37 @@ class ICGenerator:
         self._emit(RETURN_OP, None, line=self._line(ctx))
 
         self._current_ic = saved
-        self.functions[name] = (params, body_ic)
+        self.functions[name] = (params, body_ic, default_ics)
 
-    def _get_param_names(self, ctx) -> list[str]:
-        names = []
+    def _get_param_info(self, ctx) -> tuple[list[str], list[tuple]]:
+        """Return (param_names, default_ics).
+
+        default_ics is a list of (param_name, mini_ic, result_addr) for every
+        parameter that has a default value.  mini_ic is the IC needed to compute
+        the default (empty for plain literals); result_addr is the variable name
+        or literal that holds the result after running mini_ic.
+        """
+        names: list[str] = []
+        default_ics: list[tuple] = []
+
         if ctx.identifier_list():
             for ident in ctx.identifier_list().IDENTIFIER():
                 names.append(ident.getText())
+
         if ctx.default_list():
             for assign in ctx.default_list().assign_statement():
                 if assign.var_decl() and assign.var_decl().IDENTIFIER():
-                    names.append(assign.var_decl().IDENTIFIER().getText())
-        return names
+                    pname = assign.var_decl().IDENTIFIER().getText()
+                    names.append(pname)
+                    # Generate IC for the default expression into a mini-list
+                    saved = self._current_ic
+                    mini_ic: list[ICInstruction] = []
+                    self._current_ic = mini_ic
+                    result_addr = self._gen_rhs(assign.var_decl())
+                    self._current_ic = saved
+                    default_ics.append((pname, mini_ic, result_addr))
+
+        return names, default_ics
 
     # ── main ──────────────────────────────────────────────────
 
@@ -1675,12 +1694,24 @@ class Interpreter:
         if name not in self.functions:
             raise BKRuntimeError(f"Undefined function '{name}'", line)
 
-        param_names, body_ic = self.functions[name]
+        param_names, body_ic, default_ics = self.functions[name]
         frame: dict[str, Any] = {}
 
-        # Bind positional args
+        # Build a lookup from param name → (mini_ic, result_addr) for defaults
+        defaults_map = {pname: (mic, addr) for pname, mic, addr in default_ics}
+
+        # Bind positional args; fall back to default value or None
         for i, pname in enumerate(param_names):
-            frame[pname] = args[i] if i < len(args) else None
+            if i < len(args):
+                frame[pname] = args[i]
+            elif pname in defaults_map:
+                mini_ic, result_addr = defaults_map[pname]
+                tmp_env: dict[str, Any] = {}
+                if mini_ic:
+                    self._run_ic(mini_ic, tmp_env)
+                frame[pname] = self._resolve(result_addr, tmp_env)
+            else:
+                frame[pname] = None
 
         self._call_stack.append(frame)
         result = None
