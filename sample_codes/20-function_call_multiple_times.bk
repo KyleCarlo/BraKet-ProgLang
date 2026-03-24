@@ -1,3 +1,6 @@
+// 19-function_call_multiple_times.bk
+// Demonstrates calling the same function multiple times with different arguments.
+
 func square(x) {
     return x * x
 }

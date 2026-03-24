@@ -1,0 +1,38 @@
+// 18-function_calling_function.bk
+// Demonstrates a function calling another function.
+
+func square(n) {
+    return n * n
+}
+
+func sum_of_squares(a, b) {
+    return square(a) + square(b)
+}
+
+func double(n) {
+    return n + n
+}
+
+func double_square(n) {
+    return double(square(n))
+}
+
+func greet(name) {
+    print("Hi, " + name + "!")
+}
+
+func greet_twice(name) {
+    greet(name)
+    greet(name)
+}
+
+main() {
+    print("sum_of_squares(3, 4):")
+    print(sum_of_squares(3, 4))    // 9 + 16 = 25
+
+    print("double_square(5):")
+    print(double_square(5))        // double(25) = 50
+
+    print("greet_twice:")
+    greet_twice("Alice")
+}

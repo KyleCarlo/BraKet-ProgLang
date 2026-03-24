@@ -1,4 +1,4 @@
-// 18-variable_scope.bk
+// 17-variable_scope.bk
 // Demonstrates variable scope: variables declared inside a function are
 // local to that function and do not affect the caller's variables.
 
