@@ -160,183 +160,183 @@ BKTYPE_COLORS = {
 
 # ── Sample BraKet code ────────────────────────────────────────
 # TODO: Edit this also
-SAMPLE = """\
-func double_in_place(ptr) {
-    *ptr = *ptr * 2
-}
-
-func swap(pa, pb) {
-    temp = *pa
-    *pa  = *pb
-    *pb  = temp
-}
-
-func sum_via_ptrs(pa, pb) {
-    return *pa + *pb
-}
-
-main() {
-    print("-- Basic pointer --")
-    x   = 10
-    ptr = &x
-    print(ptr)
-    print(*ptr)
-
-    print("-- Modify via pointer --")
-    *ptr = 42
-    print(x)
-
-    print("-- Two pointers, same variable --")
-    y  = 100
-    p1 = &y
-    p2 = &y
-    *p1 = 55
-    print(*p2)
-
-    print("-- Function: double in place --")
-    n  = 7
-    pn = &n
-    double_in_place(pn)
-    print(n)
-
-    print("-- Function: sum via ptrs --")
-    a  = 3
-    b  = 8
-    pa = &a
-    pb = &b
-    print(sum_via_ptrs(pa, pb))
-
-    print("-- Function: swap --")
-    u = 100
-    v = 200
-    swap(&u, &v)
-    print(u)
-    print(v)
-
-    print("-- Pointer in condition --")
-    val = 5
-    pv  = &val
-    if (*pv > 3) {
-        print("greater than 3")
-    } else {
-        print("not greater than 3")
-    }
-}"""
 # SAMPLE = """\
-# const |ket0> = (1, 0)
-# const |ket1> = (0, 1)
-# const PI = 3.14159
-
-# func hadamard(state) {
-#     H = ((0.707, 0.707), (0.707, -0.707))
-#     return H * state
+# func double_in_place(ptr) {
+#     *ptr = *ptr * 2
 # }
 
-# func get_1(){
-#     return 1
+# func swap(pa, pb) {
+#     temp = *pa
+#     *pa  = *pb
+#     *pb  = temp
 # }
 
-# func get_state(){
-#     return get_1()
+# func sum_via_ptrs(pa, pb) {
+#     return *pa + *pb
 # }
 
-# func factorial(n){
-#     if(n==0 || n == 1){
-#         return 1
-#     }
-#     val = factorial(n - 1)
-#     return val * n
-# }
-    
 # main() {
-#     print("Variable Declaration")
-#     var_test = 5
-#     y      = 3.14
-#     flag   = true
-#     print(var_test)
-    
-#     print("Structures")
-#     struct_test = {
-#     	x = 0,
-#      	y = 1
-#     }
-#     print(struct_test.y)
-    
-#     print("Assignment")
-#     assign_test  = "BraKet"
-#     print(assign_test)
-#     assign_test = 1
-#     print(assign_test)
-    
-#     print("Simple Math")
-#     math_test = 1+3*2
-#     print(math_test)
-    
-#     print("Complex Math")
-#     |psi>  = |ket0> @ |ket1>
-#     <phi|  = (0.707, 0.707)
-#     inner  = <phi| * |psi>
-#     print(inner)
+#     print("-- Basic pointer --")
+#     x   = 10
+#     ptr = &x
+#     print(ptr)
+#     print(*ptr)
 
-#     print("Conditional Statements")
-#     x = 3
-#     if (x > 3) {
-#         x = x + 1
-#     } elif (x == 3) {
-#         x = 0
-#     } else {
-#         x = -1
-#     }
+#     print("-- Modify via pointer --")
+#     *ptr = 42
 #     print(x)
 
-#     print("Iterative Statements")
-#     print("--while--")
-#     i = 0
-#     while (i < 3) {
-#         i = i + 1
+#     print("-- Two pointers, same variable --")
+#     y  = 100
+#     p1 = &y
+#     p2 = &y
+#     *p1 = 55
+#     print(*p2)
+
+#     print("-- Function: double in place --")
+#     n  = 7
+#     pn = &n
+#     double_in_place(pn)
+#     print(n)
+
+#     print("-- Function: sum via ptrs --")
+#     a  = 3
+#     b  = 8
+#     pa = &a
+#     pb = &b
+#     print(sum_via_ptrs(pa, pb))
+
+#     print("-- Function: swap --")
+#     u = 100
+#     v = 200
+#     swap(&u, &v)
+#     print(u)
+#     print(v)
+
+#     print("-- Pointer in condition --")
+#     val = 5
+#     pv  = &val
+#     if (*pv > 3) {
+#         print("greater than 3")
+#     } else {
+#         print("not greater than 3")
 #     }
-#     print(i)
+# }"""
+SAMPLE = """\
+const |ket0> = (1, 0)
+const |ket1> = (0, 1)
+const PI = 3.14159
+
+func hadamard(state) {
+    H = ((0.707, 0.707), (0.707, -0.707))
+    return H * state
+}
+
+func get_1(){
+    return 1
+}
+
+func get_state(){
+    return get_1()
+}
+
+func factorial(n){
+    if(n==0 || n == 1){
+        return 1
+    }
+    val = factorial(n - 1)
+    return val * n
+}
     
-#     print("--for--")
-#     loop = 1
-#     for(i = 0; i<3; i=i+1){
-#     	loop = loop*2
-#     }
-#     print(loop)
+main() {
+    print("Variable Declaration")
+    var_test = 5
+    y      = 3.14
+    flag   = true
+    print(var_test)
     
-#     print("--do while--")
-#     x=0
-#     do{
-#     	print("hi")
-#      	x = x+1
-#     } while(x<=2)
+    print("Structures")
+    struct_test = {
+    	x = 0,
+     	y = 1
+    }
+    print(struct_test.y)
     
-#     print("Complex Boolean")
-#     x=0
-#     y=3
-#     print((x-y-2>3-y+x)&&(x-3<2)||(x+3<y))
+    print("Assignment")
+    assign_test  = "BraKet"
+    print(assign_test)
+    assign_test = 1
+    print(assign_test)
     
-#     print("Function Calling")
-#     |ket> = (1,1)
-#     func_var = hadamard(|ket>)
-#     print(func_var)
+    print("Simple Math")
+    math_test = 1+3*2
+    print(math_test)
     
-#     print("Function Calling Another Function")
-#     print(hadamard(get_state()))
+    print("Complex Math")
+    |psi>  = |ket0> @ |ket1>
+    <phi|  = (0.707, 0.707)
+    inner  = <phi| * |psi>
+    print(inner)
+
+    print("Conditional Statements")
+    x = 3
+    if (x > 3) {
+        x = x + 1
+    } elif (x == 3) {
+        x = 0
+    } else {
+        x = -1
+    }
+    print(x)
+
+    print("Iterative Statements")
+    print("--while--")
+    i = 0
+    while (i < 3) {
+        i = i + 1
+    }
+    print(i)
     
-#     print("Recursion")
-#     print(factorial(3))
+    print("--for--")
+    loop = 1
+    for(i = 0; i<3; i=i+1){
+    	loop = loop*2
+    }
+    print(loop)
     
-#     print("Nested Loop")
-#     val = 0
-#     for(i = 0; i<3; i=i+1){
-#     	for(j = 0; j < 3; j = j+1){
-#      	    val = i*j
-#           	 print(val)
-#          }
-#      }
-# }
-# """
+    print("--do while--")
+    x=0
+    do{
+    	print("hi")
+     	x = x+1
+    } while(x<=2)
+    
+    print("Complex Boolean")
+    x=0
+    y=3
+    print((x-y-2>3-y+x)&&(x-3<2)||(x+3<y))
+    
+    print("Function Calling")
+    |ket> = (1,1)
+    func_var = hadamard(|ket>)
+    print(func_var)
+    
+    print("Function Calling Another Function")
+    print(hadamard(get_state()))
+    
+    print("Recursion")
+    print(factorial(3))
+    
+    print("Nested Loop")
+    val = 0
+    for(i = 0; i<3; i=i+1){
+    	for(j = 0; j < 3; j = j+1){
+     	    val = i*j
+          	 print(val)
+         }
+     }
+}
+"""
 
 
 # ─────────────────────────────────────────────────────────────
@@ -1049,7 +1049,7 @@ class IDE:
 
         # Semantic diagnostics
         for d in sem_result.diagnostics:
-            kind_label = "Error" if d.kind == "error" else "Warning"
+            kind_label = "Semantic" if d.kind == "error" else "Warning"
             self.diag_tree.insert("", tk.END,
                                    values=(kind_label, d.line, d.col, d.message),
                                    tags=(d.kind,))
