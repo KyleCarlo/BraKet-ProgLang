@@ -14,6 +14,10 @@ program
 COMMA   : ',';
 WS : [ \t\r\n]+ -> skip ;
 
+/* Comments — skipped by the lexer */
+LINE_COMMENT  : '//' ~[\r\n]* -> skip ;
+BLOCK_COMMENT : '/*' .*? '*/' -> skip ;
+
 /* PRODUCTIONS FOR IMPORTING FILES AND FUNCTIONS */
 import_list 
     : import_statement (import_statement)*

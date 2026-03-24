@@ -730,8 +730,8 @@ class IDE:
             "ket":     CYAN,
             "bra":     PINK,
             "tensor":  PURPLE,
-            "comment": "#6e7681",
             "id":      FG,
+            "comment": "#6a9955",   # green — configured last = highest tag priority
         }
         for tag, color in cfg.items():
             self.editor.tag_config(tag, foreground=color)
@@ -747,7 +747,6 @@ class IDE:
             self.editor.tag_remove(tag, "1.0", tk.END)
 
         patterns = [
-            ("comment", r"//[^\n]*"),
             ("string",  r'"[^"\n]*"'),
             ("string",  r"'[^'\n]?'"),
             ("kw",      r"\b(if|elif|else|while|for|do|func|main|const|"
@@ -759,6 +758,9 @@ class IDE:
             ("tensor",  r"@"),
             ("op",      r"\*\*|==|!=|<=|>=|&&|\|\||[+\-*/<>=!%]"),
             ("id",      r"\b[a-zA-Z_]\w*\b"),
+            # Comments applied last so they override all other tags inside them
+            ("comment", r"//[^\n]*"),
+            ("comment", r"(?s)/\*.*?\*/"),
         ]
         content = self.editor.get("1.0", tk.END)
         for tag, pat in patterns:

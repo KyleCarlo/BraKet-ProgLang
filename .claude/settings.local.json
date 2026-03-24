@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(antlr4 -version)",
+      "Bash(java -jar antlr4.jar)"
+    ]
+  }
+}
