@@ -36,7 +36,6 @@ from BraKetVisitor import BraKetVisitor
 # Imported lazily so braket_engine still works without braket_interp on path.
 try:
     from braket_interp import (
-        ICGenerator, Interpreter, InterpreterResult,
         generate_ic, run_ic, ic_listing,
         snapshot_ic, DebugSnapshot,
     )
@@ -1041,21 +1040,23 @@ def analyze(code: str, input_cb=None, ready_cb=None, output_cb=None) -> BraKetRe
     ic_str    = ""
     run_res   = None
     snapshots = []
-    _gen      = None
+    _ic_instructions = None
+    _ic_functions    = None
 
     if _INTERP_AVAILABLE and not (lex_err.errors + parse_err.errors):
         try:
-            _gen = ICGenerator()
-            _gen.generate(tree)
-            ic_str = ic_listing(_gen.instructions)
+            # generate_ic runs all optimization passes (constant propagation,
+            # dead temp elimination, etc.) before returning.
+            _ic_instructions, _ic_functions = generate_ic(tree)
+            ic_str = ic_listing(_ic_instructions)
             # Include function IC in listing
-            for fname, (params, body, *_) in _gen.functions.items():
+            for fname, (params, body, *_) in _ic_functions.items():
                 param_str = ", ".join(params)
                 ic_str += "\n\n# func " + fname + "(" + param_str + ")\n"
                 ic_str += ic_listing(body)
         except Exception as e:
             ic_str = ""
-            _gen   = None
+            _ic_instructions = None
 
     # Fire ready_cb now — static analysis and IC generation are complete,
     # interpreter hasn't run yet.  The IDE uses this to populate all panels
@@ -1071,9 +1072,8 @@ def analyze(code: str, input_cb=None, ready_cb=None, output_cb=None) -> BraKetRe
         )
         ready_cb(_partial)
 
-    if _gen is not None:
+    if _ic_instructions is not None:
         try:
-            gen = _gen  # alias for readability below
             # Capture inputs during the real run, then replay them silently
             # for snapshot_ic so the dialog never opens a second time.
             _captured_inputs: list[str] = []
@@ -1091,10 +1091,10 @@ def analyze(code: str, input_cb=None, ready_cb=None, output_cb=None) -> BraKetRe
                 _replay_index[0] += 1
                 return _captured_inputs[idx] if idx < len(_captured_inputs) else ""
 
-            run_res = run_ic(gen.instructions, gen.functions,
+            run_res = run_ic(_ic_instructions, _ic_functions,
                              output_cb=output_cb, input_cb=_capturing_input_cb)
             try:
-                snapshots = snapshot_ic(gen.instructions, gen.functions, input_cb=_replaying_input_cb)
+                snapshots = snapshot_ic(_ic_instructions, _ic_functions, input_cb=_replaying_input_cb)
             except Exception:
                 snapshots = []
         except Exception as e:

@@ -1,14 +1,23 @@
 // 24-optimization.bk
 main() {
-    /* 1. Short Circuit of && / ||
+    /* 1a. Short Circuit of && — JUMPF
     - Shown in the Trace Tab
-    - Click Debug and step through — the x / 0 side is never evaluated (but still noted) because false && short-circuits.
+    - Left operand is false, so JUMPF fires and the right side (x / 0) is never evaluated.
     */
     x = 0
     if (false && (x / 0 > 1)) {
         print("unreachable")
     }
-    print("jumped")
+    print("&& short-circuited (JUMPF)")
+
+    /* 1b. Short Circuit of || — JUMPT
+    - Left operand is a true variable, so JUMPT fires and the right side (x / 0) is never evaluated.
+    - Must use a variable (not literal true) so constant folding doesn't collapse it before IC is emitted.
+    */
+    a = true
+    if (a || (x / 0 > 1)) {
+        print("|| short-circuited (JUMPT)")
+    }
 
     /* 2. Constant Folding
     - Shown in IC Tab
@@ -16,11 +25,21 @@ main() {
     */
     y = 2 + 3 * 4
     print("y =", y)
-    
-    
 
-    /* 3. Freeing of Temporary Addresses
+    /* 3. Constant Propagation + Dead Variable Elimination
+    - Shown in IC Tab
+    */
+    test = (1 + 2)
+    z = test * 4
+    print("z =", z)
+
+    /* 4. Freeing of Temporary Addresses
     - Shown in Symbol Table
     - Space allocated for temporary variables are freed upon use
     */
 }
+
+
+
+
+

@@ -2432,6 +2432,62 @@ def _patched_run_ic(self, ic, env):
 Interpreter._run_ic = _patched_run_ic
 
 
+# ── Dead Temp Assignment Elimination ─────────────────────────
+
+# Ops that are pure (no side effects) and safe to remove when their dest temp is unused.
+_DTAE_ELIMINABLE = {ASSIGN, BINOP, UNOP, COPY, STRUCT_GET, ARRAY_GET, ADDR_OF, DEREF}
+
+def _dtae_sources(ins) -> set:
+    """Return the set of temp names read as sources by *ins*."""
+    op = ins.op
+    if op == ASSIGN:         cands = [ins.b]
+    elif op == BINOP:        cands = [ins.b, ins.c]
+    elif op == UNOP:         cands = [ins.c]           # ins.b is operator string
+    elif op == COPY:         cands = [ins.b]
+    elif op in (JUMPF, JUMPT): cands = [ins.a]
+    elif op == PARAM:        cands = [ins.a]
+    elif op == RETURN_OP:    cands = [ins.a]
+    elif op == PRINT_OP:     cands = [ins.a]
+    elif op == ARRAY_SET:    cands = [ins.a, ins.b, ins.c]
+    elif op == ARRAY_GET:    cands = [ins.b, ins.c]
+    elif op == STRUCT_SET:   cands = [ins.a, ins.c]
+    elif op == STRUCT_GET:   cands = [ins.b]
+    elif op == DEREF:        cands = [ins.b]
+    elif op == DEREF_ASSIGN: cands = [ins.a, ins.b]
+    else:                    cands = []
+    return {v for v in cands if _is_tmp_name(v)}
+
+
+def _elim_dead_temps(ic: list) -> list:
+    """
+    Dead Temp Assignment Elimination pass.
+
+    Iteratively removes instructions whose destination is a temporary
+    variable (t0, t1, ...) that is never read by any other instruction.
+    Only pure ops (ASSIGN, BINOP, UNOP, COPY, STRUCT_GET, ARRAY_GET,
+    ADDR_OF, DEREF) are eligible — CALL and ARRAY_NEW are kept because
+    they may have side effects.
+
+    Iterates until convergence so that chains of dead temps are fully pruned.
+    """
+    changed = True
+    while changed:
+        changed = False
+        used: set = set()
+        for ins in ic:
+            used |= _dtae_sources(ins)
+        new_ic = []
+        for ins in ic:
+            if (ins.op in _DTAE_ELIMINABLE
+                    and _is_tmp_name(ins.a)
+                    and ins.a not in used):
+                changed = True
+                continue
+            new_ic.append(ins)
+        ic = new_ic
+    return ic
+
+
 # ── Constant folding helper ───────────────────────────────────
 
 def _const_fold(left, op, right):
@@ -2462,6 +2518,125 @@ def _const_fold(left, op, right):
     except Exception:
         pass
     return None, False
+
+
+# ── Constant Propagation ──────────────────────────────────────
+
+def _const_propagate(ic: list) -> list:
+    """
+    Constant Propagation pass.
+
+    Repeatedly finds variables that are assigned exactly once with a
+    compile-time numeric/bool literal, substitutes that value into every
+    instruction that reads the variable, and folds any BINOP/UNOP whose
+    operands are now all literals.  Iterates until no more substitutions
+    are possible; DTAE is run afterwards to remove the now-dead assignments.
+
+    Example:
+        y = 3        # from constant-folded (1 + 2)
+        t0 = y * 4   # BINOP → substituted → t0 = 3 * 4 → folded → t0 = 12
+        z  = t0      # ASSIGN → substituted → z = 12
+    After DTAE: only  z = 12  survives.
+    """
+    def _is_num_lit(v):
+        return isinstance(v, bool) or isinstance(v, (int, float, complex))
+
+    def _sub(v, cmap):
+        return cmap[v] if (isinstance(v, str) and v in cmap) else v
+
+    changed = True
+    while changed:
+        changed = False
+
+        # Count how many instructions define each name (as dest = ins.a)
+        def_count: dict = {}
+        _def_ops = {ASSIGN, BINOP, UNOP, COPY, ARRAY_GET, STRUCT_GET,
+                    ARRAY_NEW, CALL, ADDR_OF, DEREF}
+        for ins in ic:
+            if ins.op in _def_ops and isinstance(ins.a, str):
+                def_count[ins.a] = def_count.get(ins.a, 0) + 1
+
+        # Build constant map: only single-def ASSIGN whose value is a numeric literal
+        const_map: dict = {}
+        for ins in ic:
+            if (ins.op == ASSIGN
+                    and isinstance(ins.a, str)
+                    and def_count.get(ins.a, 0) == 1
+                    and _is_num_lit(ins.b)):
+                const_map[ins.a] = ins.b
+
+        if not const_map:
+            break
+
+        new_ic = []
+        for ins in ic:
+            if ins.op == BINOP:
+                left   = _sub(ins.b, const_map)
+                right  = _sub(ins.c, const_map)
+                op_str = getattr(ins, '_op2', '+')
+                folded, ok = _const_fold(left, op_str, right)
+                if ok:
+                    new_ins = ICInstruction(ASSIGN, ins.a, folded, None, ins.line)
+                    new_ins._op2 = None
+                    changed = True
+                else:
+                    new_ins = ICInstruction(BINOP, ins.a, left, right, ins.line)
+                    new_ins._op2 = op_str
+                    if left is not ins.b or right is not ins.c:
+                        changed = True
+                new_ic.append(new_ins)
+
+            elif ins.op == UNOP:
+                operand = _sub(ins.c, const_map)
+                op_str  = ins.b
+                folded  = None
+                if _is_num_lit(operand):
+                    try:
+                        if op_str == "-" and not isinstance(operand, bool):
+                            folded = -operand
+                        elif op_str == "!":
+                            folded = not operand
+                    except Exception:
+                        pass
+                if folded is not None:
+                    new_ins = ICInstruction(ASSIGN, ins.a, folded, None, ins.line)
+                    new_ins._op2 = None
+                    changed = True
+                else:
+                    new_ins = ICInstruction(UNOP, ins.a, op_str, operand, ins.line)
+                    new_ins._op2 = None
+                    if operand is not ins.c:
+                        changed = True
+                new_ic.append(new_ins)
+
+            elif ins.op == ASSIGN:
+                new_b = _sub(ins.b, const_map)
+                if new_b is not ins.b:
+                    new_ins = ICInstruction(ASSIGN, ins.a, new_b, None, ins.line)
+                    new_ins._op2 = None
+                    new_ic.append(new_ins)
+                    changed = True
+                else:
+                    new_ic.append(ins)
+
+            else:
+                # For JUMPF/JUMPT conditions and observable instructions (PARAM, RETURN, PRINT),
+                # only substitute temps — not user variables — so user variables remain live
+                # in the IC and visible in the symbol table.
+                if ins.op in (JUMPF, JUMPT, PARAM, RETURN_OP, PRINT_OP):
+                    tmp_only = {k: v for k, v in const_map.items() if _is_tmp_name(k)}
+                    a = _sub(ins.a, tmp_only)
+                else:
+                    a = ins.a
+                new_ins = ICInstruction(ins.op, a, ins.b, ins.c, ins.line)
+                new_ins._op2 = getattr(ins, '_op2', None)
+                if a is not ins.a:
+                    changed = True
+                new_ic.append(new_ins)
+
+        ic = new_ic
+
+    return ic
 
 
 # ── Also patch _gen_num_expr / _gen_num_term / _gen_num_factor ─
@@ -2691,9 +2866,19 @@ def generate_ic(tree, parser=None) -> tuple[list[ICInstruction],
     Generate intermediate code from an ANTLR parse tree.
     Returns (global_instructions, functions_dict).
     """
+    def _optimize(ic):
+        ic = _const_propagate(ic)
+        ic = _elim_dead_temps(ic)
+        return ic
+
     gen = ICGenerator()
     gen.generate(tree)
-    return gen.instructions, gen.functions
+    instructions = _optimize(gen.instructions)
+    functions = {
+        name: (params, _optimize(body_ic), defaults)
+        for name, (params, body_ic, defaults) in gen.functions.items()
+    }
+    return instructions, functions
 
 
 def run_ic(instructions:  list[ICInstruction],
