@@ -121,6 +121,37 @@ class ICInstruction:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  String escape processing
+# ══════════════════════════════════════════════════════════════════════════════
+
+_ESCAPE_MAP: dict[str, str] = {
+    'n': '\n', 't': '\t', 'r': '\r',
+    '\\': '\\', '"': '"', "'": "'",
+    '0': '\0', 'a': '\a', 'b': '\b',
+    'f': '\f', 'v': '\v',
+}
+
+def _unescape(s: str) -> str:
+    """Expand backslash escape sequences in a string/char literal body.
+
+    Recognises: \\n \\t \\r \\\\ \\" \\' \\0 \\a \\b \\f \\v
+    Unknown escapes are left as-is (e.g. \\x → \\x).
+    """
+    if '\\' not in s:
+        return s
+    result: list[str] = []
+    i = 0
+    while i < len(s):
+        if s[i] == '\\' and i + 1 < len(s):
+            result.append(_ESCAPE_MAP.get(s[i + 1], s[i + 1]))
+            i += 2
+        else:
+            result.append(s[i])
+            i += 1
+    return ''.join(result)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  IC Generator  (Parse Tree → flat IC list)
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -521,7 +552,7 @@ class ICGenerator:
             return float(ctx.FLOAT().getText())
         if ctx.CHAR():
             raw = ctx.CHAR().getText()
-            return raw[1] if len(raw) >= 3 else ""
+            return _unescape(raw[1:-1])
         if ctx.num_factor():
             inner = self._gen_num_factor(ctx.num_factor())
             if ctx.SUB():
@@ -659,7 +690,7 @@ class ICGenerator:
             return t
         if ctx.STRING():
             raw = ctx.STRING().getText()
-            return raw[1:-1]   # strip quotes
+            return _unescape(raw[1:-1])
         if ctx.IDENTIFIER():
             return ctx.IDENTIFIER().getText()
         return ""
@@ -836,9 +867,9 @@ class ICGenerator:
         if ctx.FLOAT():   return float(ctx.FLOAT().getText())
         if ctx.CHAR():
             raw = ctx.CHAR().getText()
-            return raw[1] if len(raw) >= 3 else ""
+            return _unescape(raw[1:-1])
         if ctx.STRING():
-            return ctx.STRING().getText()[1:-1]
+            return _unescape(ctx.STRING().getText()[1:-1])
         if ctx.BOOL_TRUE():  return True
         if ctx.BOOL_FALSE(): return False
         if ctx.COMPLEX():    return self._parse_complex(ctx.COMPLEX().getText())
@@ -2372,7 +2403,7 @@ def _patched_gen_string_expr(self, ctx):
         self._current_ic.append(ins)
         return t
     if ctx.STRING():
-        return ctx.STRING().getText()[1:-1]
+        return _unescape(ctx.STRING().getText()[1:-1])
     if ctx.IDENTIFIER():
         return ctx.IDENTIFIER().getText()
     return ""

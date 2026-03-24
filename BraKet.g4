@@ -391,10 +391,10 @@ fragment LET_DIG_USCORE : (LETTER | DIGIT | '_') ;
 fragment LETTER : [a-zA-Z] ;
 fragment DIGIT : [0-9] ;
 fragment DIGIT_NONZERO : [1-9] ;
-// FIX: STR_SYMBOL matches any character except a double-quote or newline (single-line strings)
-fragment STR_SYMBOL : ~["\r\n] ;
-// FIX: CHAR_SYMBOL matches any character except a single-quote or newline
-fragment CHAR_SYMBOL : ~['\r\n] ;
+// STR_SYMBOL: either a backslash escape (\n, \t, \", \\ etc.) or any non-special char
+fragment STR_SYMBOL  : '\\' . | ~["\\\r\n] ;
+// CHAR_SYMBOL: either a backslash escape (\n, \t, \', \\ etc.) or any non-special char
+fragment CHAR_SYMBOL : '\\' . | ~['\\\r\n] ;
 
 IDENTIFIER
     : LETTER LET_DIG_USCORE*
