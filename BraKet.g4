@@ -1,5 +1,5 @@
 grammar BraKet;
-// FIX: EOF anchors the program rule to the full input.
+
 // Any tokens that do not belong to import_list, const_decl_list, func_decl_list,
 // or main_function will cause a parse error instead of being silently ignored.
 program
@@ -104,12 +104,12 @@ braket_factor
 INT
     : DIGIT+
     ;
-// FIX: removed '| INT' alternative from FLOAT to eliminate ambiguity with the INT token.
+
 // Integers are now exclusively matched by INT; FLOAT only matches values with a decimal point.
 FLOAT
     : INT? '.' DIGIT+
     ;
-// FIX: CHAR and STRING now use dedicated fragments that exclude newlines,
+
 // preventing multi-line string/char literals from being accepted by the lexer.
 CHAR
     : '\'' CHAR_SYMBOL? '\''

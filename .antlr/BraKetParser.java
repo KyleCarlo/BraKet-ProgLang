@@ -148,14 +148,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_program; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterProgram(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitProgram(this);
-		}
 	}
 
 	public final ProgramContext program() throws RecognitionException {
@@ -232,14 +224,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_import_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterImport_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitImport_list(this);
-		}
 	}
 
 	public final Import_listContext import_list() throws RecognitionException {
@@ -290,14 +274,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_import_statement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterImport_statement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitImport_statement(this);
-		}
 	}
 
 	public final Import_statementContext import_statement() throws RecognitionException {
@@ -358,14 +334,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_func_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterFunc_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitFunc_list(this);
-		}
 	}
 
 	public final Func_listContext func_list() throws RecognitionException {
@@ -418,14 +386,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_const_decl_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterConst_decl_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitConst_decl_list(this);
-		}
 	}
 
 	public final Const_decl_listContext const_decl_list() throws RecognitionException {
@@ -472,14 +432,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_const_decl; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterConst_decl(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitConst_decl(this);
-		}
 	}
 
 	public final Const_declContext const_decl() throws RecognitionException {
@@ -517,14 +469,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_var_decl_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterVar_decl_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitVar_decl_list(this);
-		}
 	}
 
 	public final Var_decl_listContext var_decl_list() throws RecognitionException {
@@ -574,14 +518,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_var_decl; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterVar_decl(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitVar_decl(this);
-		}
 	}
 
 	public final Var_declContext var_decl() throws RecognitionException {
@@ -661,14 +597,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_value; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterValue(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitValue(this);
-		}
 	}
 
 	public final ValueContext value() throws RecognitionException {
@@ -781,14 +709,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_braket_vector; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBraket_vector(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBraket_vector(this);
-		}
 	}
 
 	public final Braket_vectorContext braket_vector() throws RecognitionException {
@@ -849,14 +769,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_braket_expression; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBraket_expression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBraket_expression(this);
-		}
 	}
 
 	public final Braket_expressionContext braket_expression() throws RecognitionException {
@@ -924,14 +836,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_braket_term; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBraket_term(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBraket_term(this);
-		}
 	}
 
 	public final Braket_termContext braket_term() throws RecognitionException {
@@ -1028,14 +932,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_braket_factor; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBraket_factor(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBraket_factor(this);
-		}
 	}
 
 	public final Braket_factorContext braket_factor() throws RecognitionException {
@@ -1140,14 +1036,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_array; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterArray(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitArray(this);
-		}
 	}
 
 	public final ArrayContext array() throws RecognitionException {
@@ -1211,14 +1099,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_struct; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterStruct(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitStruct(this);
-		}
 	}
 
 	public final StructContext struct() throws RecognitionException {
@@ -1271,14 +1151,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_struct_value; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterStruct_value(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitStruct_value(this);
-		}
 	}
 
 	public final Struct_valueContext struct_value() throws RecognitionException {
@@ -1355,14 +1227,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_op; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterOp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitOp(this);
-		}
 	}
 
 	public final OpContext op() throws RecognitionException {
@@ -1419,14 +1283,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_statement_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterStatement_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitStatement_list(this);
-		}
 	}
 
 	public final Statement_listContext statement_list() throws RecognitionException {
@@ -1490,14 +1346,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_statement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterStatement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitStatement(this);
-		}
 	}
 
 	public final StatementContext statement() throws RecognitionException {
@@ -1590,14 +1438,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_assign_statement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterAssign_statement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitAssign_statement(this);
-		}
 	}
 
 	public final Assign_statementContext assign_statement() throws RecognitionException {
@@ -1674,14 +1514,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_func_call_statement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterFunc_call_statement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitFunc_call_statement(this);
-		}
 	}
 
 	public final Func_call_statementContext func_call_statement() throws RecognitionException {
@@ -1739,14 +1571,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_arg_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterArg_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitArg_list(this);
-		}
 	}
 
 	public final Arg_listContext arg_list() throws RecognitionException {
@@ -1809,14 +1633,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_arg; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterArg(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitArg(this);
-		}
 	}
 
 	public final ArgContext arg() throws RecognitionException {
@@ -1891,14 +1707,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_return_statement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterReturn_statement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitReturn_statement(this);
-		}
 	}
 
 	public final Return_statementContext return_statement() throws RecognitionException {
@@ -1950,14 +1758,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_if_statement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterIf_statement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitIf_statement(this);
-		}
 	}
 
 	public final If_statementContext if_statement() throws RecognitionException {
@@ -2035,14 +1835,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_elif; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterElif(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitElif(this);
-		}
 	}
 
 	public final ElifContext elif() throws RecognitionException {
@@ -2090,14 +1882,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_else; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterElse(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitElse(this);
-		}
 	}
 
 	public final ElseContext else_() throws RecognitionException {
@@ -2154,14 +1938,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_for_statement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterFor_statement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitFor_statement(this);
-		}
 	}
 
 	public final For_statementContext for_statement() throws RecognitionException {
@@ -2222,14 +1998,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_while_statement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterWhile_statement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitWhile_statement(this);
-		}
 	}
 
 	public final While_statementContext while_statement() throws RecognitionException {
@@ -2283,14 +2051,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_do_statement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterDo_statement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitDo_statement(this);
-		}
 	}
 
 	public final Do_statementContext do_statement() throws RecognitionException {
@@ -2362,14 +2122,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_expression; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterExpression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitExpression(this);
-		}
 	}
 
 	public final ExpressionContext expression() throws RecognitionException {
@@ -2477,14 +2229,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_string_expression; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterString_expression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitString_expression(this);
-		}
 	}
 
 	public final String_expressionContext string_expression() throws RecognitionException {
@@ -2572,14 +2316,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_num_expression; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterNum_expression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitNum_expression(this);
-		}
 	}
 
 	public final Num_expressionContext num_expression() throws RecognitionException {
@@ -2647,14 +2383,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_num_term; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterNum_term(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitNum_term(this);
-		}
 	}
 
 	public final Num_termContext num_term() throws RecognitionException {
@@ -2760,14 +2488,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_num_factor; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterNum_factor(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitNum_factor(this);
-		}
 	}
 
 	public final Num_factorContext num_factor() throws RecognitionException {
@@ -2914,14 +2634,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_array_access; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterArray_access(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitArray_access(this);
-		}
 	}
 
 	public final Array_accessContext array_access() throws RecognitionException {
@@ -2984,14 +2696,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_struct_access; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterStruct_access(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitStruct_access(this);
-		}
 	}
 
 	public final Struct_accessContext struct_access() throws RecognitionException {
@@ -3058,14 +2762,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_dirac_expression; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterDirac_expression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitDirac_expression(this);
-		}
 	}
 
 	public final Dirac_expressionContext dirac_expression() throws RecognitionException {
@@ -3192,14 +2888,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_num_comp; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterNum_comp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitNum_comp(this);
-		}
 	}
 
 	public final Num_compContext num_comp() throws RecognitionException {
@@ -3268,14 +2956,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_eq_comp; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterEq_comp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitEq_comp(this);
-		}
 	}
 
 	public final Eq_compContext eq_comp() throws RecognitionException {
@@ -3317,14 +2997,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_bool_expression; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBool_expression(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBool_expression(this);
-		}
 	}
 
 	public final Bool_expressionContext bool_expression() throws RecognitionException {
@@ -3364,14 +3036,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_bool_or; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBool_or(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBool_or(this);
-		}
 	}
 
 	public final Bool_orContext bool_or() throws RecognitionException {
@@ -3447,14 +3111,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_bool_and; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBool_and(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBool_and(this);
-		}
 	}
 
 	public final Bool_andContext bool_and() throws RecognitionException {
@@ -3544,14 +3200,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_bool_cmp; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBool_cmp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBool_cmp(this);
-		}
 	}
 
 	public final Bool_cmpContext bool_cmp() throws RecognitionException {
@@ -3627,14 +3275,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_bool_unary; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBool_unary(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBool_unary(this);
-		}
 	}
 
 	public final Bool_unaryContext bool_unary() throws RecognitionException {
@@ -3697,14 +3337,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_bool_primary; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterBool_primary(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitBool_primary(this);
-		}
 	}
 
 	public final Bool_primaryContext bool_primary() throws RecognitionException {
@@ -3785,14 +3417,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_func_decl_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterFunc_decl_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitFunc_decl_list(this);
-		}
 	}
 
 	public final Func_decl_listContext func_decl_list() throws RecognitionException {
@@ -3847,14 +3471,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_func_decl; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterFunc_decl(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitFunc_decl(this);
-		}
 	}
 
 	public final Func_declContext func_decl() throws RecognitionException {
@@ -3922,14 +3538,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_param_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterParam_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitParam_list(this);
-		}
 	}
 
 	public final Param_listContext param_list() throws RecognitionException {
@@ -3993,14 +3601,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_identifier_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterIdentifier_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitIdentifier_list(this);
-		}
 	}
 
 	public final Identifier_listContext identifier_list() throws RecognitionException {
@@ -4059,14 +3659,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_default_list; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterDefault_list(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitDefault_list(this);
-		}
 	}
 
 	public final Default_listContext default_list() throws RecognitionException {
@@ -4124,14 +3716,6 @@ public class BraKetParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_main_function; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).enterMain_function(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof BraKetListener ) ((BraKetListener)listener).exitMain_function(this);
-		}
 	}
 
 	public final Main_functionContext main_function() throws RecognitionException {

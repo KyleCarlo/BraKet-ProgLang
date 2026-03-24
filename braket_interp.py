@@ -725,7 +725,7 @@ class ICGenerator:
             right = self._gen_dirac(children[1])
             op    = "*" if ctx.MUL() else "@"
             t     = self._tmp()
-            # FIX: use _op2 pattern (not the broken b=op / c=right hack)
+            
             ins = ICInstruction(BINOP, t, left, right, self._line(ctx))
             ins._op2 = op
             self._current_ic.append(ins)
@@ -1434,7 +1434,7 @@ class Interpreter:
 
             elif op == ASSIGN:
                 val = self._resolve(ins.b, env)
-                # ── FIX: use the variable name (ins.a) to decide ket vs bra ──
+                
                 if isinstance(val, list):
                     name = ins.a if isinstance(ins.a, str) else ""
                     if name.startswith("<") and name.endswith("|"):
