@@ -10,7 +10,7 @@ else:
 
 def serializedATN():
     return [
-        4,1,52,619,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,52,620,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,
         7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,
@@ -47,24 +47,24 @@ def serializedATN():
         32,423,8,32,1,33,1,33,1,33,1,33,1,33,1,33,1,33,1,33,1,33,1,33,1,
         33,1,33,1,33,1,33,1,33,1,33,1,33,3,33,442,8,33,1,34,1,34,1,34,1,
         34,1,34,1,34,1,34,1,34,1,34,1,34,1,34,1,34,1,34,1,34,1,34,1,34,1,
-        34,1,34,1,34,3,34,463,8,34,1,35,1,35,1,35,1,35,1,35,4,35,470,8,35,
-        11,35,12,35,471,1,36,1,36,1,36,4,36,477,8,36,11,36,12,36,478,1,37,
-        1,37,1,37,1,37,1,37,1,37,1,37,3,37,488,8,37,1,37,1,37,1,37,1,37,
-        1,37,1,37,5,37,496,8,37,10,37,12,37,499,9,37,1,38,1,38,1,38,1,38,
-        1,38,3,38,506,8,38,1,39,1,39,1,40,1,40,1,41,1,41,1,41,1,41,1,41,
-        1,41,5,41,518,8,41,10,41,12,41,521,9,41,1,42,1,42,1,42,1,42,1,42,
-        1,42,5,42,529,8,42,10,42,12,42,532,9,42,1,43,1,43,1,43,1,43,1,43,
-        1,43,1,43,1,43,1,43,1,43,1,43,1,43,1,43,3,43,547,8,43,1,44,1,44,
-        1,44,3,44,552,8,44,1,45,1,45,1,45,1,45,1,45,1,45,1,45,1,45,1,45,
-        3,45,563,8,45,1,46,4,46,566,8,46,11,46,12,46,567,1,47,1,47,1,47,
-        1,47,3,47,574,8,47,1,47,1,47,1,47,3,47,579,8,47,1,47,1,47,1,48,1,
-        48,1,48,3,48,586,8,48,1,48,3,48,589,8,48,1,49,1,49,1,49,5,49,594,
-        8,49,10,49,12,49,597,9,49,1,50,1,50,1,50,5,50,602,8,50,10,50,12,
-        50,605,9,50,1,51,1,51,1,51,3,51,610,8,51,1,51,1,51,1,51,3,51,615,
-        8,51,1,51,1,51,1,51,0,4,62,74,82,84,52,0,2,4,6,8,10,12,14,16,18,
-        20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,
-        64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,98,100,102,0,
-        1,1,0,38,39,687,0,105,1,0,0,0,2,118,1,0,0,0,4,131,1,0,0,0,6,133,
+        34,1,34,1,34,1,34,3,34,464,8,34,1,35,1,35,1,35,1,35,1,35,4,35,471,
+        8,35,11,35,12,35,472,1,36,1,36,1,36,4,36,478,8,36,11,36,12,36,479,
+        1,37,1,37,1,37,1,37,1,37,1,37,1,37,3,37,489,8,37,1,37,1,37,1,37,
+        1,37,1,37,1,37,5,37,497,8,37,10,37,12,37,500,9,37,1,38,1,38,1,38,
+        1,38,1,38,3,38,507,8,38,1,39,1,39,1,40,1,40,1,41,1,41,1,41,1,41,
+        1,41,1,41,5,41,519,8,41,10,41,12,41,522,9,41,1,42,1,42,1,42,1,42,
+        1,42,1,42,5,42,530,8,42,10,42,12,42,533,9,42,1,43,1,43,1,43,1,43,
+        1,43,1,43,1,43,1,43,1,43,1,43,1,43,1,43,1,43,3,43,548,8,43,1,44,
+        1,44,1,44,3,44,553,8,44,1,45,1,45,1,45,1,45,1,45,1,45,1,45,1,45,
+        1,45,3,45,564,8,45,1,46,4,46,567,8,46,11,46,12,46,568,1,47,1,47,
+        1,47,1,47,3,47,575,8,47,1,47,1,47,1,47,3,47,580,8,47,1,47,1,47,1,
+        48,1,48,1,48,3,48,587,8,48,1,48,3,48,590,8,48,1,49,1,49,1,49,5,49,
+        595,8,49,10,49,12,49,598,9,49,1,50,1,50,1,50,5,50,603,8,50,10,50,
+        12,50,606,9,50,1,51,1,51,1,51,3,51,611,8,51,1,51,1,51,1,51,3,51,
+        616,8,51,1,51,1,51,1,51,0,4,62,74,82,84,52,0,2,4,6,8,10,12,14,16,
+        18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,
+        62,64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,98,100,102,
+        0,1,1,0,38,39,689,0,105,1,0,0,0,2,118,1,0,0,0,4,131,1,0,0,0,6,133,
         1,0,0,0,8,142,1,0,0,0,10,146,1,0,0,0,12,150,1,0,0,0,14,163,1,0,0,
         0,16,175,1,0,0,0,18,177,1,0,0,0,20,197,1,0,0,0,22,216,1,0,0,0,24,
         231,1,0,0,0,26,233,1,0,0,0,28,246,1,0,0,0,30,262,1,0,0,0,32,264,
@@ -72,11 +72,11 @@ def serializedATN():
         0,0,42,311,1,0,0,0,44,325,1,0,0,0,46,327,1,0,0,0,48,330,1,0,0,0,
         50,346,1,0,0,0,52,354,1,0,0,0,54,359,1,0,0,0,56,371,1,0,0,0,58,379,
         1,0,0,0,60,398,1,0,0,0,62,403,1,0,0,0,64,422,1,0,0,0,66,441,1,0,
-        0,0,68,462,1,0,0,0,70,464,1,0,0,0,72,473,1,0,0,0,74,487,1,0,0,0,
-        76,505,1,0,0,0,78,507,1,0,0,0,80,509,1,0,0,0,82,511,1,0,0,0,84,522,
-        1,0,0,0,86,546,1,0,0,0,88,551,1,0,0,0,90,562,1,0,0,0,92,565,1,0,
-        0,0,94,569,1,0,0,0,96,588,1,0,0,0,98,590,1,0,0,0,100,598,1,0,0,0,
-        102,606,1,0,0,0,104,106,3,2,1,0,105,104,1,0,0,0,105,106,1,0,0,0,
+        0,0,68,463,1,0,0,0,70,465,1,0,0,0,72,474,1,0,0,0,74,488,1,0,0,0,
+        76,506,1,0,0,0,78,508,1,0,0,0,80,510,1,0,0,0,82,512,1,0,0,0,84,523,
+        1,0,0,0,86,547,1,0,0,0,88,552,1,0,0,0,90,563,1,0,0,0,92,566,1,0,
+        0,0,94,570,1,0,0,0,96,589,1,0,0,0,98,591,1,0,0,0,100,599,1,0,0,0,
+        102,607,1,0,0,0,104,106,3,2,1,0,105,104,1,0,0,0,105,106,1,0,0,0,
         106,108,1,0,0,0,107,109,3,8,4,0,108,107,1,0,0,0,108,109,1,0,0,0,
         109,111,1,0,0,0,110,112,3,92,46,0,111,110,1,0,0,0,111,112,1,0,0,
         0,112,114,1,0,0,0,113,115,3,102,51,0,114,113,1,0,0,0,114,115,1,0,
@@ -183,66 +183,66 @@ def serializedATN():
         437,438,5,31,0,0,438,439,3,66,33,0,439,442,1,0,0,0,440,442,3,68,
         34,0,441,424,1,0,0,0,441,428,1,0,0,0,441,432,1,0,0,0,441,436,1,0,
         0,0,441,440,1,0,0,0,442,67,1,0,0,0,443,444,5,43,0,0,444,445,3,64,
-        32,0,445,446,5,44,0,0,446,463,1,0,0,0,447,463,3,40,20,0,448,463,
-        5,14,0,0,449,450,5,26,0,0,450,463,3,68,34,0,451,452,5,27,0,0,452,
-        463,3,68,34,0,453,454,5,28,0,0,454,463,5,52,0,0,455,456,5,29,0,0,
-        456,463,5,52,0,0,457,463,5,10,0,0,458,463,5,11,0,0,459,463,5,12,
-        0,0,460,463,3,74,37,0,461,463,5,52,0,0,462,443,1,0,0,0,462,447,1,
-        0,0,0,462,448,1,0,0,0,462,449,1,0,0,0,462,451,1,0,0,0,462,453,1,
-        0,0,0,462,455,1,0,0,0,462,457,1,0,0,0,462,458,1,0,0,0,462,459,1,
-        0,0,0,462,460,1,0,0,0,462,461,1,0,0,0,463,69,1,0,0,0,464,469,5,52,
-        0,0,465,466,5,45,0,0,466,467,3,64,32,0,467,468,5,46,0,0,468,470,
-        1,0,0,0,469,465,1,0,0,0,470,471,1,0,0,0,471,469,1,0,0,0,471,472,
-        1,0,0,0,472,71,1,0,0,0,473,476,5,52,0,0,474,475,5,51,0,0,475,477,
-        5,52,0,0,476,474,1,0,0,0,477,478,1,0,0,0,478,476,1,0,0,0,478,479,
-        1,0,0,0,479,73,1,0,0,0,480,481,6,37,-1,0,481,488,5,8,0,0,482,488,
-        5,9,0,0,483,488,3,40,20,0,484,488,5,52,0,0,485,488,3,18,9,0,486,
-        488,3,32,16,0,487,480,1,0,0,0,487,482,1,0,0,0,487,483,1,0,0,0,487,
-        484,1,0,0,0,487,485,1,0,0,0,487,486,1,0,0,0,488,497,1,0,0,0,489,
-        490,10,8,0,0,490,491,5,29,0,0,491,496,3,74,37,9,492,493,10,7,0,0,
-        493,494,5,49,0,0,494,496,3,74,37,8,495,489,1,0,0,0,495,492,1,0,0,
-        0,496,499,1,0,0,0,497,495,1,0,0,0,497,498,1,0,0,0,498,75,1,0,0,0,
-        499,497,1,0,0,0,500,506,3,78,39,0,501,506,5,34,0,0,502,506,5,35,
-        0,0,503,506,5,36,0,0,504,506,5,37,0,0,505,500,1,0,0,0,505,501,1,
-        0,0,0,505,502,1,0,0,0,505,503,1,0,0,0,505,504,1,0,0,0,506,77,1,0,
-        0,0,507,508,7,0,0,0,508,79,1,0,0,0,509,510,3,82,41,0,510,81,1,0,
-        0,0,511,512,6,41,-1,0,512,513,3,84,42,0,513,519,1,0,0,0,514,515,
-        10,2,0,0,515,516,5,40,0,0,516,518,3,82,41,3,517,514,1,0,0,0,518,
-        521,1,0,0,0,519,517,1,0,0,0,519,520,1,0,0,0,520,83,1,0,0,0,521,519,
-        1,0,0,0,522,523,6,42,-1,0,523,524,3,86,43,0,524,530,1,0,0,0,525,
-        526,10,2,0,0,526,527,5,41,0,0,527,529,3,84,42,3,528,525,1,0,0,0,
-        529,532,1,0,0,0,530,528,1,0,0,0,530,531,1,0,0,0,531,85,1,0,0,0,532,
-        530,1,0,0,0,533,534,3,64,32,0,534,535,3,76,38,0,535,536,3,64,32,
-        0,536,547,1,0,0,0,537,538,3,62,31,0,538,539,3,78,39,0,539,540,3,
-        62,31,0,540,547,1,0,0,0,541,542,3,88,44,0,542,543,3,78,39,0,543,
-        544,3,88,44,0,544,547,1,0,0,0,545,547,3,88,44,0,546,533,1,0,0,0,
-        546,537,1,0,0,0,546,541,1,0,0,0,546,545,1,0,0,0,547,87,1,0,0,0,548,
-        549,5,42,0,0,549,552,3,88,44,0,550,552,3,90,45,0,551,548,1,0,0,0,
-        551,550,1,0,0,0,552,89,1,0,0,0,553,554,5,43,0,0,554,555,3,80,40,
-        0,555,556,5,44,0,0,556,563,1,0,0,0,557,563,3,40,20,0,558,563,5,22,
-        0,0,559,563,5,23,0,0,560,563,5,10,0,0,561,563,5,52,0,0,562,553,1,
-        0,0,0,562,557,1,0,0,0,562,558,1,0,0,0,562,559,1,0,0,0,562,560,1,
-        0,0,0,562,561,1,0,0,0,563,91,1,0,0,0,564,566,3,94,47,0,565,564,1,
-        0,0,0,566,567,1,0,0,0,567,565,1,0,0,0,567,568,1,0,0,0,568,93,1,0,
-        0,0,569,570,5,25,0,0,570,571,5,52,0,0,571,573,5,43,0,0,572,574,3,
-        96,48,0,573,572,1,0,0,0,573,574,1,0,0,0,574,575,1,0,0,0,575,576,
-        5,44,0,0,576,578,5,47,0,0,577,579,3,34,17,0,578,577,1,0,0,0,578,
-        579,1,0,0,0,579,580,1,0,0,0,580,581,5,48,0,0,581,95,1,0,0,0,582,
-        585,3,98,49,0,583,584,5,1,0,0,584,586,3,100,50,0,585,583,1,0,0,0,
-        585,586,1,0,0,0,586,589,1,0,0,0,587,589,3,100,50,0,588,582,1,0,0,
-        0,588,587,1,0,0,0,589,97,1,0,0,0,590,595,5,52,0,0,591,592,5,1,0,
-        0,592,594,5,52,0,0,593,591,1,0,0,0,594,597,1,0,0,0,595,593,1,0,0,
-        0,595,596,1,0,0,0,596,99,1,0,0,0,597,595,1,0,0,0,598,603,3,38,19,
-        0,599,600,5,1,0,0,600,602,3,38,19,0,601,599,1,0,0,0,602,605,1,0,
-        0,0,603,601,1,0,0,0,603,604,1,0,0,0,604,101,1,0,0,0,605,603,1,0,
-        0,0,606,607,5,24,0,0,607,609,5,43,0,0,608,610,3,96,48,0,609,608,
-        1,0,0,0,609,610,1,0,0,0,610,611,1,0,0,0,611,612,5,44,0,0,612,614,
-        5,47,0,0,613,615,3,34,17,0,614,613,1,0,0,0,614,615,1,0,0,0,615,616,
-        1,0,0,0,616,617,5,48,0,0,617,103,1,0,0,0,54,105,108,111,114,122,
-        131,138,144,152,163,175,183,197,216,231,239,242,248,262,270,278,
-        287,302,307,316,325,340,344,398,403,410,422,441,462,471,478,487,
-        495,497,505,519,530,546,551,562,567,573,578,585,588,595,603,609,
-        614
+        32,0,445,446,5,44,0,0,446,464,1,0,0,0,447,464,3,40,20,0,448,464,
+        5,14,0,0,449,450,5,26,0,0,450,464,3,68,34,0,451,452,5,27,0,0,452,
+        464,3,68,34,0,453,454,5,28,0,0,454,464,5,52,0,0,455,456,5,29,0,0,
+        456,464,5,52,0,0,457,464,5,10,0,0,458,464,5,11,0,0,459,464,5,12,
+        0,0,460,464,3,74,37,0,461,464,3,70,35,0,462,464,5,52,0,0,463,443,
+        1,0,0,0,463,447,1,0,0,0,463,448,1,0,0,0,463,449,1,0,0,0,463,451,
+        1,0,0,0,463,453,1,0,0,0,463,455,1,0,0,0,463,457,1,0,0,0,463,458,
+        1,0,0,0,463,459,1,0,0,0,463,460,1,0,0,0,463,461,1,0,0,0,463,462,
+        1,0,0,0,464,69,1,0,0,0,465,470,5,52,0,0,466,467,5,45,0,0,467,468,
+        3,64,32,0,468,469,5,46,0,0,469,471,1,0,0,0,470,466,1,0,0,0,471,472,
+        1,0,0,0,472,470,1,0,0,0,472,473,1,0,0,0,473,71,1,0,0,0,474,477,5,
+        52,0,0,475,476,5,51,0,0,476,478,5,52,0,0,477,475,1,0,0,0,478,479,
+        1,0,0,0,479,477,1,0,0,0,479,480,1,0,0,0,480,73,1,0,0,0,481,482,6,
+        37,-1,0,482,489,5,8,0,0,483,489,5,9,0,0,484,489,3,40,20,0,485,489,
+        5,52,0,0,486,489,3,18,9,0,487,489,3,32,16,0,488,481,1,0,0,0,488,
+        483,1,0,0,0,488,484,1,0,0,0,488,485,1,0,0,0,488,486,1,0,0,0,488,
+        487,1,0,0,0,489,498,1,0,0,0,490,491,10,8,0,0,491,492,5,29,0,0,492,
+        497,3,74,37,9,493,494,10,7,0,0,494,495,5,49,0,0,495,497,3,74,37,
+        8,496,490,1,0,0,0,496,493,1,0,0,0,497,500,1,0,0,0,498,496,1,0,0,
+        0,498,499,1,0,0,0,499,75,1,0,0,0,500,498,1,0,0,0,501,507,3,78,39,
+        0,502,507,5,34,0,0,503,507,5,35,0,0,504,507,5,36,0,0,505,507,5,37,
+        0,0,506,501,1,0,0,0,506,502,1,0,0,0,506,503,1,0,0,0,506,504,1,0,
+        0,0,506,505,1,0,0,0,507,77,1,0,0,0,508,509,7,0,0,0,509,79,1,0,0,
+        0,510,511,3,82,41,0,511,81,1,0,0,0,512,513,6,41,-1,0,513,514,3,84,
+        42,0,514,520,1,0,0,0,515,516,10,2,0,0,516,517,5,40,0,0,517,519,3,
+        82,41,3,518,515,1,0,0,0,519,522,1,0,0,0,520,518,1,0,0,0,520,521,
+        1,0,0,0,521,83,1,0,0,0,522,520,1,0,0,0,523,524,6,42,-1,0,524,525,
+        3,86,43,0,525,531,1,0,0,0,526,527,10,2,0,0,527,528,5,41,0,0,528,
+        530,3,84,42,3,529,526,1,0,0,0,530,533,1,0,0,0,531,529,1,0,0,0,531,
+        532,1,0,0,0,532,85,1,0,0,0,533,531,1,0,0,0,534,535,3,64,32,0,535,
+        536,3,76,38,0,536,537,3,64,32,0,537,548,1,0,0,0,538,539,3,62,31,
+        0,539,540,3,78,39,0,540,541,3,62,31,0,541,548,1,0,0,0,542,543,3,
+        88,44,0,543,544,3,78,39,0,544,545,3,88,44,0,545,548,1,0,0,0,546,
+        548,3,88,44,0,547,534,1,0,0,0,547,538,1,0,0,0,547,542,1,0,0,0,547,
+        546,1,0,0,0,548,87,1,0,0,0,549,550,5,42,0,0,550,553,3,88,44,0,551,
+        553,3,90,45,0,552,549,1,0,0,0,552,551,1,0,0,0,553,89,1,0,0,0,554,
+        555,5,43,0,0,555,556,3,80,40,0,556,557,5,44,0,0,557,564,1,0,0,0,
+        558,564,3,40,20,0,559,564,5,22,0,0,560,564,5,23,0,0,561,564,5,10,
+        0,0,562,564,5,52,0,0,563,554,1,0,0,0,563,558,1,0,0,0,563,559,1,0,
+        0,0,563,560,1,0,0,0,563,561,1,0,0,0,563,562,1,0,0,0,564,91,1,0,0,
+        0,565,567,3,94,47,0,566,565,1,0,0,0,567,568,1,0,0,0,568,566,1,0,
+        0,0,568,569,1,0,0,0,569,93,1,0,0,0,570,571,5,25,0,0,571,572,5,52,
+        0,0,572,574,5,43,0,0,573,575,3,96,48,0,574,573,1,0,0,0,574,575,1,
+        0,0,0,575,576,1,0,0,0,576,577,5,44,0,0,577,579,5,47,0,0,578,580,
+        3,34,17,0,579,578,1,0,0,0,579,580,1,0,0,0,580,581,1,0,0,0,581,582,
+        5,48,0,0,582,95,1,0,0,0,583,586,3,98,49,0,584,585,5,1,0,0,585,587,
+        3,100,50,0,586,584,1,0,0,0,586,587,1,0,0,0,587,590,1,0,0,0,588,590,
+        3,100,50,0,589,583,1,0,0,0,589,588,1,0,0,0,590,97,1,0,0,0,591,596,
+        5,52,0,0,592,593,5,1,0,0,593,595,5,52,0,0,594,592,1,0,0,0,595,598,
+        1,0,0,0,596,594,1,0,0,0,596,597,1,0,0,0,597,99,1,0,0,0,598,596,1,
+        0,0,0,599,604,3,38,19,0,600,601,5,1,0,0,601,603,3,38,19,0,602,600,
+        1,0,0,0,603,606,1,0,0,0,604,602,1,0,0,0,604,605,1,0,0,0,605,101,
+        1,0,0,0,606,604,1,0,0,0,607,608,5,24,0,0,608,610,5,43,0,0,609,611,
+        3,96,48,0,610,609,1,0,0,0,610,611,1,0,0,0,611,612,1,0,0,0,612,613,
+        5,44,0,0,613,615,5,47,0,0,614,616,3,34,17,0,615,614,1,0,0,0,615,
+        616,1,0,0,0,616,617,1,0,0,0,617,618,5,48,0,0,618,103,1,0,0,0,54,
+        105,108,111,114,122,131,138,144,152,163,175,183,197,216,231,239,
+        242,248,262,270,278,287,302,307,316,325,340,344,398,403,410,422,
+        441,463,472,479,488,496,498,506,520,531,547,552,563,568,574,579,
+        586,589,596,604,610,615
     ]
 
 class BraKetParser ( Parser ):
@@ -434,6 +434,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_program
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterProgram" ):
+                listener.enterProgram(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitProgram" ):
+                listener.exitProgram(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitProgram" ):
                 return visitor.visitProgram(self)
@@ -510,6 +518,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_import_list
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterImport_list" ):
+                listener.enterImport_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitImport_list" ):
+                listener.exitImport_list(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitImport_list" ):
                 return visitor.visitImport_list(self)
@@ -569,6 +585,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_import_statement
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterImport_statement" ):
+                listener.enterImport_statement(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitImport_statement" ):
+                listener.exitImport_statement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitImport_statement" ):
@@ -639,6 +663,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_func_list
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterFunc_list" ):
+                listener.enterFunc_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitFunc_list" ):
+                listener.exitFunc_list(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFunc_list" ):
                 return visitor.visitFunc_list(self)
@@ -695,6 +727,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_const_decl_list
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterConst_decl_list" ):
+                listener.enterConst_decl_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitConst_decl_list" ):
+                listener.exitConst_decl_list(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConst_decl_list" ):
                 return visitor.visitConst_decl_list(self)
@@ -749,6 +789,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_const_decl
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterConst_decl" ):
+                listener.enterConst_decl(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitConst_decl" ):
+                listener.exitConst_decl(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConst_decl" ):
                 return visitor.visitConst_decl(self)
@@ -793,6 +841,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_var_decl_list
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterVar_decl_list" ):
+                listener.enterVar_decl_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitVar_decl_list" ):
+                listener.exitVar_decl_list(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitVar_decl_list" ):
@@ -856,6 +912,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_var_decl
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterVar_decl" ):
+                listener.enterVar_decl(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitVar_decl" ):
+                listener.exitVar_decl(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitVar_decl" ):
@@ -955,6 +1019,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_value
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterValue" ):
+                listener.enterValue(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitValue" ):
+                listener.exitValue(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitValue" ):
@@ -1064,6 +1136,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_braket_vector
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBraket_vector" ):
+                listener.enterBraket_vector(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBraket_vector" ):
+                listener.exitBraket_vector(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBraket_vector" ):
                 return visitor.visitBraket_vector(self)
@@ -1131,6 +1211,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_braket_expression
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBraket_expression" ):
+                listener.enterBraket_expression(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBraket_expression" ):
+                listener.exitBraket_expression(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBraket_expression" ):
@@ -1214,6 +1302,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_braket_term
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBraket_term" ):
+                listener.enterBraket_term(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBraket_term" ):
+                listener.exitBraket_term(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBraket_term" ):
@@ -1334,6 +1430,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_braket_factor
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBraket_factor" ):
+                listener.enterBraket_factor(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBraket_factor" ):
+                listener.exitBraket_factor(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBraket_factor" ):
                 return visitor.visitBraket_factor(self)
@@ -1446,6 +1550,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_array
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterArray" ):
+                listener.enterArray(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitArray" ):
+                listener.exitArray(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitArray" ):
                 return visitor.visitArray(self)
@@ -1515,6 +1627,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_struct
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterStruct" ):
+                listener.enterStruct(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitStruct" ):
+                listener.exitStruct(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStruct" ):
                 return visitor.visitStruct(self)
@@ -1576,6 +1696,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_struct_value
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterStruct_value" ):
+                listener.enterStruct_value(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitStruct_value" ):
+                listener.exitStruct_value(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStruct_value" ):
@@ -1665,6 +1793,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_op
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterOp" ):
+                listener.enterOp(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitOp" ):
+                listener.exitOp(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitOp" ):
                 return visitor.visitOp(self)
@@ -1724,6 +1860,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_statement_list
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterStatement_list" ):
+                listener.enterStatement_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitStatement_list" ):
+                listener.exitStatement_list(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStatement_list" ):
@@ -1799,6 +1943,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_statement
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterStatement" ):
+                listener.enterStatement(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitStatement" ):
+                listener.exitStatement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStatement" ):
@@ -1904,6 +2056,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_assign_statement
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterAssign_statement" ):
+                listener.enterAssign_statement(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitAssign_statement" ):
+                listener.exitAssign_statement(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitAssign_statement" ):
                 return visitor.visitAssign_statement(self)
@@ -1992,6 +2152,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_func_call_statement
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterFunc_call_statement" ):
+                listener.enterFunc_call_statement(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitFunc_call_statement" ):
+                listener.exitFunc_call_statement(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFunc_call_statement" ):
                 return visitor.visitFunc_call_statement(self)
@@ -2057,6 +2225,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_arg_list
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterArg_list" ):
+                listener.enterArg_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitArg_list" ):
+                listener.exitArg_list(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitArg_list" ):
@@ -2128,6 +2304,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_arg
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterArg" ):
+                listener.enterArg(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitArg" ):
+                listener.exitArg(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitArg" ):
@@ -2209,6 +2393,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_return_statement
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterReturn_statement" ):
+                listener.enterReturn_statement(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitReturn_statement" ):
+                listener.exitReturn_statement(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitReturn_statement" ):
                 return visitor.visitReturn_statement(self)
@@ -2280,6 +2472,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_if_statement
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterIf_statement" ):
+                listener.enterIf_statement(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitIf_statement" ):
+                listener.exitIf_statement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitIf_statement" ):
@@ -2371,6 +2571,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_elif
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterElif" ):
+                listener.enterElif(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitElif" ):
+                listener.exitElif(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitElif" ):
                 return visitor.visitElif(self)
@@ -2431,6 +2639,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_else
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterElse" ):
+                listener.enterElse(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitElse" ):
+                listener.exitElse(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitElse" ):
@@ -2509,6 +2725,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_for_statement
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterFor_statement" ):
+                listener.enterFor_statement(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitFor_statement" ):
+                listener.exitFor_statement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFor_statement" ):
@@ -2589,6 +2813,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_while_statement
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterWhile_statement" ):
+                listener.enterWhile_statement(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitWhile_statement" ):
+                listener.exitWhile_statement(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitWhile_statement" ):
                 return visitor.visitWhile_statement(self)
@@ -2662,6 +2894,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_do_statement
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterDo_statement" ):
+                listener.enterDo_statement(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitDo_statement" ):
+                listener.exitDo_statement(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitDo_statement" ):
@@ -2751,6 +2991,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_expression
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterExpression" ):
+                listener.enterExpression(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitExpression" ):
+                listener.exitExpression(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitExpression" ):
@@ -2865,6 +3113,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_string_expression
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterString_expression" ):
+                listener.enterString_expression(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitString_expression" ):
+                listener.exitString_expression(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitString_expression" ):
                 return visitor.visitString_expression(self)
@@ -2952,6 +3208,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_num_expression
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterNum_expression" ):
+                listener.enterNum_expression(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitNum_expression" ):
+                listener.exitNum_expression(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitNum_expression" ):
                 return visitor.visitNum_expression(self)
@@ -3034,6 +3298,14 @@ class BraKetParser ( Parser ):
 
         def getRuleIndex(self):
             return BraKetParser.RULE_num_term
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterNum_term" ):
+                listener.enterNum_term(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitNum_term" ):
+                listener.exitNum_term(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitNum_term" ):
@@ -3164,8 +3436,20 @@ class BraKetParser ( Parser ):
             return self.getTypedRuleContext(BraKetParser.Dirac_expressionContext,0)
 
 
+        def array_access(self):
+            return self.getTypedRuleContext(BraKetParser.Array_accessContext,0)
+
+
         def getRuleIndex(self):
             return BraKetParser.RULE_num_factor
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterNum_factor" ):
+                listener.enterNum_factor(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitNum_factor" ):
+                listener.exitNum_factor(self)
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitNum_factor" ):
@@ -3181,7 +3465,7 @@ class BraKetParser ( Parser ):
         localctx = BraKetParser.Num_factorContext(self, self._ctx, self.state)
         self.enterRule(localctx, 68, self.RULE_num_factor)
         try:
-            self.state = 462
+            self.state = 463
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,33,self._ctx)
             if la_ == 1:
@@ -3265,6 +3549,12 @@ class BraKetParser ( Parser ):
             elif la_ == 12:
                 self.enterOuterAlt(localctx, 12)
                 self.state = 461
+                self.array_access()
+                pass
+
+            elif la_ == 13:
+                self.enterOuterAlt(localctx, 13)
+                self.state = 462
                 self.match(BraKetParser.IDENTIFIER)
                 pass
 
@@ -3310,6 +3600,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_array_access
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterArray_access" ):
+                listener.enterArray_access(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitArray_access" ):
+                listener.exitArray_access(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitArray_access" ):
                 return visitor.visitArray_access(self)
@@ -3323,26 +3621,27 @@ class BraKetParser ( Parser ):
 
         localctx = BraKetParser.Array_accessContext(self, self._ctx, self.state)
         self.enterRule(localctx, 70, self.RULE_array_access)
-        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 464
+            self.state = 465
             self.match(BraKetParser.IDENTIFIER)
-            self.state = 469 
+            self.state = 470 
             self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while True:
-                self.state = 465
-                self.match(BraKetParser.LSQUARE)
-                self.state = 466
-                self.num_expression()
-                self.state = 467
-                self.match(BraKetParser.RSQUARE)
-                self.state = 471 
+            _alt = 1
+            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
+                if _alt == 1:
+                    self.state = 466
+                    self.match(BraKetParser.LSQUARE)
+                    self.state = 467
+                    self.num_expression()
+                    self.state = 468
+                    self.match(BraKetParser.RSQUARE)
+
+                else:
+                    raise NoViableAltException(self)
+                self.state = 472 
                 self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                if not (_la==45):
-                    break
+                _alt = self._interp.adaptivePredict(self._input,34,self._ctx)
 
         except RecognitionException as re:
             localctx.exception = re
@@ -3375,6 +3674,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_struct_access
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterStruct_access" ):
+                listener.enterStruct_access(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitStruct_access" ):
+                listener.exitStruct_access(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStruct_access" ):
                 return visitor.visitStruct_access(self)
@@ -3391,17 +3698,17 @@ class BraKetParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 473
+            self.state = 474
             self.match(BraKetParser.IDENTIFIER)
-            self.state = 476 
+            self.state = 477 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 474
-                self.match(BraKetParser.DOT)
                 self.state = 475
+                self.match(BraKetParser.DOT)
+                self.state = 476
                 self.match(BraKetParser.IDENTIFIER)
-                self.state = 478 
+                self.state = 479 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la==51):
@@ -3460,6 +3767,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_dirac_expression
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterDirac_expression" ):
+                listener.enterDirac_expression(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitDirac_expression" ):
+                listener.exitDirac_expression(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitDirac_expression" ):
                 return visitor.visitDirac_expression(self)
@@ -3477,42 +3792,42 @@ class BraKetParser ( Parser ):
         self.enterRecursionRule(localctx, 74, self.RULE_dirac_expression, _p)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 487
+            self.state = 488
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,36,self._ctx)
             if la_ == 1:
-                self.state = 481
+                self.state = 482
                 self.match(BraKetParser.KET_IDENTIFIER)
                 pass
 
             elif la_ == 2:
-                self.state = 482
+                self.state = 483
                 self.match(BraKetParser.BRA_IDENTIFIER)
                 pass
 
             elif la_ == 3:
-                self.state = 483
+                self.state = 484
                 self.func_call_statement()
                 pass
 
             elif la_ == 4:
-                self.state = 484
+                self.state = 485
                 self.match(BraKetParser.IDENTIFIER)
                 pass
 
             elif la_ == 5:
-                self.state = 485
+                self.state = 486
                 self.braket_vector()
                 pass
 
             elif la_ == 6:
-                self.state = 486
+                self.state = 487
                 self.op()
                 pass
 
 
             self._ctx.stop = self._input.LT(-1)
-            self.state = 497
+            self.state = 498
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,38,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
@@ -3520,37 +3835,37 @@ class BraKetParser ( Parser ):
                     if self._parseListeners is not None:
                         self.triggerExitRuleEvent()
                     _prevctx = localctx
-                    self.state = 495
+                    self.state = 496
                     self._errHandler.sync(self)
                     la_ = self._interp.adaptivePredict(self._input,37,self._ctx)
                     if la_ == 1:
                         localctx = BraKetParser.Dirac_expressionContext(self, _parentctx, _parentState)
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_dirac_expression)
-                        self.state = 489
+                        self.state = 490
                         if not self.precpred(self._ctx, 8):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
-                        self.state = 490
-                        self.match(BraKetParser.MUL)
                         self.state = 491
+                        self.match(BraKetParser.MUL)
+                        self.state = 492
                         self.dirac_expression(9)
                         pass
 
                     elif la_ == 2:
                         localctx = BraKetParser.Dirac_expressionContext(self, _parentctx, _parentState)
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_dirac_expression)
-                        self.state = 492
+                        self.state = 493
                         if not self.precpred(self._ctx, 7):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 7)")
-                        self.state = 493
-                        self.match(BraKetParser.TENSOR)
                         self.state = 494
+                        self.match(BraKetParser.TENSOR)
+                        self.state = 495
                         self.dirac_expression(8)
                         pass
 
              
-                self.state = 499
+                self.state = 500
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,38,self._ctx)
 
@@ -3589,6 +3904,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_num_comp
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterNum_comp" ):
+                listener.enterNum_comp(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitNum_comp" ):
+                listener.exitNum_comp(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitNum_comp" ):
                 return visitor.visitNum_comp(self)
@@ -3603,32 +3926,32 @@ class BraKetParser ( Parser ):
         localctx = BraKetParser.Num_compContext(self, self._ctx, self.state)
         self.enterRule(localctx, 76, self.RULE_num_comp)
         try:
-            self.state = 505
+            self.state = 506
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [38, 39]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 500
+                self.state = 501
                 self.eq_comp()
                 pass
             elif token in [34]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 501
+                self.state = 502
                 self.match(BraKetParser.GT)
                 pass
             elif token in [35]:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 502
+                self.state = 503
                 self.match(BraKetParser.LT)
                 pass
             elif token in [36]:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 503
+                self.state = 504
                 self.match(BraKetParser.GTE)
                 pass
             elif token in [37]:
                 self.enterOuterAlt(localctx, 5)
-                self.state = 504
+                self.state = 505
                 self.match(BraKetParser.LTE)
                 pass
             else:
@@ -3659,6 +3982,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_eq_comp
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterEq_comp" ):
+                listener.enterEq_comp(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitEq_comp" ):
+                listener.exitEq_comp(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitEq_comp" ):
                 return visitor.visitEq_comp(self)
@@ -3675,7 +4006,7 @@ class BraKetParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 507
+            self.state = 508
             _la = self._input.LA(1)
             if not(_la==38 or _la==39):
                 self._errHandler.recoverInline(self)
@@ -3705,6 +4036,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_expression
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBool_expression" ):
+                listener.enterBool_expression(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBool_expression" ):
+                listener.exitBool_expression(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_expression" ):
                 return visitor.visitBool_expression(self)
@@ -3720,7 +4059,7 @@ class BraKetParser ( Parser ):
         self.enterRule(localctx, 80, self.RULE_bool_expression)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 509
+            self.state = 510
             self.bool_or(0)
         except RecognitionException as re:
             localctx.exception = re
@@ -3755,6 +4094,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_or
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBool_or" ):
+                listener.enterBool_or(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBool_or" ):
+                listener.exitBool_or(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_or" ):
                 return visitor.visitBool_or(self)
@@ -3772,10 +4119,10 @@ class BraKetParser ( Parser ):
         self.enterRecursionRule(localctx, 82, self.RULE_bool_or, _p)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 512
+            self.state = 513
             self.bool_and(0)
             self._ctx.stop = self._input.LT(-1)
-            self.state = 519
+            self.state = 520
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,40,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
@@ -3785,15 +4132,15 @@ class BraKetParser ( Parser ):
                     _prevctx = localctx
                     localctx = BraKetParser.Bool_orContext(self, _parentctx, _parentState)
                     self.pushNewRecursionContext(localctx, _startState, self.RULE_bool_or)
-                    self.state = 514
+                    self.state = 515
                     if not self.precpred(self._ctx, 2):
                         from antlr4.error.Errors import FailedPredicateException
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
-                    self.state = 515
-                    self.match(BraKetParser.LOGICAL_OR)
                     self.state = 516
+                    self.match(BraKetParser.LOGICAL_OR)
+                    self.state = 517
                     self.bool_or(3) 
-                self.state = 521
+                self.state = 522
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,40,self._ctx)
 
@@ -3830,6 +4177,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_and
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBool_and" ):
+                listener.enterBool_and(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBool_and" ):
+                listener.exitBool_and(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_and" ):
                 return visitor.visitBool_and(self)
@@ -3847,10 +4202,10 @@ class BraKetParser ( Parser ):
         self.enterRecursionRule(localctx, 84, self.RULE_bool_and, _p)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 523
+            self.state = 524
             self.bool_cmp()
             self._ctx.stop = self._input.LT(-1)
-            self.state = 530
+            self.state = 531
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,41,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
@@ -3860,15 +4215,15 @@ class BraKetParser ( Parser ):
                     _prevctx = localctx
                     localctx = BraKetParser.Bool_andContext(self, _parentctx, _parentState)
                     self.pushNewRecursionContext(localctx, _startState, self.RULE_bool_and)
-                    self.state = 525
+                    self.state = 526
                     if not self.precpred(self._ctx, 2):
                         from antlr4.error.Errors import FailedPredicateException
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
-                    self.state = 526
-                    self.match(BraKetParser.LOGICAL_AND)
                     self.state = 527
+                    self.match(BraKetParser.LOGICAL_AND)
+                    self.state = 528
                     self.bool_and(3) 
-                self.state = 532
+                self.state = 533
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,41,self._ctx)
 
@@ -3920,6 +4275,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_cmp
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBool_cmp" ):
+                listener.enterBool_cmp(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBool_cmp" ):
+                listener.exitBool_cmp(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_cmp" ):
                 return visitor.visitBool_cmp(self)
@@ -3934,42 +4297,42 @@ class BraKetParser ( Parser ):
         localctx = BraKetParser.Bool_cmpContext(self, self._ctx, self.state)
         self.enterRule(localctx, 86, self.RULE_bool_cmp)
         try:
-            self.state = 546
+            self.state = 547
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,42,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 533
-                self.num_expression()
                 self.state = 534
-                self.num_comp()
+                self.num_expression()
                 self.state = 535
+                self.num_comp()
+                self.state = 536
                 self.num_expression()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 537
-                self.string_expression(0)
                 self.state = 538
-                self.eq_comp()
+                self.string_expression(0)
                 self.state = 539
+                self.eq_comp()
+                self.state = 540
                 self.string_expression(0)
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 541
-                self.bool_unary()
                 self.state = 542
-                self.eq_comp()
+                self.bool_unary()
                 self.state = 543
+                self.eq_comp()
+                self.state = 544
                 self.bool_unary()
                 pass
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 545
+                self.state = 546
                 self.bool_unary()
                 pass
 
@@ -4004,6 +4367,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_unary
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBool_unary" ):
+                listener.enterBool_unary(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBool_unary" ):
+                listener.exitBool_unary(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_unary" ):
                 return visitor.visitBool_unary(self)
@@ -4018,19 +4389,19 @@ class BraKetParser ( Parser ):
         localctx = BraKetParser.Bool_unaryContext(self, self._ctx, self.state)
         self.enterRule(localctx, 88, self.RULE_bool_unary)
         try:
-            self.state = 551
+            self.state = 552
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [42]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 548
-                self.match(BraKetParser.NEG)
                 self.state = 549
+                self.match(BraKetParser.NEG)
+                self.state = 550
                 self.bool_unary()
                 pass
             elif token in [10, 22, 23, 43, 52]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 550
+                self.state = 551
                 self.bool_primary()
                 pass
             else:
@@ -4081,6 +4452,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_bool_primary
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterBool_primary" ):
+                listener.enterBool_primary(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitBool_primary" ):
+                listener.exitBool_primary(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitBool_primary" ):
                 return visitor.visitBool_primary(self)
@@ -4095,46 +4474,46 @@ class BraKetParser ( Parser ):
         localctx = BraKetParser.Bool_primaryContext(self, self._ctx, self.state)
         self.enterRule(localctx, 90, self.RULE_bool_primary)
         try:
-            self.state = 562
+            self.state = 563
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,44,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 553
-                self.match(BraKetParser.LPAREN)
                 self.state = 554
-                self.bool_expression()
+                self.match(BraKetParser.LPAREN)
                 self.state = 555
+                self.bool_expression()
+                self.state = 556
                 self.match(BraKetParser.RPAREN)
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 557
+                self.state = 558
                 self.func_call_statement()
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 558
+                self.state = 559
                 self.match(BraKetParser.BOOL_TRUE)
                 pass
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 559
+                self.state = 560
                 self.match(BraKetParser.BOOL_FALSE)
                 pass
 
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
-                self.state = 560
+                self.state = 561
                 self.match(BraKetParser.INT)
                 pass
 
             elif la_ == 6:
                 self.enterOuterAlt(localctx, 6)
-                self.state = 561
+                self.state = 562
                 self.match(BraKetParser.IDENTIFIER)
                 pass
 
@@ -4165,6 +4544,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_func_decl_list
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterFunc_decl_list" ):
+                listener.enterFunc_decl_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitFunc_decl_list" ):
+                listener.exitFunc_decl_list(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFunc_decl_list" ):
                 return visitor.visitFunc_decl_list(self)
@@ -4181,13 +4568,13 @@ class BraKetParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 565 
+            self.state = 566 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 564
+                self.state = 565
                 self.func_decl()
-                self.state = 567 
+                self.state = 568 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la==25):
@@ -4238,6 +4625,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_func_decl
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterFunc_decl" ):
+                listener.enterFunc_decl(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitFunc_decl" ):
+                listener.exitFunc_decl(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitFunc_decl" ):
                 return visitor.visitFunc_decl(self)
@@ -4254,33 +4649,33 @@ class BraKetParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 569
-            self.match(BraKetParser.FUNC)
             self.state = 570
-            self.match(BraKetParser.IDENTIFIER)
+            self.match(BraKetParser.FUNC)
             self.state = 571
+            self.match(BraKetParser.IDENTIFIER)
+            self.state = 572
             self.match(BraKetParser.LPAREN)
-            self.state = 573
+            self.state = 574
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 4503600164242176) != 0):
-                self.state = 572
+                self.state = 573
                 self.param_list()
 
 
-            self.state = 575
-            self.match(BraKetParser.RPAREN)
             self.state = 576
+            self.match(BraKetParser.RPAREN)
+            self.state = 577
             self.match(BraKetParser.LCURLY)
-            self.state = 578
+            self.state = 579
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 4503600168010496) != 0):
-                self.state = 577
+                self.state = 578
                 self.statement_list()
 
 
-            self.state = 580
+            self.state = 581
             self.match(BraKetParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
@@ -4312,6 +4707,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_param_list
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterParam_list" ):
+                listener.enterParam_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitParam_list" ):
+                listener.exitParam_list(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitParam_list" ):
                 return visitor.visitParam_list(self)
@@ -4327,20 +4730,20 @@ class BraKetParser ( Parser ):
         self.enterRule(localctx, 96, self.RULE_param_list)
         self._la = 0 # Token type
         try:
-            self.state = 588
+            self.state = 589
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,49,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 582
+                self.state = 583
                 self.identifier_list()
-                self.state = 585
+                self.state = 586
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if _la==1:
-                    self.state = 583
-                    self.match(BraKetParser.COMMA)
                     self.state = 584
+                    self.match(BraKetParser.COMMA)
+                    self.state = 585
                     self.default_list()
 
 
@@ -4348,7 +4751,7 @@ class BraKetParser ( Parser ):
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 587
+                self.state = 588
                 self.default_list()
                 pass
 
@@ -4384,6 +4787,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_identifier_list
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterIdentifier_list" ):
+                listener.enterIdentifier_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitIdentifier_list" ):
+                listener.exitIdentifier_list(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitIdentifier_list" ):
                 return visitor.visitIdentifier_list(self)
@@ -4399,18 +4810,18 @@ class BraKetParser ( Parser ):
         self.enterRule(localctx, 98, self.RULE_identifier_list)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 590
+            self.state = 591
             self.match(BraKetParser.IDENTIFIER)
-            self.state = 595
+            self.state = 596
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,50,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
-                    self.state = 591
-                    self.match(BraKetParser.COMMA)
                     self.state = 592
+                    self.match(BraKetParser.COMMA)
+                    self.state = 593
                     self.match(BraKetParser.IDENTIFIER) 
-                self.state = 597
+                self.state = 598
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,50,self._ctx)
 
@@ -4446,6 +4857,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_default_list
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterDefault_list" ):
+                listener.enterDefault_list(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitDefault_list" ):
+                listener.exitDefault_list(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitDefault_list" ):
                 return visitor.visitDefault_list(self)
@@ -4462,17 +4881,17 @@ class BraKetParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 598
+            self.state = 599
             self.assign_statement()
-            self.state = 603
+            self.state = 604
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==1:
-                self.state = 599
-                self.match(BraKetParser.COMMA)
                 self.state = 600
+                self.match(BraKetParser.COMMA)
+                self.state = 601
                 self.assign_statement()
-                self.state = 605
+                self.state = 606
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -4518,6 +4937,14 @@ class BraKetParser ( Parser ):
         def getRuleIndex(self):
             return BraKetParser.RULE_main_function
 
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterMain_function" ):
+                listener.enterMain_function(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitMain_function" ):
+                listener.exitMain_function(self)
+
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitMain_function" ):
                 return visitor.visitMain_function(self)
@@ -4534,31 +4961,31 @@ class BraKetParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 606
-            self.match(BraKetParser.MAIN)
             self.state = 607
+            self.match(BraKetParser.MAIN)
+            self.state = 608
             self.match(BraKetParser.LPAREN)
-            self.state = 609
+            self.state = 610
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 4503600164242176) != 0):
-                self.state = 608
+                self.state = 609
                 self.param_list()
 
 
-            self.state = 611
-            self.match(BraKetParser.RPAREN)
             self.state = 612
+            self.match(BraKetParser.RPAREN)
+            self.state = 613
             self.match(BraKetParser.LCURLY)
-            self.state = 614
+            self.state = 615
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 4503600168010496) != 0):
-                self.state = 613
+                self.state = 614
                 self.statement_list()
 
 
-            self.state = 616
+            self.state = 617
             self.match(BraKetParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re

@@ -579,6 +579,8 @@ class ICGenerator:
                 self._emit(UNOP, t, "-", inner, line=self._line(ctx))
                 return t
             return inner   # unary +
+        if ctx.array_access():
+            return self._gen_array_access(ctx.array_access())
         if ctx.dirac_expression():
             return self._gen_dirac(ctx.dirac_expression())
         if ctx.IDENTIFIER():

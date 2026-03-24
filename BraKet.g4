@@ -264,6 +264,7 @@ num_factor
     | MUL IDENTIFIER        // dereference:  *ptr
     | INT | FLOAT | CHAR
     | dirac_expression
+    | array_access
     | IDENTIFIER
     ;
 
