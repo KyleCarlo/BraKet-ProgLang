@@ -2599,11 +2599,10 @@ def _prop_temp_copies(ic: list) -> list:
 
         copy_map: dict = {}
         for ins in ic:
-            if (ins.op == ASSIGN
+            if (ins.op in (ASSIGN, COPY)       # COPY handles CSE-generated temp aliases
                     and _is_tmp_name(ins.a)
                     and def_count.get(ins.a, 0) == 1
-                    and isinstance(ins.b, str)
-                    and not _is_tmp_name(ins.b)):
+                    and isinstance(ins.b, str)):
                 copy_map[ins.a] = ins.b
 
         if not copy_map:
@@ -2663,6 +2662,91 @@ def _prop_temp_copies(ic: list) -> list:
         ic = new_ic
 
     return ic
+
+
+# ── Common Subexpression Elimination ──────────────────────────
+
+def _cse(ic: list) -> list:
+    """
+    Common Subexpression Elimination (CSE) pass.
+
+    Within each basic block, detects BINOP/UNOP instructions that compute
+    the same expression (same operator, same operands) as an earlier
+    instruction in the same block, and replaces them with a COPY of the
+    temporary that already holds the result.
+
+    Commutative operators (+, *, ==, !=) normalize operand order so that
+    a+b and b+a are recognized as the same expression.
+
+    The expression cache is reset at every basic-block boundary (LABEL,
+    JUMP, JUMPF, JUMPT, RETURN).  Cache entries are invalidated whenever
+    an operand variable is redefined by an assignment.
+
+    Example — (i+1)*(i+1) generates two identical BINOP i+1 instructions:
+        BINOP t4 i 1  (+)   ← first computation, cached as (+, 1, i) → t4
+        BINOP t5 i 1  (+)   ← duplicate: replaced with COPY t5 t4
+        BINOP t6 t4 t5 (*)
+    After _prop_temp_copies substitutes t5→t4:
+        BINOP t4 i 1  (+)
+        BINOP t6 t4 t4 (*)  ← i+1 computed exactly once
+    """
+    _COMMUTATIVE = {'+', '*', '==', '!='}
+    _BLOCK_ENDS  = {LABEL, JUMP, JUMPF, JUMPT, RETURN_OP}
+    _DEF_OPS     = {ASSIGN, BINOP, UNOP, COPY, ARRAY_GET, STRUCT_GET,
+                    ARRAY_NEW, CALL, ADDR_OF, DEREF}
+
+    def _key(op_str, left, right):
+        """Canonical key — swap commutative operands into lexicographic order."""
+        if op_str in _COMMUTATIVE and str(right) < str(left):
+            left, right = right, left
+        return (op_str, left, right)
+
+    def _invalidate(var, emap):
+        """Drop all cache entries whose operands include var."""
+        return {k: v for k, v in emap.items() if var not in (k[1], k[2])}
+
+    new_ic: list = []
+    expr_map: dict = {}          # key → existing temp holding the result
+
+    for ins in ic:
+        if ins.op in _BLOCK_ENDS:
+            expr_map = {}        # reset at every basic-block boundary
+            new_ic.append(ins)
+
+        elif ins.op == BINOP:
+            op_str = getattr(ins, '_op2', '+')
+            key = _key(op_str, ins.b, ins.c)
+            if key in expr_map:
+                # CSE hit — reuse the already-computed result
+                cse_ins = ICInstruction(COPY, ins.a, expr_map[key], None, ins.line)
+                cse_ins._op2 = None
+                new_ic.append(cse_ins)
+            else:
+                if isinstance(ins.a, str):
+                    expr_map = _invalidate(ins.a, expr_map)
+                expr_map[key] = ins.a
+                new_ic.append(ins)
+
+        elif ins.op == UNOP:
+            op_str = ins.b      # UNOP stores operator in ins.b
+            key = (op_str, ins.c, None)
+            if key in expr_map:
+                cse_ins = ICInstruction(COPY, ins.a, expr_map[key], None, ins.line)
+                cse_ins._op2 = None
+                new_ic.append(cse_ins)
+            else:
+                if isinstance(ins.a, str):
+                    expr_map = _invalidate(ins.a, expr_map)
+                expr_map[key] = ins.a
+                new_ic.append(ins)
+
+        else:
+            # Invalidate cache entries whose operands include the redefined variable
+            if ins.op in _DEF_OPS and isinstance(ins.a, str):
+                expr_map = _invalidate(ins.a, expr_map)
+            new_ic.append(ins)
+
+    return new_ic
 
 
 # ── Constant folding helper ───────────────────────────────────
@@ -3139,6 +3223,7 @@ def generate_ic(tree, parser=None) -> tuple[list[ICInstruction],
         for _ in range(4):          # iterate to handle cascading simplifications
             prev = len(ic)
             ic = _const_propagate(ic)
+            ic = _cse(ic)                     # common subexpression elimination
             ic = _elim_dead_assignments(ic)   # algebraic identities (b*0→0, b+0→b, …)
             ic = _prop_temp_copies(ic)        # expose self-assignments via temp substitution
             ic = _elim_dead_assignments(ic)   # remove self-assignments revealed above
