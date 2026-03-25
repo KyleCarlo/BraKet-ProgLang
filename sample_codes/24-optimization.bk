@@ -1,11 +1,22 @@
 // 24-optimization.bk
+
+func sumcalc(a, b, N) {
+    x = 0
+    y = 0          // Dead variable: y is never read — eliminated from IC
+    for (i = 0; i <= N; i = i + 1) {
+        x = x + (4*a/b)*i + (i+1)*(i+1)
+        x = x + b*0   // b*0 → 0 (constant fold); x + 0 → dead assignment (eliminated)
+    }
+    return x
+}
+
 main() {
     /* 1a. Branch Simplification + Unreachable Elimination (JUMPF)
     - Shown in IC Tab
-    - count = 3, limit = 10  →  constant propagation substitutes into (count - limit > 0)
-    - (3 - 10 > 0)  →  constant folded to false
-    - JUMPF false, L         →  simplified to JUMP L (always taken)
-    - Body print("unreachable") is now unreachable and removed from IC.
+    - count = 3, limit = 10 → constant propagation substitutes into (count - limit > 0)
+    - (3 - 10 > 0) → constant folded to false
+    - JUMPF false, L → simplified to JUMP L (always taken)
+    - Body print("unreachable") is now unreachable and removed from IC
     */
     count = 3
     limit = 10
@@ -16,34 +27,43 @@ main() {
 
     /* 1b. Branch Simplification + Unreachable Elimination (JUMPT)
     - Shown in IC Tab
-    - score = 100, threshold = 50  →  constant propagation substitutes into (score - threshold > 0)
-    - (100 - 50 > 0)  →  constant folded to true
-    - JUMPT true, L  →  simplified to JUMP L (always taken)
-    - Right side (count / 0) and intermediate temps are unreachable and removed.
+    - score = 100, threshold = 50 → constant propagation substitutes into (score - threshold > 0)
+    - (100 - 50 > 0) → constant folded to true
+    - JUMPT true, L → simplified to JUMP L (always taken)
+    - Right side (count / 0) and intermediate temps are unreachable and removed
     */
     score = 100
     threshold = 50
     if ((score - threshold > 0) || (count / 0 > 1)) {
         print("|| short-circuited (JUMPT)")
     }
-
     /* 2. Constant Folding
     - Shown in IC Tab
-    - Immediately computed in compile fall_time (no BINOP)
+    - Immediately computed at compile time (no BINOP emitted in IC)
     */
-    y = 2 + 3 * 4
+    y = 2 + 3 * 4       // folded to 14
     print("y =", y)
 
-    /* 3. Constant Propagation + Dead Variable Elimination
+    /* 3a. Constant Propagation
     - Shown in IC Tab
+    - test = (1 + 2) → constant-folded to 3
+    - 3 propagated into z = 3 * 4 = 12
+    - test is dead after propagation — removed from IC
     */
-    test = (1 + 2)
+    test = 1 + 2
     z = test * 4
     print("z =", z)
+    
+    /* 4. Dead Code Elimination (sumcalc)
+    - Shown in IC Tab and Symbol Table
+    - sumcalc internally: y = 0 is dead (never read), removed from IC
+    - sumcalc internally: b*0 constant-folded to 0; x = x + 0 eliminated
+    */
+    result = sumcalc(4, 2, 5)
+    print("sumcalc(4, 2, 5) =", result)
 
-    /* 4. Freeing of Temporary Addresses
-    - Shown in Symbol Table
-    - Space allocated for temporary variables are freed upon use
+    /* 4. Dead Variable Elimination in IC
+    - Freeing the temporary variables used in IC
     */
 }
 

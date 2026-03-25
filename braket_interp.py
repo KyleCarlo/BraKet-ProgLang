@@ -2488,6 +2488,183 @@ def _elim_dead_temps(ic: list) -> list:
     return ic
 
 
+# ── Dead Assignment Elimination ────────────────────────────────
+
+def _elim_dead_assignments(ic: list) -> list:
+    """
+    Dead Assignment Elimination pass.
+
+    1. Algebraic identity simplification — reduces BINOP instructions whose
+       result is trivially determined even when one operand is unknown:
+         b * 0  →  0     0 * b  →  0
+         b + 0  →  b     0 + b  →  b
+         b - 0  →  b
+         b * 1  →  b     1 * b  →  b
+         b ** 0 →  1     b ** 1 →  b
+
+    2. Self-assignment elimination — removes instructions that assign a
+       variable the value it already holds:
+         ASSIGN  a  a  →  removed
+         COPY    a  a  →  removed
+
+    Iterates until convergence so cascading simplifications fully resolve.
+    For example:
+        BINOP t0 b 0  →  ASSIGN t0 0   (zero-multiplication rule)
+    Then after constant propagation substitutes t0→0 into the next BINOP:
+        BINOP t1 x 0  →  ASSIGN t1 x   (additive identity rule)
+    Then after _prop_temp_copies substitutes t1→x:
+        COPY x x       →  removed       (self-assignment rule)
+    """
+    def _is_zero(v):
+        return isinstance(v, (int, float)) and not isinstance(v, bool) and v == 0
+
+    def _is_one(v):
+        return isinstance(v, (int, float)) and not isinstance(v, bool) and v == 1
+
+    changed = True
+    while changed:
+        changed = False
+        new_ic = []
+        for ins in ic:
+            if ins.op == BINOP:
+                left   = ins.b
+                right  = ins.c
+                op_str = getattr(ins, '_op2', '+')
+                simplified = None
+
+                if op_str == '*':
+                    if _is_zero(left) or _is_zero(right):   simplified = 0
+                    elif _is_one(right):                     simplified = left
+                    elif _is_one(left):                      simplified = right
+                elif op_str == '+':
+                    if _is_zero(right):                      simplified = left
+                    elif _is_zero(left):                     simplified = right
+                elif op_str == '-':
+                    if _is_zero(right):                      simplified = left
+                elif op_str == '**':
+                    if _is_zero(right):                      simplified = 1
+                    elif _is_one(right):                     simplified = left
+
+                if simplified is not None:
+                    new_ins = ICInstruction(ASSIGN, ins.a, simplified, None, ins.line)
+                    new_ins._op2 = None
+                    new_ic.append(new_ins)
+                    changed = True
+                else:
+                    new_ic.append(ins)
+
+            elif ins.op in (ASSIGN, COPY) and ins.a == ins.b:
+                # a = a  or  COPY a a — value unchanged, discard
+                changed = True
+
+            else:
+                new_ic.append(ins)
+
+        ic = new_ic
+
+    return ic
+
+
+# ── Temporary Copy Propagation ─────────────────────────────────
+
+def _prop_temp_copies(ic: list) -> list:
+    """
+    Temporary Copy Propagation pass.
+
+    For every single-definition temporary t that is assigned a plain user
+    variable name v (ASSIGN t v), substitutes every read of t with v.
+    This is the complement of constant propagation: where that pass
+    propagates literals, this pass propagates variable names.
+
+    This enables _elim_dead_assignments to detect self-assignments that
+    arise from algebraic simplification chains.  Example:
+        ASSIGN  t1  x          # produced when  x + 0  →  x
+        COPY    x   t1         # becomes COPY x x → self-assignment → removed
+    After removal, DTAE prunes the now-dead  ASSIGN t1 x.
+    """
+    def _sub(v, cmap):
+        return cmap[v] if isinstance(v, str) and v in cmap else v
+
+    changed = True
+    while changed:
+        changed = False
+
+        # Single-def temps whose value is a non-temp user variable name
+        def_count: dict = {}
+        _def_ops = {ASSIGN, BINOP, UNOP, COPY, ARRAY_GET, STRUCT_GET,
+                    ARRAY_NEW, CALL, ADDR_OF, DEREF}
+        for ins in ic:
+            if ins.op in _def_ops and isinstance(ins.a, str):
+                def_count[ins.a] = def_count.get(ins.a, 0) + 1
+
+        copy_map: dict = {}
+        for ins in ic:
+            if (ins.op == ASSIGN
+                    and _is_tmp_name(ins.a)
+                    and def_count.get(ins.a, 0) == 1
+                    and isinstance(ins.b, str)
+                    and not _is_tmp_name(ins.b)):
+                copy_map[ins.a] = ins.b
+
+        if not copy_map:
+            break
+
+        new_ic = []
+        for ins in ic:
+            if ins.op == BINOP:
+                b = _sub(ins.b, copy_map)
+                c = _sub(ins.c, copy_map)
+                if b is not ins.b or c is not ins.c:
+                    new_ins = ICInstruction(BINOP, ins.a, b, c, ins.line)
+                    new_ins._op2 = getattr(ins, '_op2', '+')
+                    new_ic.append(new_ins)
+                    changed = True
+                else:
+                    new_ic.append(ins)
+            elif ins.op == UNOP:
+                c = _sub(ins.c, copy_map)
+                if c is not ins.c:
+                    new_ins = ICInstruction(UNOP, ins.a, ins.b, c, ins.line)
+                    new_ins._op2 = None
+                    new_ic.append(new_ins)
+                    changed = True
+                else:
+                    new_ic.append(ins)
+            elif ins.op in (ASSIGN, COPY):
+                b = _sub(ins.b, copy_map)
+                if b is not ins.b:
+                    new_ins = ICInstruction(ins.op, ins.a, b, None, ins.line)
+                    new_ins._op2 = None
+                    new_ic.append(new_ins)
+                    changed = True
+                else:
+                    new_ic.append(ins)
+            elif ins.op in (JUMPF, JUMPT):
+                a = _sub(ins.a, copy_map)
+                if a is not ins.a:
+                    new_ins = ICInstruction(ins.op, a, ins.b, ins.c, ins.line)
+                    new_ins._op2 = getattr(ins, '_op2', None)
+                    new_ic.append(new_ins)
+                    changed = True
+                else:
+                    new_ic.append(ins)
+            elif ins.op in (PARAM, RETURN_OP, PRINT_OP):
+                a = _sub(ins.a, copy_map)
+                if a is not ins.a:
+                    new_ins = ICInstruction(ins.op, a, ins.b, ins.c, ins.line)
+                    new_ins._op2 = getattr(ins, '_op2', None)
+                    new_ic.append(new_ins)
+                    changed = True
+                else:
+                    new_ic.append(ins)
+            else:
+                new_ic.append(ins)
+
+        ic = new_ic
+
+    return ic
+
+
 # ── Constant folding helper ───────────────────────────────────
 
 def _const_fold(left, op, right):
@@ -2962,6 +3139,9 @@ def generate_ic(tree, parser=None) -> tuple[list[ICInstruction],
         for _ in range(4):          # iterate to handle cascading simplifications
             prev = len(ic)
             ic = _const_propagate(ic)
+            ic = _elim_dead_assignments(ic)   # algebraic identities (b*0→0, b+0→b, …)
+            ic = _prop_temp_copies(ic)        # expose self-assignments via temp substitution
+            ic = _elim_dead_assignments(ic)   # remove self-assignments revealed above
             ic = _simplify_branches(ic)
             ic = _elim_unreachable(ic)
             ic = _elim_dead_temps(ic)
