@@ -1,51 +1,3 @@
-"""
-braket_interp.py
-================
-BraKet Language — Intermediate Code Generator + Tree-Walking Interpreter
-
-Pipeline
---------
-  ANTLR Parse Tree
-       │
-       ▼
-  ICGenerator   →  list[ICInstruction]   (three-address / TAC-style IR)
-       │
-       ▼
-  Interpreter   →  runtime output, symbol table, execution trace
-
-Intermediate Code Design
-------------------------
-  Three-address code (TAC) with a flat instruction list.
-  Each instruction is one of:
-
-    ASSIGN    dest, src                 dest = src
-    BINOP     dest, left, op, right     dest = left OP right
-    UNOP      dest, op, src             dest = OP src
-    COPY      dest, src                 dest = src  (variable copy)
-    LABEL     name                      jump target
-    JUMP      label                     unconditional goto
-    JUMPF     cond, label               goto label if cond is falsy
-    JUMPT     cond, label               goto label if cond is truthy
-    PARAM     src                       push argument
-    CALL      dest, func, argc          dest = call func(argc args)
-    RETURN    src                       return src from function
-    PRINT     src                       built-in print
-    ARRAY_NEW dest, size                dest = new array[size]
-    ARRAY_SET dest, index, src          dest[index] = src
-    ARRAY_GET dest, src, index          dest = src[index]
-    STRUCT_SET dest, field, src         dest.field = src
-    STRUCT_GET dest, src, field         dest = src.field
-
-  Temporaries are named  t0, t1, t2, …
-  Labels are named       L0, L1, L2, …
-
-Public API (used by braket_engine.py / IDE)
--------------------------------------------
-  generate_ic(tree, parser) -> list[ICInstruction]
-  run_ic(instructions, functions, output_cb, max_steps)
-       -> InterpreterResult
-"""
-
 from __future__ import annotations
 
 import math
@@ -2190,18 +2142,6 @@ class Interpreter:
 
         return self._SENTINEL
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  BINOP operator storage fix
-#  The ICGenerator stores BINOP as: emit(BINOP, dest, left, op)
-#  then patches the last instruction's .c = right.
-#  So the layout is:  a=dest  b=left  c=right  — and op is stored separately.
-#  We need to track op.  We fix this by storing op in a 4th slot.
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Monkey-patch ICInstruction to add an `op2` field for BINOP operator string,
-# and override _run_ic to use it.
-
 _orig_emit = ICGenerator._emit
 
 def _patched_emit(self, op, a=None, b=None, c=None, line=0, _op2=None):
@@ -2217,9 +2157,6 @@ def _patched_emit_binop(gen, dest, left, op_str, line=0):
     ins = ICInstruction(BINOP, dest, left, None, line)
     ins._op2 = op_str
     gen._current_ic.append(ins)
-
-# Override _gen_num_expr, _gen_num_term, etc. to use _op2 properly
-# We do this by overriding _apply_binop dispatch in Interpreter to read ins._op2
 
 _orig_run_ic = Interpreter._run_ic
 

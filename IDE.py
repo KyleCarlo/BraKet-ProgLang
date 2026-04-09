@@ -1,24 +1,10 @@
-# ide.py  —  BraKet IDE
-# Integrated with braket_engine.py (ANTLR4-backed scanner / parser / semantic analyser).
-#
-# Layout
-# ──────
-#   Left  : Editor (with line numbers) + Output/Diagnostics panel
-#   Right : Debug notebook
-#             🔍 Scanner   — full ANTLR token stream
-#             🌳 Parse Tree — ANTLR toStringTree output
-#             📋 Symbols   — global symbol table (name / BKType / const?)
-#             ⚠  Diagnostics — semantic errors & warnings with line:col
-
 import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog, simpledialog as _tk_simpledialog
 from tkinter import font as tkfont
 import re
 
 # ── Engine import ────────────────────────────────────────────
-# braket_engine.py (and the ANTLR-generated BraKetLexer/Parser/Visitor)
-# must be on sys.path.  A graceful fallback is provided so the IDE can
-# still open even when ANTLR files are absent.
+
 try:
     from braket_engine import analyze, BraKetResult, TokenInfo
     _ENGINE_AVAILABLE = True
@@ -159,69 +145,6 @@ BKTYPE_COLORS = {
 }
 
 # ── Sample BraKet code ────────────────────────────────────────
-# TODO: Edit this also
-# SAMPLE = """\
-# func double_in_place(ptr) {
-#     *ptr = *ptr * 2
-# }
-
-# func swap(pa, pb) {
-#     temp = *pa
-#     *pa  = *pb
-#     *pb  = temp
-# }
-
-# func sum_via_ptrs(pa, pb) {
-#     return *pa + *pb
-# }
-
-# main() {
-#     print("-- Basic pointer --")
-#     x   = 10
-#     ptr = &x
-#     print(ptr)
-#     print(*ptr)
-
-#     print("-- Modify via pointer --")
-#     *ptr = 42
-#     print(x)
-
-#     print("-- Two pointers, same variable --")
-#     y  = 100
-#     p1 = &y
-#     p2 = &y
-#     *p1 = 55
-#     print(*p2)
-
-#     print("-- Function: double in place --")
-#     n  = 7
-#     pn = &n
-#     double_in_place(pn)
-#     print(n)
-
-#     print("-- Function: sum via ptrs --")
-#     a  = 3
-#     b  = 8
-#     pa = &a
-#     pb = &b
-#     print(sum_via_ptrs(pa, pb))
-
-#     print("-- Function: swap --")
-#     u = 100
-#     v = 200
-#     swap(&u, &v)
-#     print(u)
-#     print(v)
-
-#     print("-- Pointer in condition --")
-#     val = 5
-#     pv  = &val
-#     if (*pv > 3) {
-#         print("greater than 3")
-#     } else {
-#         print("not greater than 3")
-#     }
-# }"""
 SAMPLE = """\
 main(){
     print("hello, world!")

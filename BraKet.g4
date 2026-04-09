@@ -1,7 +1,5 @@
 grammar BraKet;
 
-// Any tokens that do not belong to import_list, const_decl_list, func_decl_list,
-// or main_function will cause a parse error instead of being silently ignored.
 program
     : import_list?
       const_decl_list?

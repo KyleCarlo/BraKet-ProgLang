@@ -1,24 +1,3 @@
-"""
-braket_engine.py
-================
-BraKet Language — Scanner, Parser, and Semantic Analyzer
-Converted and optimized from Main.ipynb for use with the BraKet IDE.
-
-Public API
-----------
-run_scanner(code)  -> list[TokenInfo]
-run_parser(code)   -> ParserResult
-run_semantic(code) -> SemanticResult
-
-Each function is self-contained and safe to call independently.
-All three share the same ANTLR4-generated lexer/parser (BraKetLexer / BraKetParser).
-
-Requirements:
-    pip install antlr4-python3-runtime==4.13.2
-    antlr4 -Dlanguage=Python3 BraKet.g4 -visitor -no-listener
-    (BraKetLexer.py, BraKetParser.py, BraKetVisitor.py must be on sys.path)
-"""
-
 from __future__ import annotations
 
 import sys
@@ -660,13 +639,6 @@ class _SemanticVisitor(BraKetVisitor):
     # ── expressions ───────────────────────────────────────────
 
     def _visit_expr(self, ctx: BraKetParser.ExpressionContext) -> str:
-        # IMPORTANT: func_call_statement MUST be checked before IDENTIFIER.
-        # ctx.IDENTIFIER() uses getToken() which searches all child tokens,
-        # so it returns the function name token even when the expression is
-        # a func_call_statement (e.g. hadamard(|ket0>)).
-        # ctx.func_call_statement() uses getTypedRuleContext() which only
-        # matches when that rule was actually parsed — so it is reliably None
-        # for a plain identifier expression and non-None for a call.
         if ctx.func_call_statement(): return self._visit_call(ctx.func_call_statement())
         if ctx.array_access():        return self._visit_array_access(ctx.array_access())
         if ctx.struct_access():       return self._visit_struct_access(ctx.struct_access())
